@@ -1,7 +1,7 @@
-# grott
+# Grott
 Growatt inverter monitor
 
-The growatt inverter with wifishine adapter sends log data to the growatt (website) at the internet. At this website you can see detailed information on how the inverter is performing. 
+The growatt inverter with shine wifi adapter sends log data to the growatt (website) at the internet. At this website you can see detailed information on how the inverter is performing. 
 
 I was looking for a way the intercept this information and use it for my home domotica environment. 
 
@@ -15,4 +15,4 @@ Inspired by this solutions, I decided that I want a more generic solution. So I 
 
 The program is written in python and can be started from the command line or linux services. Because the progrom is using sockets to capature the data it is necessary to run it with SUDO rights. 
 
-Since a couple of weeks I have the program running as a service and seem to work fine. I will published to prgram soon after doing some clean up. I will publish setup information in the wiki. 
+Since a couple of weeks I have the program running as a service and seem to work fine. I will published the program soon after doing some clean up. I will publish setup information in the wiki. 
