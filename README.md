@@ -9,6 +9,7 @@ Searching at the internet I find some site where people managed to intercept the
 See: 
 
 https://github.com/sciurius/Growatt-WiFi-Tools 
+
 http://123zonne-energie.ning.com/profiles/blogs/growatt-wifi-module-via-raspberry-pi-automatische-upload-naar
 
 Inspired by this solutions, I decided that I want a more generic solution. So I use the ideas and created an own solution based on routing the data (IP forwarding) via a Raspberry Pi and capture the growatt log data with a python (socket) sniffer that sends a JSON message to a MQTT broker (eg MOSQUITTO). With node red it is possible to connect to use the MQTT data and create dashboard or sent it to other receivers like pvoutput or Domoticz. 
