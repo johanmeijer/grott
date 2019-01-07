@@ -19,3 +19,6 @@ With node red it is possible to connect to use the MQTT data and create dashboar
 The program is written in python and can be started from the command line or linux services. Because the progrom is using sockets to capature the data it is necessary to run it with SUDO rights. 
 
 Version 1.0.4: enables configuration file and commandline based parameter specification
+
+Copy grott.service in /etc/systemd/system directory for running grott as a deamon (see wiki how to use services)
+Be aware the assumption is that grott.py and grott.ini are installed in /home/pi/growatt. grott.service need to be modified if other directory is used. 
