@@ -22,3 +22,5 @@ Version 1.0.4: enables configuration file and commandline based parameter specif
 
 Copy grott.service in /etc/systemd/system directory for running grott as a deamon (see wiki how to use services)
 Be aware the assumption is that grott.py and grott.ini are installed in /home/pi/growatt. grott.service need to be modified if other directory is used. 
+
+The Grott monitor is tested with a Growatt 1500-s inverter with a ShineWIFI-S wifi device
