@@ -1,0 +1,27 @@
+[Unit]
+Description=Grott Growatt monitor
+After=syslog.target
+After=network.target
+#Wants=systemd-networkd-wait-online.service
+#Wants=mosquitto.service
+
+[Service]
+SyslogIdentifier=grott
+Type=simple
+User=root
+
+WorkingDirectory=/home/pi/growatt/
+ExecStart=-/usr/bin/python3 /home/pi/growatt/grott.py -v
+#StandardInput=socket
+StandardOutput=journal
+
+Restart=always
+RestartSec=1
+StartLimitInterval=10
+StartLimitBurst=5
+
+# Give the script some time to startup
+TimeoutSec=120
+
+[Install]
+WantedBy=multi-user.target
