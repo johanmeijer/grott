@@ -16,7 +16,7 @@ Inspired by this solutions, I decided that I want a more generic solution. So I 
 
 With node red it is possible to connect to use the MQTT data and create dashboard or sent it to other receivers like pvoutput or Domoticz. 
 
-The program is written in python and can be started from the command line or linux services. Because the progrom is using sockets to capature the data it is necessary to run it with SUDO rights. 
+The program is written in python and can be started from the command line or linux services. Because the program is using sockets to capature the data, it is necessary to run it with SUDO rights. 
 
 Version 1.0.4: enables configuration file and commandline based parameter specification
 
