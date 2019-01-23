@@ -4,7 +4,7 @@
 #       For more information how to see aditional documentation
 #       Monitor can run in forground and as a standard service!
 #
-#Done in this release
+#Done in 1.0.4
 #       Clean up coding 
 #       Test with real data 
 #       implemetd mqtt 
@@ -15,21 +15,24 @@
 #       Enable running as a services and automatic startup after reboot 
 #       Code review by peer
 #       Added in github: https://github.com/johanmeijer/grott
-#
-#Todo next releases
-#       Add more relevant values to JSON message
-#       Document Raspberry PI prot forwarding, MQTT, Node Red implementation as example
 #       Document and add service example to git
 #
+#Done   in 1.0.5
+#V      Changed some verbose print output to trace ouput to keep verbose messages clean and lean 
+#V      Add more relevant values to JSON message
+#V      Make print data unbufferd to see messages direct in journal when running as as service (python -u parm added in grott.service )
+#V      MQTT error handling improved
+#V      Process and sent values only if PVstatus is 0 or 1. Detected unexpected values while pvstatus was 257. This an quick fix. Has to look for realroot cause reason (probably not a monitor record) 
+#V      included messages for problem detection / solving of unexpected PVSTATUS = 257 issue
 
-verrel = "1.0.4"
+verrel = "1.0.5"
 
 import socket
 import struct
 import textwrap
 import configparser, sys, argparse
 from itertools import cycle # to support "cycling" the iterator
-import time, json, datetime
+import time, json, datetime, codecs
 
 #Decide wish MQTT will be used. use client if continuous connection is wanted 
 #import paho.mqtt.client as mqtt                       
@@ -50,7 +53,7 @@ growattip = "47.91.67.66"
 growattport = 5279
 
 #MQTT default
-mqttip = "local"
+mqttip = "localhost"
 mqttport = 1883
 mqtttopic= "energy/growatt"
 nomqtt = False                                                                          #not in ini file, can only be changed via start parms
@@ -66,7 +69,7 @@ DATA_TAB_2 = '\t\t   '
 DATA_TAB_3 = '\t\t\t   '
 DATA_TAB_4 = '\t\t\t\t   '
 
-print("Grott Growatt logging monitor started")    
+print("Grott Growatt logging monitor")    
 
 #Proces commandline parameters
 parser = argparse.ArgumentParser(prog='grott')
@@ -87,11 +90,11 @@ if (args.o != None) : sys.stdout = open(args.o, 'w')
 
 if verbose : 
     print("\nGrott Command line parameters processed:")
-    print("\tverbose: \t", verbose)    
-    print("\tconfig file:\t",cfgfile)
-    print("\toutput file:\t",sys.stdout)
-    print("\tnomqtt: \t", nomqtt)
-    print("\ttrace: \t\t", trace)
+    print("\tverbose:     \t", verbose)    
+    print("\tconfig file: \t", cfgfile)
+    print("\toutput file: \t", sys.stdout)
+    print("\tnomqtt:      \t", nomqtt)
+    print("\ttrace:       \t", trace)
 
 #proces configuration file
 config = configparser.ConfigParser()
@@ -109,16 +112,16 @@ if config.has_option("MQTT","topic"): mqtttopic = config.get("MQTT","topic")
 
 #Print processed settings 
 if verbose : 
-    print("\nGrott configuration file processed:")
-    print("\n\tminrecl: \t",minrecl)
-    print("\tdecrypt: \t",decrypt)
-    print("\tcompat: \t",compat)
+    print("\nGrott configuration file processed:\n")
+    print("\tminrecl:     \t",minrecl)
+    print("\tdecrypt:     \t",decrypt)
+    print("\tcompat:      \t",compat)
     print("\tvalueoffset: \t",valueoffset)
-    print("\tinverterid: \t",inverterid)
-    print("\n\tmqttip: \t",mqttip)
-    print("\tmqttport: \t",mqttport)
-    print("\tmqtttopic: \t",mqtttopic)
-    print("\n\tgrowattip: \t",growattip)
+    print("\tinverterid:  \t",inverterid)
+    print("\tmqttip:      \t",mqttip)
+    print("\tmqttport:    \t",mqttport)
+    print("\tmqtttopic:   \t",mqtttopic)
+    print("\tgrowattip:   \t",growattip)
     print("\tgrowattport: \t",growattport)
 
 #Prepare invert settings
@@ -175,10 +178,12 @@ def main():
                     if len(tcp.data) < minrecl :
                         if verbose: print(TAB_1 + 'TCP Data less then minimum record length, data not processed') 
                     else: 
+                        if verbose: print(TAB_2 + 'Growatt Monitor Data detected')
+                        #Change in trace in future
+                        if verbose: 
+                            print(TAB_2 + 'Growatt original Data:')
+                            print(format_multi_line(DATA_TAB_3, tcp.data))
 
-                        if verbose: print(TAB_2 + 'Growatt Data:')
-
-                        if verbose: print(format_multi_line(DATA_TAB_3, tcp.data))
                         message = list(tcp.data)
                         nmessage = len(message)
 
@@ -233,41 +238,76 @@ def main():
                             else: 
                                 if verbose: print(TAB_2 + 'Growatt unscrambled data processed no matching inverter id found')
                                                                      
-                        if serialfound == True:         
-                            if verbose: print(TAB_2 + 'Growatt scrambled data processed for: ', bytearray.fromhex(SN).decode())
+                        if serialfound == True:
+                            #Change in trace in future
+                            if verbose: 
+                                print(TAB_2 + 'Growatt unscrambled data:')
+                                print(format_multi_line(DATA_TAB_3, result_string))     
+                                
+                            if verbose: print(TAB_2 + 'Growatt processing values for: ', bytearray.fromhex(SN).decode())
                             
                             #Retrieve values 
                             snstart = result_string.find(SN)  
-                            
-                            pvserial = result_string[snstart:snstart+16]
-                            pvstatus = int(result_string[snstart+offset*2+15*2:snstart+offset*2+30+4],16)
-                            pvpowerout = int(result_string[snstart+offset*2+37*2:snstart+offset*2+37*2+8],16)
-                            pvenergytoday= int(result_string[snstart+offset*2+67*2:snstart+offset*2+67*2+8],16)
-                            pvenergytotal= int(result_string[snstart+offset*2+71*2:snstart+offset*2+71*2+8],16)
-                            
-                            if verbose:
-                                print(TAB_3 + "pvserial:      ", pvserial) 
-                                print(TAB_3 + "pvstatus:      ", pvstatus) 
-                                print(TAB_3 + "pvpowerout:    ", pvpowerout/10)
-                                print(TAB_3 + "pvenergytoday: ", pvenergytoday/10)
-                                print(TAB_3 + "pvenergytotal: ", pvenergytotal/10)
-                            
-                            #create JSON message
-                            jsonmsg = json.dumps({"device":inverterid,"time":datetime.datetime.utcnow().replace(microsecond=0).isoformat(),"values":{"pvstatus":pvstatus,"pvpowerout":pvpowerout, "pvenergytoday":pvenergytoday,"pvenergytotal":pvenergytotal}})
-                            if verbose:
-                                print(TAB_2 + "MQTT jsonmsg: ")        
-                                print(TAB_3 + jsonmsg)        
-                            
-                            #send MQTT (use publish to keep connection active, single for sendig message and disconnect)
-                            #    mqttclient.publish(mqtttopic, payload=jsonmsg, qos=0, retain=False)   
-                            if not nomqtt:
-                                   publish.single(mqtttopic, payload=jsonmsg, qos=0, retain=False, hostname=mqttip,port=mqttport, client_id=inverterid)
+                            pvserial = result_string[snstart:snstart+20]
+                            pvstatus = int(result_string[snstart+offset*2+15*2:snstart+offset*2+15*2+4],16)
+                            #Only process value if pvstatus is oke (this is because unexpected pvstatus of 257)
+                            if pvstatus == 0 or pvstatus == 1:
+                                pv1watt    = int(result_string[snstart+offset*2+25*2:snstart+offset*2+25*2+8],16)
+                                pv2watt    = int(result_string[snstart+offset*2+33*2:snstart+offset*2+33*2+8],16)
+                                pvpowerout = int(result_string[snstart+offset*2+37*2:snstart+offset*2+37*2+8],16)
+                                pvfrequentie = int(result_string[snstart+offset*2+41*2:snstart+offset*2+41*2+4],16)
+                                pvgridvoltage = int(result_string[snstart+offset*2+43*2:snstart+offset*2+43*2+4],16)
+                                pvenergytoday= int(result_string[snstart+offset*2+67*2:snstart+offset*2+67*2+8],16)
+                                pvenergytotal= int(result_string[snstart+offset*2+71*2:snstart+offset*2+71*2+8],16)
+                                
+                                if verbose:
+                                    print(TAB_3 + "pvserial:      ", codecs.decode(pvserial, "hex").decode('utf-8'))
+                                    print(TAB_3 + "pvstatus:      ", pvstatus) 
+                                    print(TAB_3 + "pvpowerout:    ", pvpowerout/10)
+                                    print(TAB_3 + "pvenergytoday: ", pvenergytoday/10)
+                                    print(TAB_3 + "pvenergytotal: ", pvenergytotal/10)
+                                    print(TAB_3 + "pv1watt:       ", pv1watt/10)
+                                    print(TAB_3 + "pv2watt:       ", pv2watt/10)
+                                    print(TAB_3 + "pvfrequentie:  ", pvfrequentie/100)
+                                    print(TAB_3 + "pvgridvoltage: ", pvgridvoltage/10)
+                                
+                                #create JSON message                          
+                                jsonmsg = json.dumps({"device":inverterid,"time":datetime.datetime.utcnow().replace(microsecond=0).isoformat(),
+                                    "values":{
+                                                "pvstatus":pvstatus,
+                                                "pv1watt":pv1watt,
+                                                "pv2watt:":pv2watt,
+                                                "pvpowerout":pvpowerout,
+                                                "pvfrequentie":pvfrequentie,
+                                                "pvgridvoltage":pvgridvoltage,                             
+                                                "pvenergytoday":pvenergytoday,
+                                                "pvenergytotal":pvenergytotal}
+                                                })
+                                if verbose:
+                                    print(TAB_2 + "MQTT jsonmsg: ")        
+                                    print(TAB_3 + jsonmsg)        
+                                
+                                #send MQTT (use publish to keep connection active, single for sendig message and disconnect)
+                                #    mqttclient.publish(mqtttopic, payload=jsonmsg, qos=0, retain=False)   
+                                if not nomqtt:
+                                    try: 
+                                        publish.single(mqtttopic, payload=jsonmsg, qos=0, retain=False, hostname=mqttip,port=mqttport, client_id=inverterid, keepalive=5)
+                                        if verbose: print(TAB_2 + 'MQTT message message sent') 
+                                    except TimeoutError:     
+                                        if verbose: print(TAB_2 + 'MQTT connection time out error') 
+                                    except ConnectionRefusedError:     
+                                        if verbose: print(TAB_2 + 'MQTT connection refused by target')     
+                                    except BaseException as error:     
+                                        if verbose: print(TAB_2 + 'MQTT send failed:', str(error)) 
+                                else:
+                                    if verbose: print(TAB_2 + 'No MQTT message sent, MQTT disabled') 
                             else:
-                               if verbose: print(TAB_2 + 'No MQTT message sent, MQTT disabled') 
+                                if verbose: print(TAB_2 + 'No valid monitor data, PV status: :', pvstatus)    
+                          
                         else:   
-                            if verbose: print(TAB_2 + 'No Growatt scrambed data processed or SN not found:')
+                            if verbose: print(TAB_2 + 'No Growatt data processed or SN not found:')
                             if trace: 
-                                print(TAB_2 + 'Processed Data:')
+                                print(TAB_2 + 'Growatt unprocessed Data:')
                                 print(format_multi_line(DATA_TAB_3, result_string))
                     
 # UDP Not used
