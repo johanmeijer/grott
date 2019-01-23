@@ -11,7 +11,7 @@ Type=simple
 User=root
 
 WorkingDirectory=/home/pi/growatt/
-ExecStart=-/usr/bin/python3 /home/pi/growatt/grott.py -v
+ExecStart=-/usr/bin/python3 -u /home/pi/growatt/grott.py -v
 #StandardInput=socket
 StandardOutput=journal
 
