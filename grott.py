@@ -131,8 +131,8 @@ if verbose :
 #Prepare invert settings
 SN = "".join(['{:02x}'.format(ord(x)) for x in inverterid])
 offset = 6 
-#if compat == "True": offset = int(valueoffset)                          #set offset for older inverter types or after record change by Growatt
-if compat: offset = valueoffset                                          #set offset for older inverter types or after record change by Growatt
+#if compat == "True": offset = valueoffset                          #set offset for older inverter types or after record change by Growatt
+if compat: offset = int(valueoffset)                                #set offset for older inverter types or after record change by Growatt
 if verbose: print("\nGrott value location offset: ", offset,"\tCompat mode: ", compat)
 
 def main():
