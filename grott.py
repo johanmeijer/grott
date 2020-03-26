@@ -24,8 +24,12 @@
 #V      MQTT error handling improved
 #V      Process and sent values only if PVstatus is 0 or 1. Detected unexpected values while pvstatus was 257. This an quick fix. Has to look for realroot cause reason (probably not a monitor record) 
 #V      included messages for problem detection / solving of unexpected PVSTATUS = 257 issue
+#
+#Done   in 1.0.6
+#       Resolved problem with specifing offset in .ini. Change in record by growatt (Since 23 March 2020) now need a offset of 26! 
+#       Specify valueoffset = 26 and compat = True in ini file!
 
-verrel = "1.0.5"
+verrel = "1.0.6"
 
 import socket
 import struct
@@ -127,8 +131,8 @@ if verbose :
 #Prepare invert settings
 SN = "".join(['{:02x}'.format(ord(x)) for x in inverterid])
 offset = 6 
-#if compat == "True": offset = valueoffset                                          #set offset for older inverter types be awere not testest yet!
-if compat: offset = valueoffset                                          #set offset for older inverter types be awere not testest yet!
+#if compat == "True": offset = int(valueoffset)                          #set offset for older inverter types or after record change by Growatt
+if compat: offset = valueoffset                                          #set offset for older inverter types or after record change by Growatt
 if verbose: print("\nGrott value location offset: ", offset,"\tCompat mode: ", compat)
 
 def main():
