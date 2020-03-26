@@ -28,7 +28,7 @@ Be aware the assumption is that grott.py and grott.ini are installed in /home/pi
 The Grott monitor is tested with a Growatt 1500-s inverter with a ShineWIFI-S wifi device
 
 ***************************************
-Since 23 March 2020 the Growatt record layout seem to be changed. For my configuration it is needed to change .ini file with:
+Since 23 March 2020 the Growatt record layout seems to be changed. For my configuration it is needed to change .ini file with:
 
 compat = True
 
