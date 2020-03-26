@@ -31,8 +31,8 @@ The Grott monitor is tested with a Growatt 1500-s inverter with a ShineWIFI-S wi
 Since 23 March 2020 the Growatt record layout seem to be changed. For my configuration it is needed to change .ini file with:
 
 compat = True
+
 valueoffset = 26
 
 Be aware to use the latest grott.py (1.0.6) for correct parameter processing
 ***************************************
-!!!!!
