@@ -22,6 +22,8 @@ Version 1.0.4: enables configuration file and commandline based parameter specif
 
 Version 1.0.6: fix error with parameter processing from .ini file (compat = True / valueoffset = xx) 
 
+Version 1.0.7: fix error with unscrambled growatt record (shinelan support) and add option for mqtt user/password authentication
+
 Copy grott.service in /etc/systemd/system directory for running grott as a deamon (see wiki how to use services)
 Be aware the assumption is that grott.py and grott.ini are installed in /home/pi/growatt. grott.service need to be modified if other directory is used. 
 
@@ -34,5 +36,5 @@ compat = True
 
 valueoffset = 26
 
-Be aware to use the latest grott.py (1.0.6) for correct parameter processing
+Be aware to use a actual version of  grott.py (1.0.6 or above) for correct parameter processing
 ***************************************
