@@ -28,8 +28,11 @@
 #Done   in 1.0.6
 #       Resolved problem with specifing offset in .ini. Change in record by growatt (Since 23 March 2020) now need a offset of 26! 
 #       Specify valueoffset = 26 and compat = True in ini file!
+#Done   in 1.0.7
+#       Resolved problem with unecrypted records
+#       added authentication (user / password) for MQTT, specify in MQTT section of ini auth = False (default ) or True and user = "xxxxxxx" (grott : default) password = "xxxxx" (default : growatt2020)
 
-verrel = "1.0.6"
+verrel = "1.0.7"
 
 import socket
 import struct
@@ -61,6 +64,9 @@ mqttip = "localhost"
 mqttport = 1883
 mqtttopic= "energy/growatt"
 nomqtt = False                                                                          #not in ini file, can only be changed via start parms
+mqttauth = True;
+mqttuser = "grott";
+mqttpsw = "growatt2020";
 
 #Set print formatting options
 TAB_1 = '\t - '
@@ -73,7 +79,7 @@ DATA_TAB_2 = '\t\t   '
 DATA_TAB_3 = '\t\t\t   '
 DATA_TAB_4 = '\t\t\t\t   '
 
-print("Grott Growatt logging monitor")    
+print("Grott Growatt logging monitor : " + verrel)    
 
 #Proces commandline parameters
 parser = argparse.ArgumentParser(prog='grott')
@@ -113,6 +119,9 @@ if config.has_option("Growatt","port"): growattport = config.getint("Growatt","p
 if config.has_option("MQTT","ip"): mqttip = config.get("MQTT","ip")
 if config.has_option("MQTT","port"): mqttport = config.getint("MQTT","port")
 if config.has_option("MQTT","topic"): mqtttopic = config.get("MQTT","topic")
+if config.has_option("MQTT","auth"): mqttauth = config.getboolean("MQTT","auth")
+if config.has_option("MQTT","user"): mqttuser = config.get("MQTT","user")
+if config.has_option("MQTT","password"): mqttpsw = config.get("MQTT","password")
 
 #Print processed settings 
 if verbose : 
@@ -125,6 +134,9 @@ if verbose :
     print("\tmqttip:      \t",mqttip)
     print("\tmqttport:    \t",mqttport)
     print("\tmqtttopic:   \t",mqtttopic)
+    print("\tmqtttauth:   \t",mqttauth)
+    print("\tmqttuser:   \t",mqttuser)
+    print("\tmqttpsw:   \t",mqttpsw)                       #scramble output if tested!
     print("\tgrowattip:   \t",growattip)
     print("\tgrowattport: \t",growattport)
 
@@ -134,6 +146,10 @@ offset = 6
 #if compat == "True": offset = valueoffset                          #set offset for older inverter types or after record change by Growatt
 if compat: offset = int(valueoffset)                                #set offset for older inverter types or after record change by Growatt
 if verbose: print("\nGrott value location offset: ", offset,"\tCompat mode: ", compat)
+
+#prepare MQTT security
+if not mqttauth: pubauth = None;
+else: pubauth = dict(username=mqttuser, password=mqttpsw) 
 
 def main():
     conn = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.ntohs(3))
@@ -234,7 +250,8 @@ def main():
                                     break
                         
                         else: 
-                            result_string = message
+#changed 1.07               result_string = message;                                                                                        
+                            result_string = message.hex();                                                                
                             if(result_string.find(SN) > -1):
                                 serialfound = True
                                 if verbose: print(TAB_2 + 'Growatt unscrambled data processed for: ', bytearray.fromhex(SN).decode())
@@ -295,7 +312,8 @@ def main():
                                 #    mqttclient.publish(mqtttopic, payload=jsonmsg, qos=0, retain=False)   
                                 if not nomqtt:
                                     try: 
-                                        publish.single(mqtttopic, payload=jsonmsg, qos=0, retain=False, hostname=mqttip,port=mqttport, client_id=inverterid, keepalive=5)
+#changed in v1.07                       publish.single(mqtttopic, payload=jsonmsg, qos=0, retain=False, hostname=mqttip,port=mqttport, client_id=inverterid, keepalive=5)
+                                        publish.single(mqtttopic, payload=jsonmsg, qos=0, retain=False, hostname=mqttip,port=mqttport, client_id=inverterid, keepalive=5, auth=pubauth)
                                         if verbose: print(TAB_2 + 'MQTT message message sent') 
                                     except TimeoutError:     
                                         if verbose: print(TAB_2 + 'MQTT connection time out error') 
