@@ -24,10 +24,12 @@ Version 1.0.6: fix error with parameter processing from .ini file (compat = True
 
 Version 1.0.7: fix error with unscrambled growatt record (shinelan support) and add option for mqtt user/password authentication
 
+Version 1.0.8: Bug fix
+
 Copy grott.service in /etc/systemd/system directory for running grott as a deamon (see wiki how to use services)
 Be aware the assumption is that grott.py and grott.ini are installed in /home/pi/growatt. grott.service need to be modified if other directory is used. 
 
-The Grott monitor is tested with a Growatt 1500-s inverter with a ShineWIFI-S wifi device
+The Grott monitor is tested with a Growatt 1500-s inverter with a ShineWIFI-S wifi device and a Growatt 3000-s with Shinelan.
 
 ***************************************
 Since 23 March 2020 the Growatt record layout seems to be changed. For my configuration it is needed to change .ini file with:
