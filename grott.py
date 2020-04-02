@@ -31,8 +31,10 @@
 #Done   in 1.0.7
 #       Resolved problem with unecrypted records
 #       added authentication (user / password) for MQTT, specify in MQTT section of ini auth = False (default ) or True and user = "xxxxxxx" (grott : default) password = "xxxxx" (default : growatt2020)
+#Done   in 1.0.8
+#       Really solved problem with unecrypted records
 
-verrel = "1.0.7"
+verrel = "1.0.8"
 
 import socket
 import struct
@@ -135,8 +137,8 @@ if verbose :
     print("\tmqttport:    \t",mqttport)
     print("\tmqtttopic:   \t",mqtttopic)
     print("\tmqtttauth:   \t",mqttauth)
-    print("\tmqttuser:   \t",mqttuser)
-    print("\tmqttpsw:   \t",mqttpsw)                       #scramble output if tested!
+    print("\tmqttuser:    \t",mqttuser)
+    print("\tmqttpsw:     \t",mqttpsw)                       #scramble output if tested!
     print("\tgrowattip:   \t",growattip)
     print("\tgrowattport: \t",growattport)
 
@@ -204,20 +206,32 @@ def main():
                             print(TAB_2 + 'Growatt original Data:')
                             print(format_multi_line(DATA_TAB_3, tcp.data))
 
-                        message = list(tcp.data)
-                        nmessage = len(message)
-
-                        # Create mask and convert to hexadecimal
-                        mask = "Growatt"
-                        hex_mask = ['{:02x}'.format(ord(x)) for x in mask]
-                        nmask = len(hex_mask)
-                                                                        
-                        # Determine how many bytes are left if we cycle mask N times over the message
-                        remainder = nmessage % nmask
+#changed 1.08           message = list(tcp.data)
+#changed 1.08           nmessage = len(message)
+#changed 1.08
+#changed 1.08           # Create mask and convert to hexadecimal
+#changed 1.08           mask = "Growatt"
+#changed 1.08           hex_mask = ['{:02x}'.format(ord(x)) for x in mask]
+#changed 1.08           nmask = len(hex_mask)
+#changed 1.08                                                           
+#changed 1.08           # Determine how many bytes are left if we cycle mask N times over the message
+#changed 1.08           remainder = nmessage % nmask
                         
                         # reset serialnumber found flag  
                         serialfound = False 
                         if decrypt: 
+                            
+                            message = list(tcp.data)
+                            nmessage = len(message)
+
+                            # Create mask and convert to hexadecimal
+                            mask = "Growatt"
+                            hex_mask = ['{:02x}'.format(ord(x)) for x in mask]
+                            nmask = len(hex_mask)
+                                                                        
+                            # Determine how many bytes are left if we cycle mask N times over the message
+                            remainder = nmessage % nmask
+                            
                             # We will now try applying the bitmask from the start of the message, and if not succesful shift one byte per loop until something readable comes out
                             for i in range(0,nmask):
                                 # Determine size of startarray and endarray
@@ -242,28 +256,36 @@ def main():
                                 #Uncomment result below for testing masked data with known invertid 
                                 #result = [0,17,114,106,119,184,117,112,74,80,67,50,56,49,56,51,51,66,81,77,66,50,56,50,51,50,54,49,18,12,3,15,21,43,2,0,0,0,44,0,0,0,0,0,0,7,174,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,19,134,9,69,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,16,0,0,3,82,0,30,208,7,0,214,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,196,0,0,0,0,0,45,0,89,78,32,0,0,0,0,0,0,0,17,0,0,3,126,0,0,0,0,0,0,0,0,0,0,3,126,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10,0,1,9,140,5,3,5,13,0,20,9,240,64,116,0,0,14,135,0,0,13,191,0,0,0,3,0,42,0,0,0,0,0,0,0,0,171,61]
                                 
-                                result_string = "".join("{:02x}".format(n) for n in result)
+                                result_string = "".join("{:02x}".format(n) for n in result)  
                                 
                                 if(result_string.find(SN) > -1):
                                     serialfound = True
                                     if verbose: print(TAB_2 + 'Growatt scrambled data processed for: ', bytearray.fromhex(SN).decode())
                                     break
+                                    
+                            
                         
                         else: 
 #changed 1.07               result_string = message;                                                                                        
-                            result_string = message.hex();                                                                
+#changed 1.08               result_string = message.hex(); 
+                            result_string = tcp.data.hex();                           
+                                                                
                             if(result_string.find(SN) > -1):
                                 serialfound = True
                                 if verbose: print(TAB_2 + 'Growatt unscrambled data processed for: ', bytearray.fromhex(SN).decode())
-                                break
+#changed 1.08                   break
                             else: 
                                 if verbose: print(TAB_2 + 'Growatt unscrambled data processed no matching inverter id found')
-                                                                     
+                                
+                        if verbose: 
+                                    print(TAB_2 + 'Growatt plain data:')
+                                    print(format_multi_line(DATA_TAB_3, result_string)) 
+                                    
                         if serialfound == True:
                             #Change in trace in future
-                            if verbose: 
-                                print(TAB_2 + 'Growatt unscrambled data:')
-                                print(format_multi_line(DATA_TAB_3, result_string))     
+#changed 1.08               if verbose: 
+#changed 1.08                  print(TAB_2 + 'Growatt unscrambled data:')
+#changed 1.08                  print(format_multi_line(DATA_TAB_3, result_string))     
                                 
                             if verbose: print(TAB_2 + 'Growatt processing values for: ', bytearray.fromhex(SN).decode())
                             
