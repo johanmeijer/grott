@@ -33,8 +33,10 @@
 #       added authentication (user / password) for MQTT, specify in MQTT section of ini auth = False (default ) or True and user = "xxxxxxx" (grott : default) password = "xxxxx" (default : growatt2020)
 #Done   in 1.0.8
 #       Really solved problem with unecrypted records
+#Done   in 1.0.9 
+#       Fix json message for pv1watt, add pv1voltage, pv2voltage, pv1current, pv2current, pvtemp;
 
-verrel = "1.0.8"
+verrel = "1.0.9"
 
 import socket
 import struct
@@ -295,17 +297,24 @@ def main():
                             pvstatus = int(result_string[snstart+offset*2+15*2:snstart+offset*2+15*2+4],16)
                             #Only process value if pvstatus is oke (this is because unexpected pvstatus of 257)
                             if pvstatus == 0 or pvstatus == 1:
+                                pvpowerin = int(result_string[snstart+offset*2+17*2:snstart+offset*2+17*2+8],16)
+                                pv1voltage = int(result_string[snstart+offset*2+21*2:snstart+offset*2+21*2+4],16)
+                                pv1current = int(result_string[snstart+offset*2+23*2:snstart+offset*2+23*2+4],16)
                                 pv1watt    = int(result_string[snstart+offset*2+25*2:snstart+offset*2+25*2+8],16)
+                                pv2voltage = int(result_string[snstart+offset*2+29*2:snstart+offset*2+29*2+4],16)
+                                pv2current = int(result_string[snstart+offset*2+31*2:snstart+offset*2+31*2+4],16)
                                 pv2watt    = int(result_string[snstart+offset*2+33*2:snstart+offset*2+33*2+8],16)
                                 pvpowerout = int(result_string[snstart+offset*2+37*2:snstart+offset*2+37*2+8],16)
                                 pvfrequentie = int(result_string[snstart+offset*2+41*2:snstart+offset*2+41*2+4],16)
                                 pvgridvoltage = int(result_string[snstart+offset*2+43*2:snstart+offset*2+43*2+4],16)
                                 pvenergytoday= int(result_string[snstart+offset*2+67*2:snstart+offset*2+67*2+8],16)
                                 pvenergytotal= int(result_string[snstart+offset*2+71*2:snstart+offset*2+71*2+8],16)
+                                pvtemperature = int(result_string[snstart+offset*2+79*2:snstart+offset*2+79*2+4],16)
                                 
                                 if verbose:
                                     print(TAB_3 + "pvserial:      ", codecs.decode(pvserial, "hex").decode('utf-8'))
                                     print(TAB_3 + "pvstatus:      ", pvstatus) 
+                                    print(TAB_3 + "pvpowerin:     ", pvpowerin/10)
                                     print(TAB_3 + "pvpowerout:    ", pvpowerout/10)
                                     print(TAB_3 + "pvenergytoday: ", pvenergytoday/10)
                                     print(TAB_3 + "pvenergytotal: ", pvenergytotal/10)
@@ -313,18 +322,29 @@ def main():
                                     print(TAB_3 + "pv2watt:       ", pv2watt/10)
                                     print(TAB_3 + "pvfrequentie:  ", pvfrequentie/100)
                                     print(TAB_3 + "pvgridvoltage: ", pvgridvoltage/10)
+                                    print(TAB_3 + "pv1voltage:    ", pv1voltage/10)
+                                    print(TAB_3 + "pv1current:    ", pv1current/10)
+                                    print(TAB_3 + "pv2voltage:    ", pv2voltage/10)
+                                    print(TAB_3 + "pv2current:    ", pv2current/10)
+                                    print(TAB_3 + "pvtemperature: ", pvtemperature/10)
                                 
                                 #create JSON message                          
                                 jsonmsg = json.dumps({"device":inverterid,"time":datetime.datetime.utcnow().replace(microsecond=0).isoformat(),
                                     "values":{
                                                 "pvstatus":pvstatus,
                                                 "pv1watt":pv1watt,
-                                                "pv2watt:":pv2watt,
+                                                "pv2watt":pv2watt,
+                                                "pvpowerin":pvpowerin,
                                                 "pvpowerout":pvpowerout,
                                                 "pvfrequentie":pvfrequentie,
                                                 "pvgridvoltage":pvgridvoltage,                             
                                                 "pvenergytoday":pvenergytoday,
-                                                "pvenergytotal":pvenergytotal}
+                                                "pvenergytotal":pvenergytotal,
+                                                "pv1voltage":pv1voltage,
+                                                "pv2voltage":pv2voltage,
+                                                "pv1current":pv1current,
+                                                "pv2current":pv2current,
+                                                "pvtemperature":pvtemperature}
                                                 })
                                 if verbose:
                                     print(TAB_2 + "MQTT jsonmsg: ")        
