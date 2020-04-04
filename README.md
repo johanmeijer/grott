@@ -26,6 +26,8 @@ Version 1.0.7: fix error with unscrambled growatt record (shinelan support) and 
 
 Version 1.0.8: Bug fix
 
+Version 1.0.9: Fixed json message for pv2watt, add pvinput, pv1voltage, pv2voltage, pv1current, pv2current, pvtemp;
+
 Copy grott.service in /etc/systemd/system directory for running grott as a deamon (see wiki how to use services)
 Be aware the assumption is that grott.py and grott.ini are installed in /home/pi/growatt. grott.service need to be modified if other directory is used. 
 
