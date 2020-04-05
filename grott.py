@@ -35,8 +35,10 @@
 #       Really solved problem with unecrypted records
 #Done   in 1.0.9 
 #       Fix json message for pv1watt, add pv1voltage, pv2voltage, pv1current, pv2current, pvtemp;
+#Done   in 1.1.0 
+#       added pvipmtemperature to the json message
 
-verrel = "1.0.9"
+verrel = "1.1.0"
 
 import socket
 import struct
@@ -310,23 +312,25 @@ def main():
                                 pvenergytoday= int(result_string[snstart+offset*2+67*2:snstart+offset*2+67*2+8],16)
                                 pvenergytotal= int(result_string[snstart+offset*2+71*2:snstart+offset*2+71*2+8],16)
                                 pvtemperature = int(result_string[snstart+offset*2+79*2:snstart+offset*2+79*2+4],16)
+                                pvipmtemperature = int(result_string[snstart+offset*2+97*2:snstart+offset*2+97*2+4],16)
                                 
                                 if verbose:
-                                    print(TAB_3 + "pvserial:      ", codecs.decode(pvserial, "hex").decode('utf-8'))
-                                    print(TAB_3 + "pvstatus:      ", pvstatus) 
-                                    print(TAB_3 + "pvpowerin:     ", pvpowerin/10)
-                                    print(TAB_3 + "pvpowerout:    ", pvpowerout/10)
-                                    print(TAB_3 + "pvenergytoday: ", pvenergytoday/10)
-                                    print(TAB_3 + "pvenergytotal: ", pvenergytotal/10)
-                                    print(TAB_3 + "pv1watt:       ", pv1watt/10)
-                                    print(TAB_3 + "pv2watt:       ", pv2watt/10)
-                                    print(TAB_3 + "pvfrequentie:  ", pvfrequentie/100)
-                                    print(TAB_3 + "pvgridvoltage: ", pvgridvoltage/10)
-                                    print(TAB_3 + "pv1voltage:    ", pv1voltage/10)
-                                    print(TAB_3 + "pv1current:    ", pv1current/10)
-                                    print(TAB_3 + "pv2voltage:    ", pv2voltage/10)
-                                    print(TAB_3 + "pv2current:    ", pv2current/10)
-                                    print(TAB_3 + "pvtemperature: ", pvtemperature/10)
+                                    print(TAB_3 + "pvserial:         ", codecs.decode(pvserial, "hex").decode('utf-8'))
+                                    print(TAB_3 + "pvstatus:         ", pvstatus) 
+                                    print(TAB_3 + "pvpowerin:        ", pvpowerin/10)
+                                    print(TAB_3 + "pvpowerout:       ", pvpowerout/10)
+                                    print(TAB_3 + "pvenergytoday:    ", pvenergytoday/10)
+                                    print(TAB_3 + "pvenergytotal:    ", pvenergytotal/10)
+                                    print(TAB_3 + "pv1watt:          ", pv1watt/10)
+                                    print(TAB_3 + "pv2watt:          ", pv2watt/10)
+                                    print(TAB_3 + "pvfrequentie:     ", pvfrequentie/100)
+                                    print(TAB_3 + "pvgridvoltage:    ", pvgridvoltage/10)
+                                    print(TAB_3 + "pv1voltage:       ", pv1voltage/10)
+                                    print(TAB_3 + "pv1current:       ", pv1current/10)
+                                    print(TAB_3 + "pv2voltage:       ", pv2voltage/10)
+                                    print(TAB_3 + "pv2current:       ", pv2current/10)
+                                    print(TAB_3 + "pvtemperature:    ", pvtemperature/10)
+                                    print(TAB_3 + "pvipmtemperature: ", pvipmtemperature/10)
                                 
                                 #create JSON message                          
                                 jsonmsg = json.dumps({"device":inverterid,"time":datetime.datetime.utcnow().replace(microsecond=0).isoformat(),
@@ -344,7 +348,8 @@ def main():
                                                 "pv2voltage":pv2voltage,
                                                 "pv1current":pv1current,
                                                 "pv2current":pv2current,
-                                                "pvtemperature":pvtemperature}
+                                                "pvtemperature":pvtemperature,
+                                                "pvipmtemperature":pvipmtemperature}                                
                                                 })
                                 if verbose:
                                     print(TAB_2 + "MQTT jsonmsg: ")        
