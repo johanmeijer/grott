@@ -18,20 +18,16 @@ With node red it is possible to connect to use the MQTT data and create dashboar
 
 The program is written in python and can be started from the command line or linux services. Because the program is using sockets to capature the data, it is necessary to run it with SUDO rights. 
 
-Version 1.0.4: enables configuration file and commandline based parameter specification
-
-Version 1.0.6: fix error with parameter processing from .ini file (compat = True / valueoffset = xx) 
-
-Version 1.0.7: fix error with unscrambled growatt record (shinelan support) and add option for mqtt user/password authentication
-
-Version 1.0.8: Bug fix
-
-Version 1.0.9: Fixed json message for pv2watt, add pvinput, pv1voltage, pv2voltage, pv1current, pv2current, pvtemp;
-
 Copy grott.service in /etc/systemd/system directory for running grott as a deamon (see wiki how to use services)
 Be aware the assumption is that grott.py and grott.ini are installed in /home/pi/growatt. grott.service need to be modified if other directory is used. 
 
-The Grott monitor is tested with a Growatt 1500-s inverter with a ShineWIFI-S wifi device and a Growatt 3000-s with Shinelan.
+The Grott monitor is tested with a Growatt 1500-s inverter with a ShineWIFI-S wifi devic, a Growatt 3000-s with Shinelan and a Growatt 2500-MTL-S. 
+
+Version History: 
+
+Version 1.0.4: enables configuration file and commandline based parameter specification
+
+Version 1.0.6: fix error with parameter processing from .ini file (compat = True / valueoffset = xx) 
 
 ***************************************
 Since 23 March 2020 the Growatt record layout seems to be changed. For my configuration it is needed to change .ini file with:
@@ -42,3 +38,13 @@ valueoffset = 26
 
 Be aware to use a actual version of  grott.py (1.0.6 or above) for correct parameter processing
 ***************************************
+
+
+Version 1.0.7: fix error with unscrambled growatt record (shinelan support) and add option for mqtt user/password authentication
+
+Version 1.0.8: Bug fix
+
+Version 1.0.9: Fixed json message for pv2watt, add pvinput, pv1voltage, pv2voltage, pv1current, pv2current, pvtemp;
+
+Version 1.1.0: Added pvipmtemperature to json message (does not seems to be used for 1500-s) 
+
