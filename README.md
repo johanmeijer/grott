@@ -43,7 +43,7 @@ Pro / Cons:
     
     proxy mode: 
     + Simple configuration 
-    + Only Growatt IP records are being analysed and process by Grott 
+    + Only Growatt IP records are being analysed and processed by Grott 
     + Less resource intensive 
     + No sudo rights needed
     - If Grott is not running no data will be sent to the Growatt server
