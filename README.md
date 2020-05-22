@@ -15,11 +15,11 @@ https://github.com/sciurius/Growatt-WiFi-Tools
 http://123zonne-energie.ning.com/profiles/blogs/growatt-wifi-module-via-raspberry-pi-automatische-upload-naar
 (link not available anymore)
 
-Inspired by this solutions, I decided that I want a more generic solution. So I used the ideas and created an own solution based on routing the data via a Raspberry Pi (or any other Linux device) and process the growatt log data with a python program that sends a JSON message with status information to a MQTT broker (eg MOSQUITTO). 
+Inspired by this solutions, I decided that I want a more generic solution. So I used the ideas and created an own solution based on routing the data via a Raspberry Pi (or any other Linux device) and process the Growatt log data with a python program that sends a JSON message with status information to a MQTT broker (eg MOSQUITTO). 
 
 MQTT can be used to distribute the data to the applications who need it (eg node red, home assistant, domoticz).  
 
-I usenode red  to consume the MQTT data, create dashboards and sent it to other receivers like PVoutput or Domoticz. Node red can also enable the use of other tooling like influxDB/Grafana to capature and analyse the data. 
+I use node red  to consume the MQTT data, create dashboards and sent it to other receivers like PVoutput or Domoticz. Node red can also enable the use of other tooling like influxDB/Grafana to capature and analyse the data. 
 
 Grott (version 2+) has to modes: sniff and proxy. 
 
