@@ -1,50 +1,65 @@
 # Grott
 Growatt inverter monitor
 
-The growatt inverter with shine wifi adapter sends log data to the growatt (website) at the internet. At this website you can see detailed information on how the inverter is performing. 
+!!!! new in version 2.0.0: proxy mode. This mode does not require IP forwarding !!!  
 
-I was looking for a way the intercept this information and use it for my home domotica environment. 
+The growatt inverter with Shine wifi adapter sends log data to the growatt website at the internet. At this website you can see detailed information on how the inverter is performing. 
 
-Searching at the internet I find some site where people managed to intercept the data and send this information to pvoutput website. 
+I was looking for a way to intercept this information and use it within my home domotica environment. 
+
+Searching at the internet I find some sites where people managed to intercept the data and send this information to the pvoutput website. 
 See: 
 
 https://github.com/sciurius/Growatt-WiFi-Tools 
 
 http://123zonne-energie.ning.com/profiles/blogs/growatt-wifi-module-via-raspberry-pi-automatische-upload-naar
+(link not available anymore)
 
-Inspired by this solutions, I decided that I want a more generic solution. So I use the ideas and created an own solution based on routing the data (IP forwarding) via a Raspberry Pi and capture the growatt log data with a python ip packet sniffer (based on: https://github.com/buckyroberts/Python-Packet-Sniffer ) that sends a JSON message to a MQTT broker (eg MOSQUITTO). 
+Inspired by this solutions, I decided that I want a more generic solution. So I used the ideas and created an own solution based on routing the data via a Raspberry Pi (or any other Linux device) and process the growatt log data with a python program that sends a JSON message with status information to a MQTT broker (eg MOSQUITTO). 
 
-With node red it is possible to connect to use the MQTT data and create dashboard or sent it to other receivers like pvoutput or Domoticz. 
+With node red it is possible to consume the MQTT data and create dashboard or sent it to other receivers like PVoutput or Domoticz. Node red can also enable the use of other tooling like influxDB/Grafana to capature and analyse the data. 
 
-The program is written in python and can be started from the command line or linux services. Because the program is using sockets to capature the data, it is necessary to run it with SUDO rights. 
+Grott (version 2+) has to modes: sniff and proxy. 
+
+In sniff mode (default and compatable with older Grott versions) IP sniffering technology is used (based on: https://github.com/buckyroberts/Python-Packet-Sniffer). In this mode the data needs to be "re-routed" using linux IP forwarding on the device Grott is running. In this mode Grott "sees" every IP package and when a Growatt TCP packages passes it will be processed and a MQTT will be sent if inverter status information is detected. 
+
+With the new proxy mode Grott is listening on a IP port (default 5279), processes the data (sent MQTT message) and routes the original packet to the growatt website. 
+
+The new mode functionality can be enabled by: 
+
+- mode = proxy in the conf.ini file 
+- m proxy parameter during startup
+
+Pro / Cons: 
+
+    sniff mode
+    + Data will also be routed to the growatt server if Grott is not active
+    - All TCP packages (also not growatt) need to be processed by Grott. 
+      This is more resource (processor) intesive and can have a negative impact on the device performance.
+    - Configure IP forwarding can be complex if a lot of other network routing is configured (e.g. by Docker). 
+    - Sudo rights necessary to allow network sniffering
+    
+    proxy mode: 
+    + Simple configuration 
+    + Only Growatt IP records are being analysed and process by Grott 
+    + Less resource intensive 
+    + No sudo rights needed
+    - If Grott is not running no data will be sent to the Growatt server
+
+The program is written in python and can be started from the command line or linux services. In sniff mode it is necessary to run Grott with SUDO rights. 
 
 Copy grott.service in /etc/systemd/system directory for running grott as a deamon (see wiki how to use services)
-Be aware the assumption is that grott.py and grott.ini are installed in /home/pi/growatt. grott.service need to be modified if other directory is used. 
+
+Be aware the assumption is that Grott is installed in /home/pi/growatt. grott.service Needs to be modified if an other directory is used. 
+
+The following modules are needed the use Grott:
+- grott.py
+- grott.ini
+- grottconf.py
+- grottdata.py
+- grottproxy.py
+- grottsniffer.py
 
 The Grott monitor is tested with a Growatt 1500-s inverter with a ShineWIFI-S wifi devic, a Growatt 3000-s with Shinelan and a Growatt 2500-MTL-S. 
 
-Version History: 
-
-Version 1.0.4: enables configuration file and commandline based parameter specification
-
-Version 1.0.6: fix error with parameter processing from .ini file (compat = True / valueoffset = xx) 
-
-***************************************
-Since 23 March 2020 the Growatt record layout seems to be changed. For my configuration it is needed to change .ini file with:
-
-compat = True
-
-valueoffset = 26
-
-Be aware to use a actual version of  grott.py (1.0.6 or above) for correct parameter processing
-***************************************
-
-
-Version 1.0.7: fix error with unscrambled growatt record (shinelan support) and add option for mqtt user/password authentication
-
-Version 1.0.8: Bug fix
-
-Version 1.0.9: Fixed json message for pv2watt, add pvinput, pv1voltage, pv2voltage, pv1current, pv2current, pvtemp;
-
-Version 1.1.0: Added pvipmtemperature to json message (does not seems to be used for 1500-s) 
-
+Version History: see Version_history.txt file. 
