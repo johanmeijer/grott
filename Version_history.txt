@@ -39,3 +39,5 @@ Version history
 #Done   in 2.0.0
 #       Enable proxy functionality 
 #       Streamline code
+#Done   in 2.0.1
+#       Repair mode setting in .ini  
