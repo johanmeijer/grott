@@ -12,7 +12,7 @@
 
 # Updated: 2020-05-22
 
-verrel = "2.0.0"
+verrel = "2.0.1"
 
 import sys
 
@@ -50,4 +50,4 @@ if conf.mode == 'sniff':
             sys.exit(1)
 
 else:
-    print("undefined mode")
+    print("- Grott undefined mode")

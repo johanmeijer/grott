@@ -31,7 +31,7 @@ Version history
 #Done   in 1.0.9 
 #       Fix json message for pv1watt, add pv1voltage, pv2voltage, pv1current, pv2current, pvtemp;
 #Done   in 1.1.0 
-#       added pvipmtemperature to the json message
+#       added pvipmtemperature to the json message (not used in 1500s)
 #Done   in 1.1.1 
 #       Only test version no real changes 
 #Done   in 1.1.2 

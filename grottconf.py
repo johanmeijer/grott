@@ -113,10 +113,11 @@ class Conf :
         self.trace = args.trace
         if (args.c != None) : self.cfgfile=args.c
         if (args.o != None) : sys.stdout = open(args.o, 'w')
-        if (args.m == "proxy") : 
-            self.mode = "proxy"
-        else :
-            self.mode = "sniff"                                         # default
+        if (args.m != None) : 
+            if (args.m == "proxy") : 
+                self.mode = "proxy"
+            else :
+                self.mode = "sniff"                                         # default
 
         if self.verbose : 
             print("\nGrott Command line parameters processed:")
