@@ -1,0 +1,41 @@
+Version history 
+#Done in 1.0.4
+#       Clean up coding 
+#       Test with real data 
+#       implemetd mqtt 
+#       implemented scrambled vs nonscrambled (needs to be tested in with old inverter)
+#       Growatt old wifi release support (needs to be tested with old inverter)           
+#       Read config file and commandline parms 
+#       Verbose vs non verbose 
+#       Enable running as a services and automatic startup after reboot 
+#       Code review by peer
+#       Added in github: https://github.com/johanmeijer/grott
+#       Document and add service example to git
+#
+#Done   in 1.0.5
+#V      Changed some verbose print output to trace ouput to keep verbose messages clean and lean 
+#V      Add more relevant values to JSON message
+#V      Make print data unbufferd to see messages direct in journal when running as as service (python -u parm added in grott.service )
+#V      MQTT error handling improved
+#V      Process and sent values only if PVstatus is 0 or 1. Detected unexpected values while pvstatus was 257. This an quick fix. Has to look for realroot cause reason (probably not a monitor record) 
+#V      included messages for problem detection / solving of unexpected PVSTATUS = 257 issue
+#
+#Done   in 1.0.6
+#       Resolved problem with specifing offset in .ini. Change in record by growatt (Since 23 March 2020) now need a offset of 26! 
+#       Specify valueoffset = 26 and compat = True in ini file!
+#Done   in 1.0.7
+#       Resolved problem with unecrypted records
+#       added authentication (user / password) for MQTT, specify in MQTT section of ini auth = False (default ) or True and user = "xxxxxxx" (grott : default) password = "xxxxx" (default : growatt2020)
+#Done   in 1.0.8
+#       Really solved problem with unecrypted records
+#Done   in 1.0.9 
+#       Fix json message for pv1watt, add pv1voltage, pv2voltage, pv1current, pv2current, pvtemp;
+#Done   in 1.1.0 
+#       added pvipmtemperature to the json message
+#Done   in 1.1.1 
+#       Only test version no real changes 
+#Done   in 1.1.2 
+#       Change MQTT publish.single keepalive =60 (default), this seem to solve disconnect error (client was always connected, is not the intention with publish.single)
+#Done   in 2.0.0
+#       Enable proxy functionality 
+#       Streamline code
