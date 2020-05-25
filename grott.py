@@ -12,7 +12,7 @@
 
 # Updated: 2020-05-22
 
-verrel = "2.0.1"
+verrel = "2.0.2"
 
 import sys
 
@@ -36,7 +36,7 @@ if conf.mode == 'proxy':
         except KeyboardInterrupt:
             print("Ctrl C - Stopping server")
             try: 
-                proxy.on_close()
+                proxy.on_close(conf)
             except:     
                 print("\t - no ports to close")
             sys.exit(1)

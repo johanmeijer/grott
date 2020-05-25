@@ -1,6 +1,6 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2020-05-22
+# Updated: 2020-05-25
 
 import configparser, sys, argparse
 
@@ -48,7 +48,7 @@ class Conf :
         if config.has_option("Generic","mode"): self.mode = config.get("Generic","mode")
         if config.has_option("Generic","port"): self.grottport = config.getint("Generic","port")
         if config.has_option("Generic","valueoffset"): self.valueoffset = config.get("Generic","valueoffset")
-        #if config.has_option("Growatt","ip"): self.growattip = config.get("Growatt","ip")          #not used server address is automatically picked if bind to 0.0.0.0
+        if config.has_option("Growatt","ip"): self.growattip = config.get("Growatt","ip")          
         if config.has_option("Growatt","port"): self.growattport = config.getint("Growatt","port")
         if config.has_option("MQTT","ip"): self.mqttip = config.get("MQTT","ip")
         if config.has_option("MQTT","port"): self.mqttport = config.getint("MQTT","port")
