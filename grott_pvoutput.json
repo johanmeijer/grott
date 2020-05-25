@@ -1,1 +1,111 @@
-[{"id":"f3d93408.21e848","type":"function","z":"9428f413.b7dc48","name":"Create PV Message for Solar PVOUTPUT ","func":"//Create PVOUTPUT Message ;\nmsg.headers={};\n//Create time\nvar date = new Date();\nday = date.getDate();\nif (day < 10) {day = \"0\" + day} \nmonth = date.getMonth()+1;\nif (month < 10) {month = \"0\" + month}\nyear = date.getFullYear();\n//node.warn(year);\nhour = date.getHours();\nif (hour < 10) {hour = \"0\" + hour}\nminute = date.getMinutes();\nif (minute < 10) {minute = \"0\" + minute}\n//Create Headers\nmsg.headers[\"X-Pvoutput-Apikey\"] = \"your api key\";\nmsg.headers[\"X-Pvoutput-SystemId\"] = 12345          //\"your system id\";\nmsg.headers[\"content-type\"]=\"application/x-www-form-urlencoded\"\n//Create Payload ]\nd = \"\"+year+month+day;\nt = hour+\":\"+minute; \n//Growatt publish pvenergytoday in 0.1 KW, PVOUTPUT.ORG expext watt hours.\nv1 = msg.payload.values.pvenergytoday*100\nv2 = msg.payload.values.pvpowerout/10\nmsg.payload = \"&d=\"+d+\"&t=\"+t+\"&v1=\"+v1+\"&v2=\"+v2;\n//optional you can also sent other value to pvoutput.org \n//This can be done in a second flow also\n//the flows will be combined by PVOUTPUT.ORG\n//you have to retrieve value from (smart) energy  meter and outside temperature indicator\n//v3 = 12345     //energy used today (watts)\n//v4 = 1234.5    //energy used currently (watts)\n//v5 = 12.3      //temeprature  \n//v6 = 123.4     //voltage\n//msg.payload = \"&d=\"+d+\"&t=\"+t+\"&v3=\"+v3+\"&v4=\"+v4+\"&v5=\"+v5+\"&v6=\"+v6;\nreturn msg;\n","outputs":1,"noerr":0,"x":800,"y":320,"wires":[["e8e9b02.d99825"]]}]
+[
+    {
+        "id": "9428f413.b7dc48",
+        "type": "tab",
+        "label": "Pvoutput.org",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "7727fb44.7557e4",
+        "type": "mqtt in",
+        "z": "9428f413.b7dc48",
+        "name": "Growatt Energie",
+        "topic": "energy/growatt",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "7fb3e06.2d91f2",
+        "x": 200,
+        "y": 320,
+        "wires": [
+            [
+                "f95d3427.1c4a98"
+            ]
+        ]
+    },
+    {
+        "id": "f95d3427.1c4a98",
+        "type": "json",
+        "z": "9428f413.b7dc48",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 410,
+        "y": 320,
+        "wires": [
+            [
+                "f3d93408.21e848"
+            ]
+        ]
+    },
+    {
+        "id": "e8e9b02.d99825",
+        "type": "http request",
+        "z": "9428f413.b7dc48",
+        "name": "PVOUTPUT.ORG",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": false,
+        "url": "https://pvoutput.org/service/r2/addstatus.jsp",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "x": 1030,
+        "y": 320,
+        "wires": [
+            [
+                "7210cbfd.3524c4"
+            ]
+        ]
+    },
+    {
+        "id": "f3d93408.21e848",
+        "type": "function",
+        "z": "9428f413.b7dc48",
+        "name": "Create PV Message for Solar PVOUTPUT ",
+        "func": "//Create PVOUTPUT Message ;\nmsg.headers={};\n//Create time\nvar date = new Date();\nday = date.getDate();\nif (day < 10) {day = \"0\" + day} \nmonth = date.getMonth()+1;\nif (month < 10) {month = \"0\" + month}\nyear = date.getFullYear();\n//node.warn(year);\nhour = date.getHours();\nif (hour < 10) {hour = \"0\" + hour}\nminute = date.getMinutes();\nif (minute < 10) {minute = \"0\" + minute}\n//Create Headers\nmsg.headers[\"X-Pvoutput-Apikey\"] = \"your api key\";\nmsg.headers[\"X-Pvoutput-SystemId\"] = 12345          //\"your system id\";\nmsg.headers[\"content-type\"]=\"application/x-www-form-urlencoded\"\n//Create Payload ]\nd = \"\"+year+month+day;\nt = hour+\":\"+minute; \n//Growatt publish pvenergytoday in 0.1 KW, PVOUTPUT.ORG expext watt hours.\nv1 = msg.payload.values.pvenergytoday*100\nv2 = msg.payload.values.pvpowerout/10\nmsg.payload = \"&d=\"+d+\"&t=\"+t+\"&v1=\"+v1+\"&v2=\"+v2;\n//optional you can also sent other value to pvoutput.org \n//This can be done in a second flow also\n//the flows will be combined by PVOUTPUT.ORG\n//you have to retrieve value from (smart) energy  meter and outside temperature indicator\n//v3 = 12345     //energy used today (watts)\n//v4 = 1234.5    //energy used currently (watts)\n//v5 = 12.3      //temeprature  \n//v6 = 123.4     //voltage\n//msg.payload = \"&d=\"+d+\"&t=\"+t+\"&v3=\"+v3+\"&v4=\"+v4+\"&v5=\"+v5+\"&v6=\"+v6;\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 700,
+        "y": 320,
+        "wires": [
+            [
+                "e8e9b02.d99825"
+            ]
+        ]
+    },
+    {
+        "id": "7210cbfd.3524c4",
+        "type": "debug",
+        "z": "9428f413.b7dc48",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 1270,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "7fb3e06.2d91f2",
+        "type": "mqtt-broker",
+        "z": "",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    }
+]
