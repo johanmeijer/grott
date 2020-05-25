@@ -62,6 +62,10 @@ The following modules are needed the use Grott:
 - grottproxy.py
 - grottsniffer.py
 
-The Grott monitor is tested with a Growatt 1500-s inverter with a ShineWIFI-S wifi devic, a Growatt 3000-s with Shinelan and a Growatt 2500-MTL-S. 
+The Grott monitor is tested on Raspian (RPI) and Ubuntu, with
++ 1500-S (ShineWiFi)
++ 3000-S  (Shinelan)
++ 2500-MTL-S (ShineWiFi)
++ 4200-MTL-S (Shinelan)
 
 Version History: see Version_history.txt file. 
