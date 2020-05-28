@@ -62,10 +62,12 @@ The following modules are needed the use Grott:
 - grottproxy.py
 - grottsniffer.py
 
-The Grott monitor is tested on Raspian (RPI) and Ubuntu, with
+The Grott monitor is tested on Raspian (Raspberry PI) and Ubuntu, with
 + 1500-S (ShineWiFi)
 + 3000-S  (Shinelan)
 + 2500-MTL-S (ShineWiFi)
 + 4200-MTL-S (Shinelan)
+
+Grott also runs on Windows 10 (in proxy mode only).
 
 Version History: see Version_history.txt file. 
