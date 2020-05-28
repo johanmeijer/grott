@@ -10,9 +10,9 @@
 #
 #       For version history see: version_history.txt
 
-# Updated: 2020-05-22
+# Updated: 2020-05-28
 
-verrel = "2.0.2"
+verrel = "2.0.3"
 
 import sys
 
@@ -22,9 +22,6 @@ from grottsniffer import Sniff
 
 #proces config file
 conf = Conf(verrel)
-
-#Proces commandline paramete rs
-conf.parser() 
 
 #print configuration 
 if conf.verbose: conf.print()

@@ -1,6 +1,6 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2020-05-25
+# Updated: 2020-05-28
 
 import configparser, sys, argparse
 
@@ -37,6 +37,9 @@ class Conf :
         self.mqttpsw = "growatt2020"
 
         print("Grott Growatt logging monitor : " + self.verrel)    
+
+        #Proces commandline parameters
+        self.parser() 
 
         #proces configuration file
         config = configparser.ConfigParser()

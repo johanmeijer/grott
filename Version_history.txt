@@ -43,3 +43,5 @@ Version history
 #       Repair mode setting in .ini 
 #Done   in 2.0.2
 #       Repair Handling Growatt server IP address in ini file 
+#Done   in 2.0.3
+#       Repair  -c [config file] parameter processing
