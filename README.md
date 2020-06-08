@@ -5,6 +5,10 @@ Growatt inverter monitor
 
 The growatt inverter with Shine wifi adapter sends log data to the growatt website at the internet. At this website you can see detailed information on how the inverter is performing. 
 
+- Please look at the wiki for detailed information on installation and use!
+
+Background: 
+
 I was looking for a way to intercept this information and use it within my home domotica environment. 
 
 Searching at the internet I find some sites where people managed to intercept the data and send this information to the pvoutput website. 
