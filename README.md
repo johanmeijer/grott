@@ -3,6 +3,8 @@ Growatt inverter monitor
 
 !!!! new in version 2.x : proxy mode. This mode does not require IP forwarding !!!  
 
+## Please use branche 2.2.1, this is the new stable version en will be promoted to master soon!!
+
 The growatt inverter with Shine wifi adapter sends log data to the growatt website at the internet. At this website you can see detailed information on how the inverter is performing. 
 
 - Please look at the wiki for detailed information on installation and use!
