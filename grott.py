@@ -10,9 +10,9 @@
 #
 #       For version history see: version_history.txt
 
-# Updated: 2020-09-30
+# Updated: 2020-05-28
 
-verrel = "2.2.1c"
+verrel = "2.0.3"
 
 import sys
 
@@ -23,11 +23,8 @@ from grottsniffer import Sniff
 #proces config file
 conf = Conf(verrel)
 
-#print configuration
+#print configuration 
 if conf.verbose: conf.print()
-
-#To test config only remove # below
-#sys.exit(1)
 
 if conf.mode == 'proxy':
         proxy = Proxy(conf)
