@@ -45,3 +45,47 @@ Version history
 #       Repair Handling Growatt server IP address in ini file 
 #Done   in 2.0.3
 #       Repair  -c [config file] parameter processing
+#2.0.4	Not published 
+#	    Preperation for Docker support
+#2.1.0 	
+#   Automatic Protocol detection (first step)
+#	Initial Support for shinelink lan box  
+#	Improve unscramble routine (preperation for server mode)
+#2.1.1 
+#	Enhanced docker support (more startup parms, env variable support 
+#   Improve / repair automatic protocol detection
+#   enable dynamic protocol layout (override existing layout, override pre-defined values)
+#   almost all .ini keywords available as env. variables start (see wiki for more details 
+2.1.2 
+#	Direct pvoutput.org support 
+#       in ini file
+#           in [mqtt]       mqtt = yes (default) or no (no mqtt processing)
+#           in [pvoutput]   pvoutput = no (default) or yes (send to pvoutput)
+#                           apikey =
+#                           systemid =
+#       new env. variables: gmqtt (yes/no)
+#                           gpvoutput(yes/no)
+#                           gpvapikey
+#                           gpvsystemid
+#       new grott command parm: -p (enables transmit pvoutput )
+2.1.3 (Not published, internal test only) 
+#	Changed automatic protocol conversion for wifi-x, growatt TL-X inverters 
+#   If available get date/time from invertor data record (prohibit wrong time if buffered data is sent after reconnect).  
+#        If not available server datetime will be used 
+#   First step to filter command comming from Growatt (to prevent unwanted remote changes or control of inverter and hacking). 
+#       Be aware data will still be sent to growatt!!
+2.2.0 
+#   (Only published as docker container for tests)
+#	Enhanced automatic protocol conversion (also allow sending saved records) 
+#   Create command filter from Growatt server (to prevent unwanted remote changes or control of inverter and hacking): blockcmd = True in .ini or -b/--blockcmd at startup
+#   Allow change IP address from Growatt server  if wanted for testing/changing (use only temporary!) noipf = True in .ini or -n/--noipf at startup
+#   Created and published docker images (see dockerhub: https://hub.docker.com/u/ledidobe) 
+#   Added json key "buffered" to MQTT message. If "buffered": "no", the record is actual,  
+#     if  "buffered":"yes" the record is send from the buffer in the inverter (saved) and created in the past (advise: use date/time in record, not actual date/time). 
+2.2.1 
+# Some minor (cosmetic) improvements on 2.2.0
+# Show inverter id = automatic if not specified in .ini
+# Show Grott ip address as default if not specified 
+# Show IP and Port messages during proxy startup
+2.2.1c
+# Minor cosmetic and stability changes
