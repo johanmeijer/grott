@@ -1,0 +1,29 @@
+FROM arm32v6/python:3.7-alpine
+
+ENV LANG en_US.UTF-8
+ENV LC_ALL en_US.UTF-8
+
+# Run updates
+# RUN apt-get clean 
+RUN apk update  
+RUN apk upgrade
+
+# Set the locale
+#RUN apk add -u locales && locale-gen en_US.UTF-8
+
+
+#COPY requirements.txt /app/requirements.txt
+#RUN pip3 install -r /app/requirements.txt
+RUN pip install paho-mqtt
+RUN pip install requests
+
+COPY grott.py /app/grott.py
+COPY grottconf.py /app/grottconf.py
+COPY grottdata.py /app/grottdata.py
+COPY grottproxy.py /app/grottproxy.py
+COPY grottsniffer.py /app/grottsniffer.py
+COPY grott.ini /app/grott.ini
+
+WORKDIR /app
+
+CMD ["python", "-u", "grott.py", "-v"]

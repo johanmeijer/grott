@@ -1,0 +1,17 @@
+version: '3.3'
+services:
+    grott:
+        network_mode: host
+        container_name: grott
+        restart: always
+        environment:
+            - gblockcmd=False 
+            - gnomqtt=False
+            - gmqttip=x.x.x.x
+            - gmqttauth=False
+            - gmqttuser=growatt
+            - gmqttpassword=growatt2020
+            - gpvoutput=False
+            - gpvapikey=yourapikey 
+            - gpvsystemid=12345
+        image: ledidobe/grott
