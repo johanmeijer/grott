@@ -56,7 +56,7 @@ class Sniff:
                             procdata(conf,self.tcp.data)    
                         else:     
                             if conf.verbose: print("\t - " + 'Data less then minimum record length, data not processed') 
-
+                            
                         
     # Other IPv4 Not used 
                 else:
