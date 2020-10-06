@@ -3,8 +3,24 @@ Growatt inverter monitor
 
 !!!! new in version 2.x : proxy mode. This mode does not require IP forwarding !!!  
 
-## Please use branche 2.2.1, this is the new stable version en will be promoted to master soon!!
+## Version > 2.2.1  
+### automatic protocol detection and processing
+Limited .ini configuration needed (inverterid, encryption, offset and record layout is automaticially detected)
+### Direct output to PVOutput.org (no mqtt processing needed). 
+Specify pvoutput = True and apikey and systemid in .ini file to enable it. 
+### Docker support 
+2 docker containers are created ledidobe/grottrpi (specific old RPI with ARM32) and ledidobe/grott (generic one, tested on synology NAS and Ubuntu). See https://hub.docker.com/search?q=ledidobe&type=image. 
+See issue 4 and 15 on how to use it (wiki will be updated soon)
+### Command Blocking / Filtering
+with blockcmd = True specified in .ini (configure/reboot) commands from outside to the inverter are blocked. This protects the inverter from beeing controlled from the outside while data exchange with server.growatt.com for reporting is still active.  
+### Use date/time from data record
+If date/time is available in the data (inserted by the inverter) this will be used. In this way buffered records will be sent with the original  creation time (in the past). 
+If date/time is not available in the data record the server time will be used (as it was originally). 
+In the mqtt message the  key buffered is added (yes/no) which indicates that the message is from the buffer (past) or actual. 
 
+# Testers always welcome. 
+
+## Short description: 
 The growatt inverter with Shine wifi adapter sends log data to the growatt website at the internet. At this website you can see detailed information on how the inverter is performing. 
 
 - Please look at the wiki for detailed information on installation and use!
@@ -73,6 +89,8 @@ The Grott monitor is tested on Raspian (Raspberry PI) and Ubuntu, with
 + 3000-S  (Shinelan)
 + 2500-MTL-S (ShineWiFi)
 + 4200-MTL-S (Shinelan)
++ 5000TL-X   (ShineWifi-X)
++ 3600TL-XE (ShineLink-X)
 
 Grott also runs on Windows 10 (in proxy mode only).
 
