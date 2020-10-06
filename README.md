@@ -1,9 +1,7 @@
 # Grott
-Growatt inverter monitor
+## The Growatt inverter monitor 
 
-!!!! new in version 2.x : proxy mode. This mode does not require IP forwarding !!!  
-
-## Version > 2.2.1  
+## New in Version > 2.2.1  
 ### automatic protocol detection and processing
 Limited .ini configuration needed (inverterid, encryption, offset and record layout is automaticially detected)
 ### Direct output to PVOutput.org (no mqtt processing needed). 
@@ -18,7 +16,6 @@ If date/time is available in the data (inserted by the inverter) this will be us
 If date/time is not available in the data record the server time will be used (as it was originally). 
 In the mqtt message the  key buffered is added (yes/no) which indicates that the message is from the buffer (past) or actual. 
 
-# Testers always welcome. 
 
 ## Short description: 
 The growatt inverter with Shine wifi adapter sends log data to the growatt website at the internet. At this website you can see detailed information on how the inverter is performing. 
@@ -47,9 +44,9 @@ Grott (version 2+) has to modes: sniff and proxy.
 
 In sniff mode (default and compatable with older Grott versions) IP sniffering technology is used (based on: https://github.com/buckyroberts/Python-Packet-Sniffer). In this mode the data needs to be "re-routed" using linux IP forwarding on the device Grott is running. In this mode Grott "sees" every IP package and when a Growatt TCP packages passes it will be processed and a MQTT will be sent if inverter status information is detected. 
 
-With the new proxy mode Grott is listening on a IP port (default 5279), processes the data (sent MQTT message) and routes the original packet to the growatt website. 
+With the proxy mode Grott is listening on a IP port (default 5279), processes the data (sent MQTT message) and routes the original packet to the growatt website. 
 
-The new mode functionality can be enabled by: 
+The proxy mode functionality can be enabled by: 
 
 - mode = proxy in the conf.ini file 
 - m proxy parameter during startup
@@ -68,11 +65,15 @@ Pro / Cons:
     + Only Growatt IP records are being analysed and processed by Grott 
     + Less resource intensive 
     + No sudo rights needed
+    + Blocking / Filtering of commands from the outside is possible
     - If Grott is not running no data will be sent to the Growatt server
 
 The program is written in python and can be started from the command line or linux services. In sniff mode it is necessary to run Grott with SUDO rights. 
+<br>
+Docker images are also available to run Grott in a docker conatiner. See the wike page on docker for more information.
 
-Copy grott.service in /etc/systemd/system directory for running grott as a deamon (see wiki how to use services)
+#### Grott as a Service 
+Copy grott.service in /etc/systemd/system directory for running grott as a deamon (see wiki how to use services for bot Linux as Windos)
 
 Be aware the assumption is that Grott is installed in /home/pi/growatt. grott.service Needs to be modified if an other directory is used. 
 
@@ -84,7 +85,7 @@ The following modules are needed the use Grott:
 - grottproxy.py
 - grottsniffer.py
 
-The Grott monitor is tested on Raspian (Raspberry PI) and Ubuntu, with
+The Grott monitor is tested on Raspian (Raspberry PI),Ubuntu and windows 10 (proxy only), with
 + 1500-S (ShineWiFi)
 + 3000-S  (Shinelan)
 + 2500-MTL-S (ShineWiFi)
@@ -92,6 +93,6 @@ The Grott monitor is tested on Raspian (Raspberry PI) and Ubuntu, with
 + 5000TL-X   (ShineWifi-X)
 + 3600TL-XE (ShineLink-X)
 
-Grott also runs on Windows 10 (in proxy mode only).
+The Docker images are tested RPI(arm32), Ubuntu and Synology NAS
 
-Version History: see Version_history.txt file. 
+#### Version History: see Version_history.txt file. 
