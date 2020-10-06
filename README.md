@@ -96,3 +96,4 @@ The Grott monitor is tested on Raspian (Raspberry PI),Ubuntu and windows 10 (pro
 The Docker images are tested RPI(arm32), Ubuntu and Synology NAS
 
 #### Version History: see Version_history.txt file. 
+#### Grott is a "hobby" project you can use it as it is (with the potential errors and imperfections). Remarks and requests for improvement are welcome. 
