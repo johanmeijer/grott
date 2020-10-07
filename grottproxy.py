@@ -149,7 +149,7 @@ class Proxy:
                             if conf.verbose : print("\t - Grott: Configure command not blocked : ", confcmd)    
                     else : 
                         #All configure inverter commands will be blocked
-                        conf.verbose : print("\t - Grott: Inverter Configure command detected")
+                        if conf.verbose : print("\t - Grott: Inverter Configure command detected")
             
             #allow records: 
             if header[12:16] in conf.recwl : blockflag = False     
