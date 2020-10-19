@@ -91,3 +91,5 @@ Version history
 # Minor cosmetic and stability changes
 2.2.1d
 # repair issue with automatic protocol detection
+2.2.2
+#Added support for MIN 36000-TL XE / With ShineLan

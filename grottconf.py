@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2020-09-28
-# Version 2.2.1d
+# Updated: 2020-10-19
+# Version 2.2.2
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -293,10 +293,11 @@ class Conf :
                          "5019",                                    #identify
                          "5050",                                    #Archived record
                          "5103",                                    #announce record
-                         "5104",                                    #data record    
+                         "5104",                                    #data record                          
                          "5116",                                    #ping    
                          "5119",                                    #identify
-                         "5050"                                     #Archived record
+                         "5150"                                     #Archived record
+                         
         } 
 
         try: 
@@ -562,6 +563,49 @@ class Conf :
             "pvtemperature"     : 530,         
             "pvipmtemperature"  : 534  
             }}     
+        
+        self.recorddict13 =  {"T065104X": {
+            "decrypt"           : "True",
+            "pvserial"          : 76,
+            "date"              : 116,
+            "pvstatus"          : 158, 
+            "pvpowerin"         : 162,    
+            "pv1voltage"        : 170,    
+            "pv1current"        : 174,            
+            "pv1watt"           : 178,           
+            "pv2voltage"        : 186,        
+            "pv2current"        : 190,        
+            "pv2watt"           : 194,        
+            "pvpowerout"        : 250,        
+            "pvfrequentie"      : 258,        
+            "pvgridvoltage"     : 262,        
+            "pvenergytoday"     : 354,         
+            "pvenergytotal"     : 362,         
+            "pvtemperature"     : 530,         
+            "pvipmtemperature"  : 534    
+            }}     
+
+        self.recorddict14 =  {"T065150X": {    
+            "decrypt"           : "True",
+            "pvserial"          : 76,
+            "date"              : 116,
+            "pvstatus"          : 158, 
+            "pvpowerin"         : 162,    
+            "pv1voltage"        : 170,    
+            "pv1current"        : 174,            
+            "pv1watt"           : 178,           
+            "pv2voltage"        : 186,        
+            "pv2current"        : 190,        
+            "pv2watt"           : 194,        
+            "pvpowerout"        : 250,        
+            "pvfrequentie"      : 258,        
+            "pvgridvoltage"     : 262,        
+            "pvenergytoday"     : 354,         
+            "pvenergytotal"     : 362,         
+            "pvtemperature"     : 530,         
+            "pvipmtemperature"  : 534    
+            }}     
+
 
         self.recorddict.update(self.recorddict1)
         self.recorddict.update(self.recorddict2)
@@ -575,7 +619,9 @@ class Conf :
         self.recorddict.update(self.recorddict10)
         self.recorddict.update(self.recorddict11)
         self.recorddict.update(self.recorddict12)
-        
+        self.recorddict.update(self.recorddict13)
+        self.recorddict.update(self.recorddict14)
+
         f = []
         print("\nGrott process json layout files")
         for (dirpath, dirnames, filenames) in walk('.'):            
