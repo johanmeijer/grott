@@ -92,6 +92,7 @@ The Grott monitor is tested on Raspian (Raspberry PI),Ubuntu and windows 10 (pro
 + 4200-MTL-S (Shinelan)
 + 5000TL-X   (ShineWifi-X)
 + 3600TL-XE (ShineLink-X)
++ 3600TL-XE (ShineLan)
 
 The Docker images are tested RPI(arm32), Ubuntu and Synology NAS
 
