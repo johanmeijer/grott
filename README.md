@@ -1,5 +1,8 @@
 # Grott
 ## The Growatt inverter monitor 
+## Be aware: the default grott.ini moved to examples directory 
+This file is deleted from the grott default directory to simply github installation (not overwrite your settings). 
+It is advised to copy this file into the Grott default directory (and customise it) during first time installation 
 
 ## New in Version > 2.2.1  
 ### automatic protocol detection and processing
