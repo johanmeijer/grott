@@ -1,13 +1,15 @@
 # grottdata.py processing data  functions
-# Updated: 2020-10-03
-# Version 2.2.1d
+# Updated: 2020-11-09
+# Version 2.2.4
 
-import time
+#import time
+from datetime import datetime
 import sys
 import struct
 import textwrap
 from itertools import cycle # to support "cycling" the iterator
-import json, datetime, codecs 
+import json, codecs 
+from distutils.util import strtobool
 # requests
 
 #import mqtt                       
@@ -50,7 +52,8 @@ def procdata(conf,data):
 
     header = "".join("{:02x}".format(n) for n in data[0:8])
     ndata = len(data)
-    
+    buffered = "nodetect"                                               # set buffer detection to nodetect (for compat mode), wil in auto detection changed to no or yes
+   
     # automatic detect protocol (decryption and protocol) only if compat = False!
     novalidrec = False
     if conf.compat is False : 
@@ -61,9 +64,13 @@ def procdata(conf,data):
         layout = "T" + header[6:8] + header[12:14] + header[14:16]
         if ndata > 375:  layout = layout + "X"
 
+        if header[14:16] == "50" : buffered = "yes"
+        else: buffered = "no" 
+
         try:
             if conf.verbose : print("\t - " + "layout   : ", layout)
-            conf.decrypt =  conf.recorddict[layout]["decrypt"]
+            #if bool(conf.recorddict[layout]["decrypt"]) 
+            conf.decrypt =  bool(strtobool(conf.recorddict[layout]["decrypt"]))
             if conf.verbose : print("\t - " + "decrypt  : ",conf.decrypt)
             #print("\t - " + "offset   : ", conf.offset)
         except: 
@@ -139,7 +146,7 @@ def procdata(conf,data):
         pvenergytotal= int(result_string[conf.recorddict[layout]["pvenergytotal"]:conf.recorddict[layout]["pvenergytotal"]+8],16)
         pvtemperature = int(result_string[conf.recorddict[layout]["pvtemperature"]:conf.recorddict[layout]["pvtemperature"]+4],16)
         pvipmtemperature = int(result_string[conf.recorddict[layout]["pvipmtemperature"]:conf.recorddict[layout]["pvipmtemperature"]+4],16)
-        if conf.recorddict[layout]["date"] > 0:
+        if conf.recorddict[layout]["date"] > 0 and (conf.gtime != "server" or buffered == "yes"):
             if conf.verbose: print("\t - " + 'Grott data record date/time processing started')
             #date
             pvyearI =  int(result_string[conf.recorddict[layout]["date"]:conf.recorddict[layout]["date"]+2],16)
@@ -161,16 +168,25 @@ def procdata(conf,data):
             pvsecondI = int(result_string[conf.recorddict[layout]["date"]+10:conf.recorddict[layout]["date"]+12],16)
             if pvsecondI < 10 : pvsecond = "0" + str(pvsecondI)
             else: pvsecond = str(pvsecondI) 
-            
-            if (pvyearI > 19 and pvyearI  < 75) :
-                #test if the year is reasonable value otherwise date is not part of the growatt data (normally it is 0 then)
-                pvdate = pvyear + "-" + pvmonth + "-" + pvday + "T" + pvhour + ":" + pvminute + ":" + pvsecond
-                if conf.verbose : print("\t - ", pvdate)            
-            else: 
-                if conf.verbose : print("\t - " + "No or no valid date found")            
+            # create date/time is format
+            pvdate = pvyear + "-" + pvmonth + "-" + pvday + "T" + pvhour + ":" + pvminute + ":" + pvsecond
+            # test if valid date/time in data record
+            timefromserver = False                                              # Indicate of date/time is from server (used for buffered data)
+            try:
+                testdate = datetime.strptime(pvdate, "%Y-%m-%dT%H:%M:%S")
+                jsondate = pvdate
+                if conf.verbose : print("\t - date-time: ", jsondate)            
+            except ValueError:
+                # Date could not be parsed - either the format is different or it's not a
+                # valid date
+                if conf.verbose : print("\t - " + "no or no valid time/date found, grott server time will be used (data records from buffer will not be sent!)")  
+                timefromserver = True          
+                jsondate = datetime.now().replace(microsecond=0).isoformat()
+        else:
+            if conf.verbose: print("\t - " + "Grott server date/time used") 
+            jsondate = datetime.now().replace(microsecond=0).isoformat()        
 
         dataprocessed = True
-
 
     else:
         serialfound = False 
@@ -178,8 +194,9 @@ def procdata(conf,data):
             serialfound = True   
 
         if serialfound == True:
-            #Change in trace in future
-                
+            
+            jsondate = datetime.now().replace(microsecond=0).isoformat()
+
             if conf.verbose: print("\t - " + 'Growatt processing values for: ', bytearray.fromhex(conf.SN).decode())
             
             #Retrieve values 
@@ -217,7 +234,7 @@ def procdata(conf,data):
         # only sendout data to MQTT if it is processed. 
         pvserial = codecs.decode(pvserial, "hex").decode('utf-8')
         if conf.verbose:
-            print("\t- " + "Grott values retrieved:")
+            print("\t - " + "Grott values retrieved:")
             print("\t\t - " + "pvserial:         ", pvserial)
             print("\t\t - " + "pvstatus:         ", pvstatus) 
             print("\t\t - " + "pvpowerin:        ", pvpowerin/10)
@@ -234,15 +251,6 @@ def procdata(conf,data):
             print("\t\t - " + "pv2current:       ", pv2current/10)
             print("\t\t - " + "pvtemperature:    ", pvtemperature/10)
             print("\t\t - " + "pvipmtemperature: ", pvipmtemperature/10)
-
-        #test which date to be used.     
-        try: 
-            jsondate = pvdate 
-        except: 
-            jsondate =datetime.datetime.now().replace(microsecond=0).isoformat()
-
-        buffered = "no"
-        if header[14:16] == "50" : buffered = "yes"
 
         #create JSON message                    
         jsonmsg = json.dumps({"device":pvserial,"time":jsondate,"buffered":buffered,
@@ -267,6 +275,11 @@ def procdata(conf,data):
             print("\t - " + "MQTT jsonmsg: ")        
             #print("\t\t - " + jsonmsg)     
             print(format_multi_line("\t\t\t ", jsonmsg))   
+
+        #do net invalid records (e.g. buffered records with time from server) or buffered records if sendbuf = False
+        if (conf.sendbuf == False) or (buffered == "yes" and timefromserver == True) :
+            if conf.verbose: print("\t - " + 'Buffered record not sent: sendbuf = False or invalid date/time format')  
+            return
             
         if conf.nomqtt != True:
             try: 

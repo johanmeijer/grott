@@ -93,3 +93,13 @@ Version history
 # repair issue with automatic protocol detection
 2.2.2
 #Added support for MIN 36000-TL XE / With ShineLan
+2.2.3 
+added additional test for date-time validation in data record the solve time issues with TL3-s inverter (issue 22)
+added time = auto/server parameter in .ini and gtime = auto server environment variable to disable time retrieval form data record (server), default is auto: grott decides which time is used (data record if vald otherwise Server)
+sample grott.ini sample .ini file to examples directory (issue 21) to make it easier to retrieve grott from github (no .ini overwrites anymore)
+2.2.4
+Data from buffer will set with the data from the record (it does not make sense to send historical data with actual server time). If the data/time does not have the right format the data will not be sent to MQTT and PVOutput
+New parameter sendbuf = True / False (default True) to enable / disable sending historical data. Environmental variable: gsendbuf = True/False
+fixed json time error when running in compat = True mode 
+added data layout for T020404 record 
+fixed decryp definition problem in external data layout jso files. 

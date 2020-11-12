@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2020-10-19
-# Version 2.2.2
+# Updated: 2020-11-09
+# Version 2.2.4
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -21,7 +21,9 @@ class Conf :
         self.decrypt = True
         self.compat = False
         self.blockcmd = False                                                                       #Block Inverter and Shine configure commands                
-        self.noipf = False                                                                           #Allow IP change if needed 
+        self.noipf = False                                                                          #Allow IP change if needed
+        self.gtime  = "auto"                                                                        #time used =  auto: use record time or if not valid server time, alternative server: use always server time 
+        self.sendbuf = True                                                                         # enable / disable sending historical data from buffer
         self.valueoffset = 6 
         self.inverterid = "automatic" 
         self.mode = "proxy"
@@ -96,6 +98,8 @@ class Conf :
         print("\tcompat:      \t",self.compat)
         print("\tblockcmd:    \t",self.blockcmd)
         print("\tnoipf:       \t",self.noipf)
+        print("\ttime:        \t",self.gtime)
+        print("\tsendbuf:     \t",self.sendbuf)
         print("\tvalueoffset: \t",self.valueoffset)
         print("\toffset:      \t",self.offset)
         print("\tinverterid:  \t",self.inverterid)
@@ -195,11 +199,12 @@ class Conf :
         else : self.compat = False      
         if self.blockcmd == True or self.blockcmd == "True" : self.blockcmd = True             
         else : self.blockcmd = False      
+        if self.sendbuf == False or self.sendbuf == "False" : self.sendbuf = False 
+        else : self.sendbuf = True      
         if self.pvoutput == True or self.pvoutput == "True" : self.pvoutput = True
         else : self.pvoutput = False
         if self.nomqtt == False or self.nomqtt == "False" : self.nomqtt = False 
-        else : self.nomqtt = True   
-        print(self.mqttauth)      
+        else : self.nomqtt = True         
         if self.mqttauth in ("True", "true", True) : 
             self.mqttauth = True
             print(self.mqttauth)      
@@ -216,6 +221,8 @@ class Conf :
         if config.has_option("Generic","inverterid"): self.inverterid = config.get("Generic","inverterid")
         if config.has_option("Generic","blockcmd"): self.blockcmd = config.get("Generic","blockcmd")
         if config.has_option("Generic","noipf"): self.noipf = config.get("Generic","noipf")
+        if config.has_option("Generic","time"): self.gtime = config.get("Generic","time")
+        if config.has_option("Generic","sendbuf"): self.sendbuf = config.get("Generic","sendbuf")
         if config.has_option("Generic","mode"): self.mode = config.get("Generic","mode")
         if config.has_option("Generic","ip"): self.grottip = config.get("Generic","ip")
         if config.has_option("Generic","port"): self.grottport = config.getint("Generic","port")
@@ -244,6 +251,8 @@ class Conf :
         if os.getenv('gcompat') in ("True", "False") :  self.compat = os.getenv('gcompat')
         if os.getenv('gblockcmd') in ("True", "False") : self.blockcmd = os.getenv('gblockcmd')
         if os.getenv('gnoipf') in ("True", "False") : self.noipf = os.getenv('gnoipf')    
+        if os.getenv('gtime') in ("auto", "server") : self.gtime = os.getenv('gtime')   
+        if os.getenv('gsendbuf') in ("True", "False") : self.sendbuf = os.getenv('gsendbuf')   
         if os.getenv('ginverterid') != None :  self.inverterid = os.getenv('ginverterid')
         if os.getenv('ggrottip') != None : 
             try: 
@@ -313,7 +322,7 @@ class Conf :
         self.recorddict = {} 
         
         self.recorddict1 = {"T020104": {
-            "decrypt"           : False,
+            "decrypt"           : "False",
             "pvserial"          : 36,
             "date"              : 0,
             "pvstatus"          : 78, 
@@ -334,7 +343,7 @@ class Conf :
             } } 
 
         self.recorddict2 = {"T050104": {
-            "decrypt"           : True,
+            "decrypt"           : "True",
             "pvserial"          : 36,
             "date"              : 56,
             "pvstatus"          : 78, 
@@ -355,7 +364,7 @@ class Conf :
             } } 
         
         self.recorddict4 = {"T055104X": {
-            "decrypt"           : True,
+            "decrypt"           : "True",
             "pvserial"          : 36,
             "date"              : 0,
             "pvstatus"          : 78, 
@@ -376,7 +385,7 @@ class Conf :
             } }   
 
         self.recorddict3 = {"T060104": {
-            "decrypt"           : True,
+            "decrypt"           : "True",
             "pvserial"          : 76,
             "date"              : 136,
             "pvstatus"          : 158, 
@@ -604,8 +613,28 @@ class Conf :
             "pvenergytotal"     : 362,         
             "pvtemperature"     : 530,         
             "pvipmtemperature"  : 534    
-            }}     
+            }}  
 
+        self.recorddict15 = {"T020404": {
+            "decrypt"           : "False",
+            "pvserial"          : 36,
+            "date"              : 0,
+            "pvstatus"          : 78, 
+            "pvpowerin"         : 82,    
+            "pv1voltage"        : 90,    
+            "pv1current"        : 94,            
+            "pv1watt"           : 98,           
+            "pv2voltage"        : 106,        
+            "pv2current"        : 110,        
+            "pv2watt"           : 114,        
+            "pvpowerout"        : 122,        
+            "pvfrequentie"      : 130,        
+            "pvgridvoltage"     : 134,        
+            "pvenergytoday"     : 182,         
+            "pvenergytotal"     : 190,         
+            "pvtemperature"     : 206,         
+            "pvipmtemperature"  : 242,        
+            } } 
 
         self.recorddict.update(self.recorddict1)
         self.recorddict.update(self.recorddict2)
@@ -621,6 +650,7 @@ class Conf :
         self.recorddict.update(self.recorddict12)
         self.recorddict.update(self.recorddict13)
         self.recorddict.update(self.recorddict14)
+        self.recorddict.update(self.recorddict15)
 
         f = []
         print("\nGrott process json layout files")
