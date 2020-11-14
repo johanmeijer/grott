@@ -1,6 +1,6 @@
 # grottdata.py processing data  functions
-# Updated: 2020-11-09
-# Version 2.2.4
+# Updated: 2020-11-14
+# Version 2.2.4a
 
 #import time
 from datetime import datetime
@@ -9,7 +9,6 @@ import struct
 import textwrap
 from itertools import cycle # to support "cycling" the iterator
 import json, codecs 
-from distutils.util import strtobool
 # requests
 
 #import mqtt                       
@@ -45,6 +44,13 @@ def decrypt(decdata) :
     print("\t - " + "Growatt data decrypted V2")   
     return result_string        
 
+def str2bool(defstr):
+    if defstr in ("True", "true", "TRUE", "y", "Y", "yes", "YES", 1, "1") : defret = True 
+    if defstr in ("False", "false", "FALSE", "n", "N", "no", "NO", 0, "0") : defret = False 
+    if 'defret' in locals():
+        return(defret)
+    else : return
+
 def procdata(conf,data):    
     if conf.verbose: 
         print("\t - " + "Growatt original Data:") 
@@ -52,7 +58,7 @@ def procdata(conf,data):
 
     header = "".join("{:02x}".format(n) for n in data[0:8])
     ndata = len(data)
-    buffered = "nodetect"                                               # set buffer detection to nodetect (for compat mode), wil in auto detection changed to no or yes
+    buffered = "nodetect"                                               # set buffer detection to nodetect (for compat mode), wil in auto detection changed to no or yes        
    
     # automatic detect protocol (decryption and protocol) only if compat = False!
     novalidrec = False
@@ -70,8 +76,9 @@ def procdata(conf,data):
         try:
             if conf.verbose : print("\t - " + "layout   : ", layout)
             #if bool(conf.recorddict[layout]["decrypt"]) 
-            conf.decrypt =  bool(strtobool(conf.recorddict[layout]["decrypt"]))
-            if conf.verbose : print("\t - " + "decrypt  : ",conf.decrypt)
+            #conf.decrypt =  bool(strtobool(conf.recorddict[layout]["decrypt"]))
+            conf.decrypt =  str2bool(conf.recorddict[layout]["decrypt"])
+            if conf.verbose : print("\t - " + "decrypt : ",conf.decrypt)
             #print("\t - " + "offset   : ", conf.offset)
         except: 
             #if conf.verbose : print("\t - " + "Grott data record not defined") 
@@ -83,23 +90,7 @@ def procdata(conf,data):
     if conf.decrypt: 
 
         result_string = decrypt(data)    
-        # #ndata = len(data)
-
-        # # Create mask and convert to hexadecimal
-        # mask = "Growatt"
-        # hex_mask = ['{:02x}'.format(ord(x)) for x in mask]    
-        # nmask = len(hex_mask)
-
-        # #start decrypt routine 
-        # unscrambled = list(data[0:8])                                            #take unscramble header
-
-        # for i,j in zip(range(0,ndata-8),cycle(range(0,nmask))): 
-        #     unscrambled = unscrambled + [data[i+8] ^ int(hex_mask[j],16)]
        
-        # result_string = "".join("{:02x}".format(n) for n in unscrambled)
-        
-        # if conf.verbose: print("\t - " + "Growatt data decrypted")           
-
     else: 
         #do not decrypt 
         result_string = data.hex()
@@ -171,11 +162,11 @@ def procdata(conf,data):
             # create date/time is format
             pvdate = pvyear + "-" + pvmonth + "-" + pvday + "T" + pvhour + ":" + pvminute + ":" + pvsecond
             # test if valid date/time in data record
-            timefromserver = False                                              # Indicate of date/time is from server (used for buffered data)
             try:
                 testdate = datetime.strptime(pvdate, "%Y-%m-%dT%H:%M:%S")
                 jsondate = pvdate
-                if conf.verbose : print("\t - date-time: ", jsondate)            
+                if conf.verbose : print("\t - date-time: ", jsondate) 
+                timefromserver = False                                              # Indicate of date/time is from server (used for buffered data)           
             except ValueError:
                 # Date could not be parsed - either the format is different or it's not a
                 # valid date
@@ -184,7 +175,8 @@ def procdata(conf,data):
                 jsondate = datetime.now().replace(microsecond=0).isoformat()
         else:
             if conf.verbose: print("\t - " + "Grott server date/time used") 
-            jsondate = datetime.now().replace(microsecond=0).isoformat()        
+            jsondate = datetime.now().replace(microsecond=0).isoformat()   
+            timefromserver = True     
 
         dataprocessed = True
 
@@ -196,6 +188,7 @@ def procdata(conf,data):
         if serialfound == True:
             
             jsondate = datetime.now().replace(microsecond=0).isoformat()
+            timefromserver = True 
 
             if conf.verbose: print("\t - " + 'Growatt processing values for: ', bytearray.fromhex(conf.SN).decode())
             

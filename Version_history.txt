@@ -103,3 +103,6 @@ New parameter sendbuf = True / False (default True) to enable / disable sending 
 fixed json time error when running in compat = True mode 
 added data layout for T020404 record 
 fixed decryp definition problem in external data layout jso files. 
+2.2.4a
+processing for t055104 data record added
+remove requirment for distutils (for compatibility reason) 
