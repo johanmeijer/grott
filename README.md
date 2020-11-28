@@ -8,16 +8,16 @@ Mulitiple inverter (multiple system id's) support in PVOutput.org
 <br> 
 see: https://github.com/johanmeijer/grott/wiki/PVOutput.org-support 
 ## New in Version 2.2.1  
-### automatic protocol detection and processing
+#### Automatic protocol detection and processing
 Limited .ini configuration needed (inverterid, encryption, offset and record layout is automaticially detected)
-### Direct output to PVOutput.org (no mqtt processing needed). 
+#### Direct output to PVOutput.org (no mqtt processing needed). 
 Specify pvoutput = True and apikey and systemid in .ini file to enable it. 
-### Docker support 
+#### Docker support 
 2 docker containers are created ledidobe/grottrpi (specific old RPI with ARM32) and ledidobe/grott (generic one, tested on synology NAS and Ubuntu). See https://hub.docker.com/search?q=ledidobe&type=image. 
 See issue 4 and 15 on how to use it (wiki will be updated soon)
-### Command Blocking / Filtering
+#### Command Blocking / Filtering
 with blockcmd = True specified in .ini (configure/reboot) commands from outside to the inverter are blocked. This protects the inverter from beeing controlled from the outside while data exchange with server.growatt.com for reporting is still active.  
-### Use date/time from data record
+#### Use date/time from data record
 If date/time is available in the data (inserted by the inverter) this will be used. In this way buffered records will be sent with the original  creation time (in the past). 
 If date/time is not available in the data record the server time will be used (as it was originally). 
 In the mqtt message the  key buffered is added (yes/no) which indicates that the message is from the buffer (past) or actual. 
