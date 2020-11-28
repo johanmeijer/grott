@@ -106,3 +106,11 @@ fixed decryp definition problem in external data layout jso files.
 2.2.4a
 processing for t055104 data record added
 remove requirment for distutils (for compatibility reason) 
+2.2.5
+Simplified data processing record allow generic definition (T0xNNNNX) so less layout definitions are needed. 
+Enable PVOUTPUT for multiple inverters (specify , pvinverters=1-8, pvsystemidx x=integer). default pvinverters = 1 and pvsystemid = <your systemid>  
+   For comptibility reason specifing pvsystemid = <yoursystemid> is the same as specifing pvsystemid1 = <yoursystemid> 
+2.2.6 
+Changed support for multiple inverters to supported all kind combination of inverters with 1 grott instance, 
+Enable PVOUTPUT for multiple inverters (specify , pvinverters=1-8, pvsystemidx=<pvoutput systemid>, pvinverteridx=<inverterid for pvsystemidx>  x=integer, pv). 
+      default pvinverters = 1 and pvsystemid = <your systemid> 

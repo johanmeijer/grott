@@ -1,12 +1,12 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2020-11-14
-# Version 2.2.4a
+# Updated: 2020-11-20
+# Version 2.2.6
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
 from os import walk
-from grottdata import format_multi_line
+from grottdata import format_multi_line, str2bool
 
 class Conf : 
 
@@ -46,10 +46,14 @@ class Conf :
 
         #pvoutput default 
         self.pvoutput = False
+        self.pvinverters = 1
         self.pvurl = "https://pvoutput.org/service/r2/addstatus.jsp"
         self.pvapikey = "yourapikey"
-        self.pvsystemid = "12345"
-
+        self.pvsystemid = {}
+        self.pvinverterid = {}
+        self.pvsystemid[1] = "systemid1"
+        self.pvinverterid[1] = "inverter1"
+        
         print("Grott Growatt logging monitor : " + self.verrel)    
 
         #Set parm's 
@@ -121,8 +125,13 @@ class Conf :
         print("_PVOutput:")
         print("\tpvoutput:    \t",self.pvoutput)
         print("\tpvurl:       \t",self.pvurl)
-        print("\tpvapikey:    \t",self.pvapikey)
-        print("\tpvsystemid:  \t",self.pvsystemid)
+        print("\tpvapikey:    \t",self.pvapikey)                
+        print("\tpvinverters: \t",self.pvinverters)
+        if self.pvinverters == 1 :
+            print("\tpvsystemid:  \t",self.pvsystemid[1])
+        else: 
+            print("\tpvsystemid:  \t",self.pvsystemid)
+            print("\tpvinvertid:  \t",self.pvinverterid)
         print()
 
 
@@ -189,26 +198,18 @@ class Conf :
         if hasattr(self, "apvoutput") and self.apvoutput: 
             self.pvoutput = self.apvoutput      
         #Correct Bool if changed to string during parsing process
-        if self.verbose == True or self.verbose == "True" : self.verbose = True  
-        else : self.verbose = False 
-        if self.trace == True or self.trace == "True" : self.trace = True  
-        else : self.trace = False 
-        if self.decrypt == False or self.decrypt == "False" : self.decrypt = False 
-        else : self.decrypt = True         
-        if self.compat == True or self.compat == "True" : self.compat = True  
-        else : self.compat = False      
-        if self.blockcmd == True or self.blockcmd == "True" : self.blockcmd = True             
-        else : self.blockcmd = False      
-        if self.sendbuf == False or self.sendbuf == "False" : self.sendbuf = False 
-        else : self.sendbuf = True      
-        if self.pvoutput == True or self.pvoutput == "True" : self.pvoutput = True
-        else : self.pvoutput = False
-        if self.nomqtt == False or self.nomqtt == "False" : self.nomqtt = False 
-        else : self.nomqtt = True         
-        if self.mqttauth in ("True", "true", True) : 
-            self.mqttauth = True
-            print(self.mqttauth)      
-        else : self.mqttauth = False         
+        # if self.verbose == True or self.verbose == "True" : self.verbose = True  
+        # else : self.verbose = False 
+        self.verbose = str2bool(self.verbose)        
+        self.trace = str2bool(self.trace)        
+        self.decrypt = str2bool(self.decrypt)
+        self.compat = str2bool(self.compat)
+        self.blockcmd = str2bool(self.blockcmd)     
+        self.noipf = str2bool(self.noipf) 
+        self.sendbuf = str2bool(self.sendbuf)      
+        self.pvoutput = str2bool(self.pvoutput)
+        self.nomqtt = str2bool(self.nomqtt)        
+        self.mqttauth = str2bool(self.mqttauth)
         
     def procconf(self): 
         print("\nGrott process configuration file")
@@ -237,8 +238,18 @@ class Conf :
         if config.has_option("MQTT","user"): self.mqttuser = config.get("MQTT","user")
         if config.has_option("MQTT","password"): self.mqttpsw = config.get("MQTT","password")
         if config.has_option("PVOutput","pvoutput"): self.pvoutput = config.get("PVOutput","pvoutput")
+        if config.has_option("PVOutput","pvinverters"): self.pvinverters = config.getint("PVOutput","pvinverters")
         if config.has_option("PVOutput","apikey"): self.pvapikey = config.get("PVOutput","apikey")
-        if config.has_option("PVOutput","systemid"): self.pvsystemid = config.get("PVOutput","systemid")
+        # if more inverter are installed at the same interface (shinelink) get systemids
+        #if self.pvinverters > 1 : 
+        for x in range(self.pvinverters+1) : 
+            if config.has_option("PVOutput","systemid"+str(x)): self.pvsystemid[x] = config.get("PVOutput","systemid" + str(x))
+            if config.has_option("PVOutput","inverterid"+str(x)): self.pvinverterid[x] = config.get("PVOutput","inverterid" + str(x))
+        if self.pvinverters == 1 : 
+            if config.has_option("PVOutput","systemid"): self.pvsystemid[1] = config.get("PVOutput","systemid")
+            # try: 
+            #     print(x, self.pvsystemid[x])
+            # except: print("key doesnot exists:",x )
 
     def procenv(self): 
         print("\nGrott process environmental variables")
@@ -287,7 +298,18 @@ class Conf :
         if os.getenv('gmqttpassword') != None : self.mqttpsw = os.getenv('gmqttpassword')
         if os.getenv('gpvoutput') in ("True", "False") :  self.pvoutput = os.getenv('gpvoutput') 
         if os.getenv('gpvapikey') != None :  self.pvapikey = os.getenv('gpvapikey')   
-        if os.getenv('gpvsystemid') != None :  self.pvsystemid = os.getenv('gpvsystemid')   
+        if os.getenv('gpvinverters') != None :  self.pvinverters = int(os.getenv('gpvinverters'))   
+        #if os.getenv('gpvsystemid') != None :  self.pvsystemid[1] = os.getenv('gpvsystemid')   
+        for x in range(self.pvinverters+1) : 
+                if os.getenv('gpvsystemid'+str(x)) != None :  self.pvsystemid[x] = os.getenv('gpvsystemid'+ str(x))
+                if os.getenv('gpvinverterid'+str(x)) != None :  self.pvinverterid[x] = os.getenv('gpvinverterid'+ str(x))
+        if self.pvinverters == 1 : 
+            if os.getenv('gpvsystemid') != None :  self.pvsystemid[1] = os.getenv('gpvsystemid')   
+
+                # try: 
+                #    print(x, self.pvsystemid[x])
+                # except: print("key doesnot exists:",x )
+
         
     def set_recwl(self):    
         #define record that will not be blocked or inspected if blockcmd is specified
@@ -321,10 +343,10 @@ class Conf :
         #define record layout to be used based on byte 4,6,7 of the header T+byte4+byte6+byte7     
         self.recorddict = {} 
         
-        self.recorddict1 = {"T020104": {
+        self.recorddict1 = {"T02NNNN": {
             "decrypt"           : "False",
             "pvserial"          : 36,
-            "date"              : 0,
+            "date"              : 56,
             "pvstatus"          : 78, 
             "pvpowerin"         : 82,    
             "pv1voltage"        : 90,    
@@ -342,7 +364,7 @@ class Conf :
             "pvipmtemperature"  : 242,        
             } } 
 
-        self.recorddict2 = {"T050104": {
+        self.recorddict2 = {"T05NNNN": {
             "decrypt"           : "True",
             "pvserial"          : 36,
             "date"              : 56,
@@ -363,10 +385,10 @@ class Conf :
             "pvipmtemperature"  : 242,        
             } } 
         
-        self.recorddict4 = {"T055104X": {
+        self.recorddict4 = {"T05NNNNX": {
             "decrypt"           : "True",
             "pvserial"          : 36,
-            "date"              : 0,
+            "date"              : 56,
             "pvstatus"          : 78, 
             "pvpowerin"         : 82,    
             "pv1voltage"        : 90,    
@@ -384,7 +406,7 @@ class Conf :
             "pvipmtemperature"  : 454,         
             } }   
 
-        self.recorddict3 = {"T060104": {
+        self.recorddict3 = {"T06NNNN": {
             "decrypt"           : "True",
             "pvserial"          : 76,
             "date"              : 136,
@@ -405,10 +427,10 @@ class Conf :
             "pvipmtemperature"  : 322,         
             } } 
 
-        self.recorddict5 = {"T060104X": {
+        self.recorddict5 = {"T06NNNNX": {
             "decrypt"           : "True",
             "pvserial"          : 76,
-            "date"              : 136,
+            "date"              : 126,
             "pvstatus"          : 158, 
             "pvpowerin"         : 162,    
             "pv1voltage"        : 170,    
@@ -424,278 +446,13 @@ class Conf :
             "pvenergytotal"     : 362,         
             "pvtemperature"     : 530,         
             "pvipmtemperature"  : 534         
-            } } 
-
-        self.recorddict6 =  {"T065004X": {
-            "decrypt"           : "True",
-            "pvserial"          : 76,
-            "date"              : 116,
-            "pvstatus"          : 158, 
-            "pvpowerin"         : 162,    
-            "pv1voltage"        : 170,    
-            "pv1current"        : 174,            
-            "pv1watt"           : 178,           
-            "pv2voltage"        : 186,        
-            "pv2current"        : 190,          
-            "pv2watt"           : 194,        
-            "pvpowerout"        : 250,        
-            "pvfrequentie"      : 258,        
-            "pvgridvoltage"     : 262,        
-            "pvenergytoday"     : 354,         
-            "pvenergytotal"     : 362,         
-            "pvtemperature"     : 530,         
-            "pvipmtemperature"  : 534  
-            } } 
-
-        self.recorddict7 =  {"T020150": {
-            "decrypt"           : "False",
-            "pvserial"          : 36,
-            "date"              : 56,
-            "pvstatus"          : 78, 
-            "pvpowerin"         : 82,    
-            "pv1voltage"        : 90,    
-            "pv1current"        : 94,            
-            "pv1watt"           : 98,           
-            "pv2voltage"        : 106,        
-            "pv2current"        : 110,        
-            "pv2watt"           : 114,        
-            "pvpowerout"        : 122,        
-            "pvfrequentie"      : 130,        
-            "pvgridvoltage"     : 134,        
-            "pvenergytoday"     : 182,         
-            "pvenergytotal"     : 190,         
-            "pvtemperature"     : 206,         
-            "pvipmtemperature"  : 242        
-            }}
-
-        self.recorddict8 =  {"T050150": {
-            "decrypt"           : "True",
-            "pvserial"          : 36,
-            "date"              : 0,
-            "pvstatus"          : 78, 
-            "pvpowerin"         : 82,    
-            "pv1voltage"        : 90,    
-            "pv1current"        : 94,            
-            "pv1watt"           : 98,           
-            "pv2voltage"        : 106,        
-            "pv2current"        : 110,        
-            "pv2watt"           : 114,        
-            "pvpowerout"        : 122,        
-            "pvfrequentie"      : 130,        
-            "pvgridvoltage"     : 134,        
-            "pvenergytoday"     : 182,         
-            "pvenergytotal"     : 190,         
-            "pvtemperature"     : 206,         
-            "pvipmtemperature"  : 242        
-            }}
-
-        self.recorddict9 =  {"T055150X": {
-            "decrypt"           : "True",
-            "pvserial"          : 36,
-            "date"              : 0,
-            "pvstatus"          : 78, 
-            "pvpowerin"         : 82,    
-            "pv1voltage"        : 90,    
-            "pv1current"        : 94,            
-            "pv1watt"           : 98,           
-            "pv2voltage"        : 106,        
-            "pv2current"        : 110,        
-            "pv2watt"           : 114,        
-            "pvpowerout"        : 170,        
-            "pvfrequentie"      : 178,        
-            "pvgridvoltage"     : 182,        
-            "pvenergytoday"     : 274,         
-            "pvenergytotal"     : 282,         
-            "pvtemperature"     : 450,         
-            "pvipmtemperature"  : 454         
-            }}
-
-        self.recorddict10 =  {"T060150": {
-            "decrypt"           : "True",
-            "pvserial"          : 76,
-            "date"              : 136,
-            "pvstatus"          : 158, 
-            "pvpowerin"         : 162,    
-            "pv1voltage"        : 170,    
-            "pv1current"        : 174,            
-            "pv1watt"           : 178,           
-            "pv2voltage"        : 186,        
-            "pv2current"        : 190,        
-            "pv2watt"           : 194,        
-            "pvpowerout"        : 202,        
-            "pvfrequentie"      : 210,        
-            "pvgridvoltage"     : 214,        
-            "pvenergytoday"     : 262,         
-            "pvenergytotal"     : 270,         
-            "pvtemperature"     : 286,         
-            "pvipmtemperature"  : 322         
-            }}
-
-        self.recorddict11 =  {"T060150X": {
-            "decrypt"           : "True",
-            "pvserial"          : 76,
-            "date"              : 136,
-            "pvstatus"          : 158, 
-            "pvpowerin"         : 162,    
-            "pv1voltage"        : 170,    
-            "pv1current"        : 174,            
-            "pv1watt"           : 178,           
-            "pv2voltage"        : 186,        
-            "pv2current"        : 190,        
-            "pv2watt"           : 194,        
-            "pvpowerout"        : 250,        
-            "pvfrequentie"      : 258,        
-            "pvgridvoltage"     : 262,        
-            "pvenergytoday"     : 354,         
-            "pvenergytotal"     : 362,         
-            "pvtemperature"     : 530,         
-            "pvipmtemperature"  : 534         
-            }}
-
-        self.recorddict12 =  {"T065050X": {
-            "decrypt"           : "True",
-            "pvserial"          : 76,
-            "date"              : 136,
-            "pvstatus"          : 158, 
-            "pvpowerin"         : 162,    
-            "pv1voltage"        : 170,    
-            "pv1current"        : 174,            
-            "pv1watt"           : 178,           
-            "pv2voltage"        : 186,        
-            "pv2current"        : 190,          
-            "pv2watt"           : 194,        
-            "pvpowerout"        : 250,        
-            "pvfrequentie"      : 258,        
-            "pvgridvoltage"     : 262,        
-            "pvenergytoday"     : 354,         
-            "pvenergytotal"     : 362,         
-            "pvtemperature"     : 530,         
-            "pvipmtemperature"  : 534  
-            }}     
-        
-        self.recorddict13 =  {"T065104X": {
-            "decrypt"           : "True",
-            "pvserial"          : 76,
-            "date"              : 116,
-            "pvstatus"          : 158, 
-            "pvpowerin"         : 162,    
-            "pv1voltage"        : 170,    
-            "pv1current"        : 174,            
-            "pv1watt"           : 178,           
-            "pv2voltage"        : 186,        
-            "pv2current"        : 190,        
-            "pv2watt"           : 194,        
-            "pvpowerout"        : 250,        
-            "pvfrequentie"      : 258,        
-            "pvgridvoltage"     : 262,        
-            "pvenergytoday"     : 354,         
-            "pvenergytotal"     : 362,         
-            "pvtemperature"     : 530,         
-            "pvipmtemperature"  : 534    
-            }}     
-
-        self.recorddict14 =  {"T065150X": {    
-            "decrypt"           : "True",
-            "pvserial"          : 76,
-            "date"              : 116,
-            "pvstatus"          : 158, 
-            "pvpowerin"         : 162,    
-            "pv1voltage"        : 170,    
-            "pv1current"        : 174,            
-            "pv1watt"           : 178,           
-            "pv2voltage"        : 186,        
-            "pv2current"        : 190,        
-            "pv2watt"           : 194,        
-            "pvpowerout"        : 250,        
-            "pvfrequentie"      : 258,        
-            "pvgridvoltage"     : 262,        
-            "pvenergytoday"     : 354,         
-            "pvenergytotal"     : 362,         
-            "pvtemperature"     : 530,         
-            "pvipmtemperature"  : 534    
-            }}  
-
-        self.recorddict15 = {"T020404": {
-            "decrypt"           : "False",
-            "pvserial"          : 36,
-            "date"              : 0,
-            "pvstatus"          : 78, 
-            "pvpowerin"         : 82,    
-            "pv1voltage"        : 90,    
-            "pv1current"        : 94,            
-            "pv1watt"           : 98,           
-            "pv2voltage"        : 106,        
-            "pv2current"        : 110,        
-            "pv2watt"           : 114,        
-            "pvpowerout"        : 122,        
-            "pvfrequentie"      : 130,        
-            "pvgridvoltage"     : 134,        
-            "pvenergytoday"     : 182,         
-            "pvenergytotal"     : 190,         
-            "pvtemperature"     : 206,         
-            "pvipmtemperature"  : 242,        
-            } } 
-
-        self.recorddict16 = {"T055104": {
-            "decrypt"           : "True",
-            "pvserial"          : 36,
-            "date"              : 56,
-            "pvstatus"          : 78, 
-            "pvpowerin"         : 82,    
-            "pv1voltage"        : 90,    
-            "pv1current"        : 94,            
-            "pv1watt"           : 98,           
-            "pv2voltage"        : 106,        
-            "pv2current"        : 110,        
-            "pv2watt"           : 114,        
-            "pvpowerout"        : 122,        
-            "pvfrequentie"      : 130,        
-            "pvgridvoltage"     : 134,        
-            "pvenergytoday"     : 182,         
-            "pvenergytotal"     : 190,         
-            "pvtemperature"     : 206,         
-            "pvipmtemperature"  : 242,        
-            } }
-
-        self.recorddict17 = {"T055150": {
-            "decrypt"           : "True",
-            "pvserial"          : 36,
-            "date"              : 56,
-            "pvstatus"          : 78, 
-            "pvpowerin"         : 82,    
-            "pv1voltage"        : 90,    
-            "pv1current"        : 94,            
-            "pv1watt"           : 98,           
-            "pv2voltage"        : 106,        
-            "pv2current"        : 110,        
-            "pv2watt"           : 114,        
-            "pvpowerout"        : 122,        
-            "pvfrequentie"      : 130,        
-            "pvgridvoltage"     : 134,        
-            "pvenergytoday"     : 182,         
-            "pvenergytotal"     : 190,         
-            "pvtemperature"     : 206,         
-            "pvipmtemperature"  : 242,        
             } }     
 
         self.recorddict.update(self.recorddict1)
         self.recorddict.update(self.recorddict2)
         self.recorddict.update(self.recorddict3)
         self.recorddict.update(self.recorddict4)
-        self.recorddict.update(self.recorddict5)
-        self.recorddict.update(self.recorddict6)
-        self.recorddict.update(self.recorddict7)
-        self.recorddict.update(self.recorddict8)
-        self.recorddict.update(self.recorddict9)
-        self.recorddict.update(self.recorddict10)
-        self.recorddict.update(self.recorddict11)
-        self.recorddict.update(self.recorddict12)
-        self.recorddict.update(self.recorddict13)
-        self.recorddict.update(self.recorddict14)
-        self.recorddict.update(self.recorddict15)
-        self.recorddict.update(self.recorddict16)
-        self.recorddict.update(self.recorddict17)
-        
+        self.recorddict.update(self.recorddict5)       
 
         f = []
         print("\nGrott process json layout files")

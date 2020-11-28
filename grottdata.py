@@ -1,6 +1,6 @@
 # grottdata.py processing data  functions
-# Updated: 2020-11-14
-# Version 2.2.4a
+# Updated: 2020-11-20
+# Version 2.2.6
 
 #import time
 from datetime import datetime
@@ -73,19 +73,26 @@ def procdata(conf,data):
         if header[14:16] == "50" : buffered = "yes"
         else: buffered = "no" 
 
-        try:
-            if conf.verbose : print("\t - " + "layout   : ", layout)
-            #if bool(conf.recorddict[layout]["decrypt"]) 
-            #conf.decrypt =  bool(strtobool(conf.recorddict[layout]["decrypt"]))
+        if conf.verbose : print("\t - " + "layout   : ", layout)
+        try:            
+            # does record layout record exists? 
+            #test = conf.recorddict[layout]["decrypt"]
             conf.decrypt =  str2bool(conf.recorddict[layout]["decrypt"])
-            if conf.verbose : print("\t - " + "decrypt : ",conf.decrypt)
-            #print("\t - " + "offset   : ", conf.offset)
-        except: 
-            #if conf.verbose : print("\t - " + "Grott data record not defined") 
-            #set novalidrec flag so print encryption is done but data processing not
-            novalidrec = True   
-            #return 
+            if conf.verbose : print("\t - " + "Record layout used : ", layout)
+        except:
+            #try generic if generic record exist
+            if header[14:16] in ("04","50") :
+                layout = layout.replace(header[12:16], "NNNN")
+                try:
+                    conf.decrypt =  str2bool(conf.recorddict[layout]["decrypt"])
+                    if conf.verbose : print("\t - " + "Record layout used : ", layout)
+                except:
+                    #no valid record fall back on old processing? 
+                    novalidrec = True  
+            else:         
+                novalidrec = True     
 
+    if conf.verbose : print("\t - " + "decrypt : ",conf.decrypt)       
     
     if conf.decrypt: 
 
@@ -170,7 +177,7 @@ def procdata(conf,data):
             except ValueError:
                 # Date could not be parsed - either the format is different or it's not a
                 # valid date
-                if conf.verbose : print("\t - " + "no or no valid time/date found, grott server time will be used (data records from buffer will not be sent!)")  
+                if conf.verbose : print("\t - " + "no or no valid time/date found, grott server time will be used (buffer records not sent!)")  
                 timefromserver = True          
                 jsondate = datetime.now().replace(microsecond=0).isoformat()
         else:
@@ -288,12 +295,37 @@ def procdata(conf,data):
             if conf.verbose: print("\t - " + 'No MQTT message sent, MQTT disabled') 
 
         # process pvoutput if enabled
-        if conf.pvoutput == True or conf.pvoutput == "True" :      
+        if conf.pvoutput :      
             import requests
-            if conf.verbose : print("\t - " + "Grott send data to PVOutput : ") 
+            #if conf.verbose : print("\t - " + "Grott send data to PVOutput : ") 
+            #get invertnumber
+            #inverternum = int(header[13:14]) 
+            pvidfound = False    
+            if  conf.pvinverters == 1 :  
+                pvssid = conf.pvsystemid[1]
+                pvidfound = True    
+            else:  
+                for pvnum, pvid in conf.pvinverterid.items():  # for name, age in dictionary.iteritems():  (for Python 2.x)
+                    # print(pvnum)
+                    # print(pvid)
+                    # print(pvserial)
+                    if pvid == pvserial:
+                       print(pvid)
+                       pvssid = conf.pvsystemid[pvnum]
+                       pvidfound = True    
+                # try: 
+                #    pvssid = conf.pvsystemid[inverternum] 
+                # except:  
+                #    if conf.verbose: print("\t - " + "PVoutput systemid not defined for inverter : ", inverternum)  
+                #    if conf.verbose: print("\t - " + "No output sent to PVOutput.org ")  
+                #    return
+            if not pvidfound:
+                if conf.verbose : print("\t - " + "pvsystemid not found for inverter : ", pvserial)   
+                return                       
+            if conf.verbose : print("\t - " + "Grott send data to PVOutput systemid: ", pvssid, "for inverter: ", pvserial) 
             pvheader = { 
                 "X-Pvoutput-Apikey"     : conf.pvapikey,
-                "X-Pvoutput-SystemId"   : conf.pvsystemid
+                "X-Pvoutput-SystemId"   : pvssid
             }
             
             pvodate = jsondate[:4] +jsondate[5:7] + jsondate[8:10]
@@ -307,6 +339,7 @@ def procdata(conf,data):
                 "v6"    : pvgridvoltage/10
                 }
             #print(pvheader)
+            if conf.verbose : print("\t\t - ", pvheader)
             if conf.verbose : print("\t\t - ", pvdata)
             reqret = requests.post(conf.pvurl, data = pvdata, headers = pvheader)
             if conf.verbose :  print("\t - " + "Grott PVOutput response: ") 
