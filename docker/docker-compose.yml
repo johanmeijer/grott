@@ -7,11 +7,13 @@ services:
         environment:
             - gblockcmd=False 
             - gnomqtt=False
-            - gmqttip=x.x.x.x
+            - gmqttip=localhost
             - gmqttauth=False
             - gmqttuser=growatt
             - gmqttpassword=growatt2020
             - gpvoutput=False
             - gpvapikey=yourapikey 
-            - gpvsystemid=12345
+            - gpvinverterid1=inverter1
+            - gpvsystemid1=12345
+            - TZ=Europe/Amsterdam 
         image: ledidobe/grott
