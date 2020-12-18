@@ -3,6 +3,10 @@
 ## Be aware: the default grott.ini moved to examples directory 
 This file is deleted from the grott default directory to simply github installation (not overwrite your settings). 
 It is advised to copy this file into the Grott default directory (and customise it) during first time installation 
+## New in Version 2.3.0  --> available in 2.3.0 - (Beta) branche
+Direct output to inlfuxdb  
+<br> 
+see: https://github.com/johanmeijer/grott/wiki/InfluxDB-Support
 ## New in Version 2.2.6  
 Mulitiple inverter (multiple system id's) support in PVOutput.org 
 <br> 
