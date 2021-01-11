@@ -3,7 +3,13 @@
 ## Be aware: the default grott.ini moved to examples directory 
 This file is deleted from the grott default directory to simply github installation (not overwrite your settings). 
 It is advised to copy this file into the Grott default directory (and customise it) during first time installation 
-## New in Version 2.3.1  --> available in grott_beta branche
+
+## New in Version 2.4.0  (available in the 2.4 branche)
+Introduce possibility to add extensions for additional (personalized) processing. 
+<br> 
+see: https://github.com/johanmeijer/grott/wiki/Extensions
+
+## New in Version 2.3.1  (available in grott_beta branche)
 Direct output to inlfuxdb (v1 and v2)   
 <br> 
 see: https://github.com/johanmeijer/grott/wiki/InfluxDB-Support
