@@ -1,10 +1,9 @@
 # Grott
 ## The Growatt inverter monitor 
 
-## Short description: 
 The growatt inverter sends log data to the growatt website at the internet. At this website (or with the mobile app) you can see detailed information on how the inverter is performing. 
 
-Grott is monitoring and process this data (containing information about performance and status of the inverter) and send this to: 
+**Grott** will monitor and process this data (containing information about performance and status of the inverter) and send this to: 
 
 * MQTT
 * PVOutput.org
