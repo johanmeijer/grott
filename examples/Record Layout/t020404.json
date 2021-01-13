@@ -1,0 +1,21 @@
+ {"T020404": {
+    "decrypt"           : "False",
+    "pvserial"          : 36,
+    "date"              : 0,
+    "pvstatus"          : 78, 
+    "pvpowerin"         : 82,    
+    "pv1voltage"        : 90,    
+    "pv1current"        : 94,            
+    "pv1watt"           : 98,           
+    "pv2voltage"        : 106,        
+    "pv2current"        : 110,        
+    "pv2watt"           : 114,        
+    "pvpowerout"        : 122,        
+    "pvfrequentie"      : 130,        
+    "pvgridvoltage"     : 134,        
+    "pvenergytoday"     : 182,         
+    "pvenergytotal"     : 190,         
+    "pvtemperature"     : 206,         
+    "pvipmtemperature"  : 242       
+      } } 
+
