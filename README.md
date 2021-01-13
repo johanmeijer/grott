@@ -12,7 +12,7 @@ The growatt inverter sends log data to the growatt website at the internet. At t
  
 MQTT can be used to distribute the data to other applications like: NodeRed, Grafana (using InfluxDB), Home Assistant, OpenHab and Domoticz. Descriptions and examples are available in the Wiki 
 
-The program is written in python and runs under Linux, Windows and is available in a docker container on Docker Hub (see: https://github.com/johanmeijer/grott/wiki/Docker-support).  
+The program is written in python and runs under Linux, Windows and is available in a docker container on Docker Hub (see: https://github.com/johanmeijer/grott/wiki/Docker-support, containers available at:https://hub.docker.com/u/ledidobe).  
 
 Grott can be started from the command line or as a (linux or Windows ) service. 
 
