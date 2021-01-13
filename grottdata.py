@@ -1,9 +1,11 @@
 # grottdata.py processing data  functions
-# Updated: 2020-11-20
-# Version 2.2.6
+# Updated: 2021-01-09
+# Version 2.4.0
 
 #import time
-from datetime import datetime
+from datetime import datetime, timedelta
+#import pytz
+import time
 import sys
 import struct
 import textwrap
@@ -49,7 +51,7 @@ def str2bool(defstr):
     if defstr in ("False", "false", "FALSE", "n", "N", "no", "NO", 0, "0") : defret = False 
     if 'defret' in locals():
         return(defret)
-    else : return
+    else : return()
 
 def procdata(conf,data):    
     if conf.verbose: 
@@ -280,7 +282,7 @@ def procdata(conf,data):
         if (conf.sendbuf == False) or (buffered == "yes" and timefromserver == True) :
             if conf.verbose: print("\t - " + 'Buffered record not sent: sendbuf = False or invalid date/time format')  
             return
-            
+
         if conf.nomqtt != True:
             try: 
                 publish.single(conf.mqtttopic, payload=jsonmsg, qos=0, retain=False, hostname=conf.mqttip,port=conf.mqttport, client_id=conf.inverterid, keepalive=60, auth=conf.pubauth)
@@ -297,28 +299,18 @@ def procdata(conf,data):
         # process pvoutput if enabled
         if conf.pvoutput :      
             import requests
-            #if conf.verbose : print("\t - " + "Grott send data to PVOutput : ") 
-            #get invertnumber
-            #inverternum = int(header[13:14]) 
+ 
             pvidfound = False    
             if  conf.pvinverters == 1 :  
                 pvssid = conf.pvsystemid[1]
                 pvidfound = True    
             else:  
-                for pvnum, pvid in conf.pvinverterid.items():  # for name, age in dictionary.iteritems():  (for Python 2.x)
-                    # print(pvnum)
-                    # print(pvid)
-                    # print(pvserial)
+                for pvnum, pvid in conf.pvinverterid.items():  
                     if pvid == pvserial:
                        print(pvid)
                        pvssid = conf.pvsystemid[pvnum]
                        pvidfound = True    
-                # try: 
-                #    pvssid = conf.pvsystemid[inverternum] 
-                # except:  
-                #    if conf.verbose: print("\t - " + "PVoutput systemid not defined for inverter : ", inverternum)  
-                #    if conf.verbose: print("\t - " + "No output sent to PVOutput.org ")  
-                #    return
+ 
             if not pvidfound:
                 if conf.verbose : print("\t - " + "pvsystemid not found for inverter : ", pvserial)   
                 return                       
@@ -346,4 +338,102 @@ def procdata(conf,data):
             if conf.verbose : print("\t\t - ", reqret.text)
         else: 
             if conf.verbose : print("\t - " + "Grott Send data to PVOutput disabled ") 
+
+    # influxDB processing 
+    if conf.influx:      
+        if conf.verbose :  print("\t - " + "Grott InfluxDB publihing started")
+        try:  
+            import  pytz             
+        except: 
+            if conf.verbose :  print("\t - " + "Grott PYTZ Library not installed in Python, influx processing disabled")    
+            conf.inlyx = False
+            return
+        try: 
+            local = pytz.timezone(conf.tmzone) 
+        except : 
+            if conf.verbose :  
+                if conf.tmzone ==  "local":  print("\t - " + "Timezone local specified default timezone used")
+                else : print("\t - " + "Grott unknown timezone : ",conf.tmzone,", default timezone used")
+            conf.tmzone = "local"
+            local = int(time.timezone/3600)
+            #print(local)
+
+        if conf.tmzone == "local": 
+           curtz = time.timezone 
+           utc_dt = datetime.strptime (jsondate, "%Y-%m-%dT%H:%M:%S") + timedelta(seconds=curtz) 
+        else :      
+            naive = datetime.strptime (jsondate, "%Y-%m-%dT%H:%M:%S")
+            local_dt = local.localize(naive, is_dst=None)
+            utc_dt = local_dt.astimezone(pytz.utc)
+        
+        ifdt = utc_dt.strftime ("%Y-%m-%dT%H:%M:%S")
+        if conf.verbose :  print("\t - " + "Grott original time : ",jsondate,"adjusted UTC time for influx : ",ifdt)
+
+        ifjson = [
+            {
+                "measurement":pvserial,
+                "time":ifdt,       
+                "fields":{
+                        "device":pvserial,
+                        "buffered":buffered,
+                        "pvstatus":pvstatus,
+                        "pv1watt":pv1watt,
+                        "pv2watt":pv2watt,
+                        "pvpowerin":pvpowerin,
+                        "pvpowerout":pvpowerout,
+                        "pvfrequentie":pvfrequentie,
+                        "pvgridvoltage":pvgridvoltage,                             
+                        "pvenergytoday":pvenergytoday,
+                        "pvenergytotal":pvenergytotal,
+                        "pv1voltage":pv1voltage,
+                        "pv2voltage":pv2voltage,
+                        "pv1current":pv1current,
+                        "pv2current":pv2current,
+                        "pvtemperature":pvtemperature,
+                        "pvipmtemperature":pvipmtemperature}                                
+                        }]
+        #print(ifjson)
+        print("\t - " + "Grott influxdb jsonmsg: ")        
+        print(format_multi_line("\t\t\t ", str(ifjson)))   
+        #if conf.verbose :  print("\t - " + "Grott InfluxDB publihing started")
+  
+        try: 
+            if (conf.influx2):
+                if conf.verbose :  print("\t - " + "Grott write to influxdb v2") 
+                ifresult = conf.ifwrite_api.write(conf.ifbucket,conf.iforg,ifjson)   
+                #print(ifresult)
+            else: 
+                if conf.verbose :  print("\t - " + "Grott write to influxdb v1") 
+                ifresult = conf.influxclient.write_points(ifjson)
+        #except : 
+        except Exception as e:
+            # if  conf.verbose: 
+                print("\t - " + "Grott InfluxDB error ")
+                print(e) 
+                raise SystemExit("Grott Influxdb write error, grott will be stopped") 
+            
+    else: 
+            if conf.verbose : print("\t - " + "Grott Send data to Influx disabled ")      
+
+    if conf.extension : 
+        
+        if conf.verbose :  print("\t - " + "Grott extension processing started : ", conf.extname)
+        import importlib
+        try: 
+            module = importlib.import_module(conf.extname, package=None)
+        except :
+            if conf.verbose : print("\t - " + "Grott import extension failed:", conf.extname)      
+            return
+        try:
+            ext_result = module.grottext(conf,result_string,jsonmsg) 
+        except Exception as e:
+            print("\t - " + "Grott extension processing error ")
+            print(e) 
+            return
+
+        if conf.verbose :  
+            print("\t - " + "Grott extension processing ended : ", ext_result)
+            #print("\t -", ext_result)
+    else: 
+            if conf.verbose : print("\t - " + "Grott extension processing disabled ")      
             

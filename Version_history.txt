@@ -114,3 +114,19 @@ Enable PVOUTPUT for multiple inverters (specify , pvinverters=1-8, pvsystemidx x
 Changed support for multiple inverters to supported all kind combination of inverters with 1 grott instance, 
 Enable PVOUTPUT for multiple inverters (specify , pvinverters=1-8, pvsystemidx=<pvoutput systemid>, pvinverteridx=<inverterid for pvsystemidx>  x=integer, pv). 
       default pvinverters = 1 and pvsystemid = <your systemid> 
+2.3.0
+Support direct output to Influxdb. See wiki for more information how to enable (resolve issue: #29)
+allow true / false (lower cases) in ini file and environmental variables (resolve issue: #24 )
+2.3.1
+Added support for influxdb V2
+2.3.1a
+bugfix:  influx ip address localhost will be translated to 0.0.0.0
+Grott processing will end with an error if influxdb initialisation fails 
+2.3.1b
+influxdb organization check at initialization only for information. Grott will not be stopped if organization can not be found. 
+      a token with only read/write permission is not allowed to find organisations (tested with influxdb 2.0.4)
+influxdb write error will stop grott processing (just to be save if organization is not available)
+2.4.0 
+Introduce possibility to add extensions for additional (personalized) processing. 
+ see wiki for more information: 
+create extension directory with extension examples  
