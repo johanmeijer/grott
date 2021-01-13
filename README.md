@@ -10,7 +10,7 @@ The growatt inverter sends log data to the growatt website at the internet. At t
 * InfluxDB (V1 and V2) 
 * Using the extension function you can add your own processing and output functionality, 
  
-MQTT can be used to distribute the data to the applications who need it (eg NodeRed, Home Assistant, OpenHab and Domoticz). Descriptions and examples are available in the Wiki 
+MQTT can be used to distribute the data to other applications like: NodeRed, Grafana (using InfluxDB), Home Assistant, OpenHab and Domoticz. Descriptions and examples are available in the Wiki 
 
 The program is written in python and runs under Linux, Windows and is available in a docker container on Docker Hub (see: https://github.com/johanmeijer/grott/wiki/Docker-support).  
 
