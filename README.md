@@ -8,7 +8,7 @@ The growatt inverter sends log data to the growatt website at the internet. At t
 * MQTT
 * PVOutput.org
 * InfluxDB (V1 and V2) 
-* Using the extension function you can add your own processing and output functionality, 
+* Using the extension functionality you can add your own processing and output functionality, 
  
 MQTT can be used to distribute the data to other applications like: NodeRed, Grafana (using InfluxDB), Home Assistant, OpenHab and Domoticz. Descriptions and examples are available in the Wiki 
 
