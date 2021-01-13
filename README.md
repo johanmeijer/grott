@@ -16,7 +16,9 @@ The program is written in python and runs under Linux, Windows and is available 
 
 Grott can be started from the command line or as a (linux or Windows ) service. 
 
-Please see the wiki for more information and installation details. There is also a short first time installation description available. 
+To "see" the growatt data, the network traffic needs to be routed via the system Grott is running (see: https://github.com/johanmeijer/grott/wiki/Rerouting-Growatt-Wifi-TCPIP-data-via-your-Grott-Server).  
+
+Please see the wiki (https://github.com/johanmeijer/grott/wiki) for more information and installation details. There is also a short first time installation description available. 
 
 # Version History 
 ## New in Version 2.4.0  
