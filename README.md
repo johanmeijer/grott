@@ -88,11 +88,6 @@ In sniff mode it is necessary to run Grott with SUDO rights.
 
 *** 
 
-## Grott as a Service 
-Copy grott.service in /etc/systemd/system directory for running grott as a deamon (see wiki how to use services for bot Linux as Windows)
-
-Be aware the assumption is that Grott is installed in /home/pi/growatt. grott.service Needs to be modified if an other directory is used. 
-
 ## Minimal installation 
 The following modules are needed the use Grott:
 - grott.py
