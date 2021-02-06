@@ -130,3 +130,5 @@ influxdb write error will stop grott processing (just to be save if organization
 Introduce possibility to add extensions for additional (personalized) processing. 
  see wiki for more information: 
 create extension directory with extension examples  
+2.4.1
+Fixed date proble with T065150X record layout 

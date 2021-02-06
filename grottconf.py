@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2021-01-09
-# Version 2.4.0
+# Updated: 2021-02-06
+# Version 2.4.1
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -569,7 +569,7 @@ class Conf :
         self.recorddict5 = {"T06NNNNX": {
             "decrypt"           : "True",
             "pvserial"          : 76,
-            "date"              : 126,
+            "date"              : 136,
             "pvstatus"          : 158, 
             "pvpowerin"         : 162,    
             "pv1voltage"        : 170,    
