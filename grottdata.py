@@ -1,5 +1,5 @@
 # grottdata.py processing data  functions
-# Updated: 2021-01-26
+# Updated: 2021-02-11
 # Version 2.5.0
 
 #import time
@@ -150,11 +150,11 @@ def procdata(conf,data):
                     #if not default is num
                     keytype = "num"           
                 if keytype == "text" :
-                    definedkey[keyword] = result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["lenght"]*2)]
+                    definedkey[keyword] = result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)]
                     definedkey[keyword] = codecs.decode(definedkey[keyword], "hex").decode('utf-8')
                     #print(definedkey[keyword])
                 else:                    
-                    definedkey[keyword] = int(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["lenght"]*2)],16)                                     
+                    definedkey[keyword] = int(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)],16)                                     
         
         # test if pvserial was defined, if not take inverterid from config. 
         try: 
