@@ -132,3 +132,10 @@ Introduce possibility to add extensions for additional (personalized) processing
 create extension directory with extension examples  
 2.4.1
 Fixed date proble with T065150X record layout 
+2.5.0 
+Change data / layout processing. 
+Improved dynamic data processing  and dynamic generation of output depended on keywords specified in record layout makes it possible: 
+      - easy add new keyword / values to process 
+      - rename keywords 
+      - external layout definitions with a layout json file still exist and make it now possible for users to easily add / change the data processing
+      - define print (verbose) layout of values 
