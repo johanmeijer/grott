@@ -21,9 +21,20 @@ To "see" the growatt data, the network traffic needs to be routed via the system
 Please see the wiki (https://github.com/johanmeijer/grott/wiki) for more information and installation details. There is also a short first time installation description available. 
 
 # Version History 
+## New in Version 2.5.0  
+Improved dynamic data processing  and dynamic generation of output allowing: 
+* add new output (values) without changing code (using external layout definitions)
+* rename keywords in MQTT JSON message and influxDB to own naming convention 
+* format the verbose output values
+
+see: https://github.com/johanmeijer/grott/wiki/Grott-advanced-(customize-behaviour)   
+<br> 
+Added new outout values to mqtt and influxDB to support 3 phase grid connection (actual information on voltage, current and power delivered), total active worktime (in 0.5 S) and energy generation per PV string (day and total)
+
+# Version History 
 ## New in Version 2.4.0  
 Introduce possibility to add extensions for additional (personalized) processing. 
-<br> 
+,br.     
 see: https://github.com/johanmeijer/grott/wiki/Extensions
 
 ## New in Version 2.3.1  
