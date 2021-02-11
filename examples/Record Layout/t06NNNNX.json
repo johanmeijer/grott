@@ -1,0 +1,20 @@
+{"T06NNNNX": {
+    "decrypt"           : {"value" :"True"},
+    "pvserial"          : {"value" :76, "lenght" : 10, "type" : "text", "devide" : 10},
+    "date"              : {"value" :136, "devide" : 10}, 
+    "pvstatus"          : {"value" :158, "lenght" : 2, "type" : "num"},  
+    "pvpowerin"         : {"value" :162, "lenght" : 4, "type" : "num", "devide" : 10},    
+    "pv1voltage"        : {"value" :170, "lenght" : 2, "type" : "num", "devide" : 10},    
+    "pv1current"        : {"value" :174, "lenght" : 2, "type" : "num", "devide" : 10},            
+    "pv1watt"           : {"value" :178, "lenght" : 4, "type" : "num", "devide" : 10},           
+    "pv2voltage"        : {"value" :186, "lenght" : 2, "type" : "num", "devide" : 10},        
+    "pv2current"        : {"value" :190, "lenght" : 2, "type" : "num", "devide" : 10},        
+    "pv2watt"           : {"value" :194, "lenght" : 4, "type" : "num", "devide" : 10},        
+    "pvpowerout"        : {"value" :250, "lenght" : 4, "type" : "num", "devide" : 10},        
+    "pvfrequentie"      : {"value" :258, "lenght" : 2, "type" : "num", "devide" : 100},        
+    "pvgridvoltage"     : {"value" :262, "lenght" : 2, "type" : "num", "devide" : 10},        
+    "pvenergytoday"     : {"value" :354, "lenght" : 4, "type" : "num", "devide" : 10},         
+    "pvenergytotal"     : {"value" :362, "lenght" : 4, "type" : "num", "devide" : 10},         
+    "pvtemperature"     : {"value" :530, "lenght" : 2, "type" : "num", "devide" : 10},         
+    "pvipmtemperature"  : {"value" :534, "lenght" : 2, "type" : "num", "devide" : 10}     
+    } }     
