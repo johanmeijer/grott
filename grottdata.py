@@ -1,6 +1,6 @@
 # grottdata.py processing data  functions
-# Updated: 2021-02-11
-# Version 2.5.0
+# Updated: 2021-02-13
+# Version 2.5.1
 
 #import time
 from datetime import datetime, timedelta
@@ -290,17 +290,17 @@ def procdata(conf,data):
                 #dynamic print 
                 print("\t - " + "Grott values retrieved:")
                 for key in definedkey : 
-                    # test if there is an devide factor is specifed 
+                    # test if there is an divide factor is specifed 
                     try:  
                         #print(keyword)
-                        keydevide =  conf.recorddict[layout][key]["devide"]
-                        #print(keydevide)
+                        keydivide =  conf.recorddict[layout][key]["divide"]
+                        #print(keydivide)
                     except:
                         #print("error")
-                        keydevide = 1  
+                        keydivide = 1  
         
-                    if type(definedkey[key]) != type(str()) and keydevide != 1 :
-                        printkey = "{:.1f}".format(definedkey[key]/keydevide)          
+                    if type(definedkey[key]) != type(str()) and keydivide != 1 :
+                        printkey = "{:.1f}".format(definedkey[key]/keydivide)          
                     else :
                         printkey = definedkey[key]
                     print("\t\t - ",key.ljust(20) + " : ",printkey)              

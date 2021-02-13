@@ -139,3 +139,5 @@ Improved dynamic data processing  and dynamic generation of output depended on k
       - rename keywords 
       - external layout definitions with a layout json file still exist and make it now possible for users to easily add / change the data processing
       - define print (verbose) layout of values 
+2.5.1 
+Cosmetic change (change devide in divide) 
