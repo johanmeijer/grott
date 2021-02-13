@@ -21,7 +21,7 @@ To "see" the growatt data, the network traffic needs to be routed via the system
 Please see the wiki (https://github.com/johanmeijer/grott/wiki) for more information and installation details. There is also a short first time installation description available. 
 
 # Version History 
-## New in Version 2.5.0  
+## New in Version 2.5.x  
 Improved dynamic data processing  and dynamic generation of output allowing: 
 * add new output (values) without changing code (using external layout definitions)
 * rename keywords in MQTT JSON message and influxDB to own naming convention 
