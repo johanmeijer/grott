@@ -141,3 +141,6 @@ Improved dynamic data processing  and dynamic generation of output depended on k
       - define print (verbose) layout of values 
 2.5.1 
 Cosmetic change (change devide in divide) 
+2.5.2
+Bugfix for specifing IP port definitions in environmentals (gmqttport, qifport, ggrowattport) 
+Add additional checking for IP address definitions in environmentals. 

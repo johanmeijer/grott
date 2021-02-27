@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2021-02-13
-# Version 2.5.1
+# Updated: 2021-02-27
+# Version 2.5.2
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -410,7 +410,9 @@ class Conf :
             except: 
                 if self.verbose : print("\nGrott Growatt server IP address env invalid")
         if os.getenv('ggrowattport') != None :     
-            if 0 <= int(os.getenv('ggrowattport')) <= 65535  :  self.growattport = os.getenv('ggrowattport')
+            if 0 <= int(os.getenv('ggrowattport')) <= 65535  :  self.growattport = int(os.getenv('ggrowattport'))
+            else : 
+               if self.verbose : print("\nGrott Growatt server Port address env invalid")   
         #handle mqtt environmentals    
         if os.getenv('gnomqtt') != None :  self.nomqtt = os.getenv('gnomqtt')    
         if os.getenv('gmqttip') != None :    
@@ -420,7 +422,9 @@ class Conf :
             except: 
                 if self.verbose : print("\nGrott MQTT server IP address env invalid")
         if os.getenv('gmqttport') != None :     
-            if 0 <= int(os.getenv('gmqttport')) <= 65535  :  self.mqttport = os.getenv('gmqttport')
+            if 0 <= int(os.getenv('gmqttport')) <= 65535  :  self.mqttport = int(os.getenv('gmqttport'))
+            else : 
+                if self.verbose : print("\nGrott MQTT server Port address env invalid")
         if os.getenv('gmqttauth') != None :  self.mqttauth = os.getenv('gmqttauth')
         if os.getenv('gmqtttopic') != None :  self.mqtttopic = os.getenv('gmqtttopic')
         if os.getenv('gmqttuser') != None :  self.mqttuser = os.getenv('gmqttuser')
@@ -438,8 +442,16 @@ class Conf :
         if os.getenv('ginflux') != None :  self.influx = os.getenv('ginflux') 
         if os.getenv('ginflux2') != None :  self.influx2 = os.getenv('ginflux2') 
         if os.getenv('gifdbname') != None :  self.ifdbname = os.getenv('gifdbname') 
-        if os.getenv('gifip') != None :  self.ifip = os.getenv('gifip') 
-        if os.getenv('gifport') != None :  self.ifport = os.getenv('gifport') 
+        if os.getenv('gifip') != None :    
+            try: 
+                ipaddress.ip_address(os.getenv('gifip'))
+                self.ifip = os.getenv('gifip') 
+            except: 
+                if self.verbose : print("\nGrott InfluxDB server IP address env invalid")
+        if os.getenv('gifport') != None :     
+            if 0 <= int(os.getenv('gifport')) <= 65535  :  self.ifport = int(os.getenv('gifport'))
+            else : 
+                if self.verbose : print("\nGrott InfluxDB server Port address env invalid")      
         if os.getenv('gifuser') != None :  self.ifuser = os.getenv('gifuser') 
         if os.getenv('gifpassword') != None :  self.ifpsw = os.getenv('gifpassword') 
         if os.getenv('giforg') != None :  self.iforg = os.getenv('giforg') 
