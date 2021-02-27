@@ -30,6 +30,9 @@ Improved dynamic data processing  and dynamic generation of output allowing:
 see: https://github.com/johanmeijer/grott/wiki/Grott-advanced-(customize-behaviour)   
 <br> 
 Added new outout values to mqtt and influxDB to support 3 phase grid connection (actual information on voltage, current and power delivered), total active worktime (in 0.5 S) and energy generation per PV string (day and total)
+<br>
+     
+Improve environmental processing for mqtt/influxDB/growatt ip and port definitions
 
 # Version History 
 ## New in Version 2.4.0  
