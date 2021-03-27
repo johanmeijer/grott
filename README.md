@@ -34,7 +34,6 @@ Added new outout values to mqtt and influxDB to support 3 phase grid connection 
      
 Improve environmental processing for mqtt/influxDB/growatt ip and port definitions
 
-# Version History 
 ## New in Version 2.4.0  
 Introduce possibility to add extensions for additional (personalized) processing. 
 ,br.     
