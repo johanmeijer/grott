@@ -1,9 +1,16 @@
 version: '3.3'
 services:
     grott:
-        network_mode: host
+        #network_mode: host
+        #image: ledidobe/grott
+        image: ledidobe/grott
         container_name: grott
-        restart: always
+        restart: unless-stopped
+        ports:
+            - "5279:5279"
+        volumes:
+            #- /opt/grott/grottstub.ini:/app/grott.ini
+            #- /opt/grott/grottstub.py:/app/grottext.py
         environment:
             - gblockcmd=False 
             - gnomqtt=False
@@ -15,15 +22,17 @@ services:
             - gpvapikey=yourapikey 
             - gpvinverterid1
             - gpvsystemid1=12345
-            - ginflux = False
-            - ginflux2 = False
-            - gifdbname = grottdb
-            - gifip = localhost
-            - gifport = 8086
-            - gifuser = grott
-            - gigpassword = growatt2020
-            - giftoken  = "influx_token"
-            - giforg  = "grottorg"
-            - gifbucket = "grottdb" 
+            - ginflux=False
+            - ginflux2=False
+            - gifdbname=grottdb
+            - gifip=localhost
+            - gifport=8086
+            - gifuser=grott
+            - gigpassword=growatt2020
+            - giftoken=influx_token
+            - giforg=grottorg
+            - gifbucket=grottdb
+            - gextension=false
+            - gextname=grottext
+            - 'gextvar = {"ip": "192.168.0.47", "port": "8000"}'
             - TZ=Europe/Amsterdam 
-        image: ledidobe/grott
