@@ -26,6 +26,8 @@ Improved dynamic data processing  and dynamic generation of output allowing:
 * add new output (values) without changing code (using external layout definitions)
 * rename keywords in MQTT JSON message and influxDB to own naming convention 
 * format the verbose output values
+* Allow negative values for pvpowerout. New (always on) inverters can also use power. 
+* Bugfix inluxdb port error
 
 see: https://github.com/johanmeijer/grott/wiki/Grott-advanced-(customize-behaviour)   
 <br> 
