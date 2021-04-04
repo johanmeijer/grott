@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2021-02-27
-# Version 2.5.2
+# Updated: 2021-04-04
+# Version 2.5.3
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -153,6 +153,7 @@ class Conf :
 
                 #self.influxclient = InfluxDBClient(url='192.168.0.211:8086',org=self.iforg, token=self.iftoken)
                 self.influxclient = InfluxDBClient(url="{}:{}".format(self.ifip, self.ifport),org=self.iforg, token=self.iftoken)
+                
                 self.ifbucket_api = self.influxclient.buckets_api()
                 self.iforganization_api = self.influxclient.organizations_api()              
                 self.ifwrite_api = self.influxclient.write_api(write_options=SYNCHRONOUS)
@@ -171,7 +172,7 @@ class Conf :
                             orgfound = True
                             break
                     if not orgfound: 
-                        print("\t - " + "influxDB organization", self.iforg, "not defined or not authorisation to check")  
+                        print("\t - " + "influxDB organization", self.iforg, "not defined or no authorisation to check")  
                         ##self.influx = False  
                         ##raise SystemExit("Grott Influxdb initialisation error")
 
@@ -368,7 +369,7 @@ class Conf :
         if config.has_option("influx","influx2"): self.influx2 = config.get("influx","influx2")
         if config.has_option("influx","dbname"): self.ifdbname = config.get("influx","dbname")
         if config.has_option("influx","ip"): self.ifip = config.get("influx","ip")
-        if config.has_option("influx","port"): self.ifport = config.get("influx","port")
+        if config.has_option("influx","port"): self.ifport = int(config.get("influx","port"))
         if config.has_option("influx","user"): self.ifuser = config.get("influx","user")
         if config.has_option("influx","password"): self.ifpsw = config.get("influx","password")
         if config.has_option("influx","org"): self.iforg = config.get("influx","org")
@@ -554,7 +555,7 @@ class Conf :
             "pv2voltage"        : {"value" :106, "length" : 2, "type" : "num", "divide" : 10},                
             "pv2current"        : {"value" :110, "length" : 2, "type" : "num", "divide" : 10},                
             "pv2watt"           : {"value" :114, "length" : 4, "type" : "num", "divide" : 10},                
-            "pvpowerout"        : {"value" :122, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvpowerout"        : {"value" :122, "length" : 4, "type" : "numx", "divide" : 10},                
             "pvfrequentie"      : {"value" :130, "length" : 2, "type" : "num", "divide" : 100},                
             "pvgridvoltage"     : {"value" :134, "length" : 2, "type" : "num", "divide" : 10},                
             "pvgridcurrent"     : {"value" :138, "length" : 2, "type" : "num", "divide" : 10},                
@@ -602,7 +603,7 @@ class Conf :
             "pv2voltage"        : {"value" :106, "length" : 2, "type" : "num", "divide" : 10},                
             "pv2current"        : {"value" :110, "length" : 2, "type" : "num", "divide" : 10},                
             "pv2watt"           : {"value" :114, "length" : 4, "type" : "num", "divide" : 10},                
-            "pvpowerout"        : {"value" :170, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvpowerout"        : {"value" :170, "length" : 4, "type" : "numx", "divide" : 10},                
             "pvfrequentie"      : {"value" :178, "length" : 2, "type" : "num", "divide" : 100},                
             "pvgridvoltage"     : {"value" :182, "length" : 2, "type" : "num", "divide" : 10},                
             "pvenergytoday"     : {"value" :274, "length" : 4, "type" : "num", "divide" : 10},                  
@@ -623,7 +624,7 @@ class Conf :
             "pv2voltage"        : {"value" :186, "length" : 2, "type" : "num", "divide" : 10},                
             "pv2current"        : {"value" :190, "length" : 2, "type" : "num", "divide" : 10},                
             "pv2watt"           : {"value" :194, "length" : 4, "type" : "num", "divide" : 10},                
-            "pvpowerout"        : {"value" :202, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvpowerout"        : {"value" :202, "length" : 4, "type" : "numx", "divide" : 10},                
             "pvfrequentie"      : {"value" :210, "length" : 2, "type" : "num", "divide" : 100},                
             "pvgridvoltage"     : {"value" :214, "length" : 2, "type" : "num", "divide" : 10},                
             "pvgridcurrent"     : {"value" :218, "length" : 2, "type" : "num", "divide" : 10},                
@@ -667,7 +668,7 @@ class Conf :
             "pv2voltage"        : {"value" :186, "length" : 2, "type" : "num", "divide" : 10},                
             "pv2current"        : {"value" :190, "length" : 2, "type" : "num", "divide" : 10},                
             "pv2watt"           : {"value" :194, "length" : 4, "type" : "num", "divide" : 10},                
-            "pvpowerout"        : {"value" :250, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvpowerout"        : {"value" :250, "length" : 4, "type" : "numx", "divide" : 10},                
             "pvfrequentie"      : {"value" :258, "length" : 2, "type" : "num", "divide" : 100},                
             "pvgridvoltage"     : {"value" :262, "length" : 2, "type" : "num", "divide" : 10},                
             "pvgridcurrent"     : {"value" :266, "length" : 2, "type" : "num", "divide" : 10},                

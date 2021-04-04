@@ -1,6 +1,6 @@
 # grottdata.py processing data  functions
-# Updated: 2021-02-13
-# Version 2.5.1
+# Updated: 2021-04-04
+# Version 2.5.3
 
 #import time
 from datetime import datetime, timedelta
@@ -148,14 +148,19 @@ def procdata(conf,data):
                     keytype = conf.recorddict[layout][keyword]["type"]           
                 except: 
                     #if not default is num
-                    keytype = "num"           
+                    keytype = "num"               
                 if keytype == "text" :
                     definedkey[keyword] = result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)]
                     definedkey[keyword] = codecs.decode(definedkey[keyword], "hex").decode('utf-8')
                     #print(definedkey[keyword])
-                else:                    
+                if keytype == "num" :
+                #else:                    
                     definedkey[keyword] = int(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)],16)                                     
-        
+                if keytype == "numx" :
+                    #process signed integer 
+                    keybytes = bytes.fromhex(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)])
+                    definedkey[keyword] = int.from_bytes(keybytes, byteorder='big', signed=True)
+                    
         # test if pvserial was defined, if not take inverterid from config. 
         try: 
             test = definedkey["pvserial"]
@@ -370,8 +375,7 @@ def procdata(conf,data):
             }
             
             pvodate = jsondate[:4] +jsondate[5:7] + jsondate[8:10]
-            pvotime = jsondate[11:16] 
-                            
+            pvotime = jsondate[11:16]                      
             pvdata = { 
                 "d"     : pvodate,
                 "t"     : pvotime,
