@@ -147,3 +147,6 @@ Add additional checking for IP address definitions in environmentals.
 2.5.3
 Allow negative values for pvpowerout (added type = numx to recordlayout) because new Growatt inverter can also publish neagtive values
 Complement bugfix prepared by KBraham (issue / pull request #41)
+2.5.4
+Change PVIMPTEMP for the extend records (T05nnnnX and t06nnnnX)
+Added new values for to T05nnnnX records. 

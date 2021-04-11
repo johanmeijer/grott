@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2021-04-04
-# Version 2.5.3
+# Updated: 2021-04-07
+# Version 2.5.4
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -606,12 +606,28 @@ class Conf :
             "pvpowerout"        : {"value" :170, "length" : 4, "type" : "numx", "divide" : 10},                
             "pvfrequentie"      : {"value" :178, "length" : 2, "type" : "num", "divide" : 100},                
             "pvgridvoltage"     : {"value" :182, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent"     : {"value" :186, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower"       : {"value" :190, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvgridvoltage2"    : {"value" :198, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent2"    : {"value" :202, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower2"      : {"value" :206, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvgridvoltage3"    : {"value" :214, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent3"    : {"value" :218, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower3"      : {"value" :222, "length" : 4, "type" : "num", "divide" : 10},  
+            "totworktime"       : {"value" :266, "length" : 4, "type" : "num", "divide" : 7200},
             "pvenergytoday"     : {"value" :274, "length" : 4, "type" : "num", "divide" : 10},                  
-            "pvenergytotal"     : {"value" :282, "length" : 4, "type" : "num", "divide" : 10},         
+            "pvenergytotal"     : {"value" :282, "length" : 4, "type" : "num", "divide" : 10},
+            "epvtotal"          : {"value" :290, "length" : 4, "type" : "num", "divide" : 10},
+            "epv1today"         : {"value" :298, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv1total"         : {"value" :306, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv2today"         : {"value" :314, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv2total"         : {"value" :322, "length" : 4, "type" : "num", "divide" : 10},                           
             "pvtemperature"     : {"value" :450, "length" : 2, "type" : "num", "divide" : 10},                 
-            "pvipmtemperature"  : {"value" :454, "length" : 2, "type" : "num", "divide" : 10},     
+            "pvipmtemperature"  : {"value" :466, "length" : 2, "type" : "num", "divide" : 10},          
+            #"pbusvolt"          : {"value" :470, "length" : 2, "type" : "num", "divide" : 1},                  
+            #"nbusvolt"          : {"value" :474, "length" : 2, "type" : "num", "divide" : 1}  
             } }   
-
+            
         self.recorddict3 = {"T06NNNN": {
             "decrypt"           : {"value" :"True"},
             "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
@@ -688,7 +704,7 @@ class Conf :
             "epv2today"         : {"value" :394, "length" : 4, "type" : "num", "divide" : 10},                
             "epv2total"         : {"value" :402, "length" : 4, "type" : "num", "divide" : 10},                           
             "pvtemperature"     : {"value" :530, "length" : 2, "type" : "num", "divide" : 10},                 
-            "pvipmtemperature"  : {"value" :534, "length" : 2, "type" : "num", "divide" : 10},          
+            "pvipmtemperature"  : {"value" :546, "length" : 2, "type" : "num", "divide" : 10},          
             #"pbusvolt"          : {"value" :550, "length" : 2, "type" : "num", "divide" : 1},                  
             #"nbusvolt"          : {"value" :554, "length" : 2, "type" : "num", "divide" : 1}    
             } }     
