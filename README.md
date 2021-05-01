@@ -131,5 +131,5 @@ The following modules are needed the use Grott:
 
 #### If you are happy a donation to support the development of Grott is welcome. 
 
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=RQFS46F9JTESQ)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=RQFS46F9JTESQ&item_name=Grott+&currency_code=EUR)
 
