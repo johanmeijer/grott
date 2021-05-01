@@ -20,7 +20,13 @@ To "see" the growatt data, the network traffic needs to be routed via the system
 
 Please see the wiki (https://github.com/johanmeijer/grott/wiki) for more information and installation details. There is also a short first time installation description available. 
 
+#### If you are happy with Grott, a donation to support future development is welcome. 
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=RQFS46F9JTESQ&item_name=Grott+&currency_code=EUR)
+
 # Version History 
+## Under Development (available for testing)
+* SPF off grid inverter support (see issue #42/#46)
+* SPH hybrid (grid/battery) support (see issue #34)
 ## New in Version 2.5.x  
 Improved dynamic data processing  and dynamic generation of output allowing: 
 * add new output (values) without changing code (using external layout definitions)
@@ -129,7 +135,5 @@ The following modules are needed the use Grott:
 #### More Version History: see Version_history.txt file. 
 #### Grott is a "hobby" project you can use it as it is (with the potential errors and imperfections). Remarks and requests for improvement are welcome. 
 
-#### If you are happy with Grott, a donation to support future development is welcome. 
 
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=RQFS46F9JTESQ&item_name=Grott+&currency_code=EUR)
 
