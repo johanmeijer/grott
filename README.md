@@ -128,3 +128,8 @@ The following modules are needed the use Grott:
 
 #### More Version History: see Version_history.txt file. 
 #### Grott is a "hobby" project you can use it as it is (with the potential errors and imperfections). Remarks and requests for improvement are welcome. 
+
+#### If you are happy a donation to support the development of Grott is welcome. 
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=RQFS46F9JTESQ)
+
