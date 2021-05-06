@@ -20,7 +20,6 @@ To "see" the growatt data, the network traffic needs to be routed via the system
 
 Please see the wiki (https://github.com/johanmeijer/grott/wiki) for more information and installation details. There is also a short first time installation description available. 
 
-#### If you are happy with Grott, a donation to support future development is welcome. 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=RQFS46F9JTESQ&item_name=Grott+&currency_code=EUR)
 
 # Version History 
