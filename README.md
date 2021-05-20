@@ -23,7 +23,7 @@ Please see the wiki (https://github.com/johanmeijer/grott/wiki) for more informa
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=RQFS46F9JTESQ&item_name=Grott+&currency_code=EUR)
 
 # Version History 
-## Under Development (available for testing)
+## Under Development (2.6.1 available for testing )
 * SPF off grid inverter support (see issue #42/#46)
 * SPH hybrid (grid/battery) support (see issue #34)
 ## New in Version 2.5.x  
