@@ -1,6 +1,6 @@
 # grottdata.py processing data  functions
-# Updated: 2021-04-04
-# Version 2.5.3
+# Updated: 2021-05-20
+# Version 2.6.1
 
 #import time
 from datetime import datetime, timedelta
@@ -72,6 +72,9 @@ def procdata(conf,data):
         layout = "T" + header[6:8] + header[12:14] + header[14:16]
         if ndata > 375:  layout = layout + "X"
 
+        if conf.invtype != "default" :
+            layout = layout + conf.invtype.upper()
+
         if header[14:16] == "50" : buffered = "yes"
         else: buffered = "no" 
 
@@ -89,6 +92,8 @@ def procdata(conf,data):
                     test = conf.recorddict[layout]
                 except:
                     #no valid record fall back on old processing? 
+                    if conf.verbose : print("\t - " + "no matching record layout found, standard processing performed")
+                    layout = "none"
                     novalidrec = True  
             else:         
                 novalidrec = True     
@@ -143,23 +148,34 @@ def procdata(conf,data):
         for keyword in  conf.recorddict[layout].keys() :
             
             if keyword not in ("decrypt","date") :  
+                #try if keyword should be included 
+                include=True
                 try:
-                    #try if key type is specified  
-                    keytype = conf.recorddict[layout][keyword]["type"]           
+                    #try if key type is specified 
+                    if conf.recorddict[layout][keyword]["incl"] == "no" : 
+                        include=False
                 except: 
-                    #if not default is num
-                    keytype = "num"               
-                if keytype == "text" :
-                    definedkey[keyword] = result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)]
-                    definedkey[keyword] = codecs.decode(definedkey[keyword], "hex").decode('utf-8')
-                    #print(definedkey[keyword])
-                if keytype == "num" :
-                #else:                    
-                    definedkey[keyword] = int(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)],16)                                     
-                if keytype == "numx" :
-                    #process signed integer 
-                    keybytes = bytes.fromhex(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)])
-                    definedkey[keyword] = int.from_bytes(keybytes, byteorder='big', signed=True)
+                    #no include statement keyword should be process, set include to prevent except errors
+                    include = True
+                #process only keyword needs to be included (default):     
+                if ((include) or (conf.includeall)): 
+                    try:
+                        #try if key type is specified  
+                        keytype = conf.recorddict[layout][keyword]["type"]           
+                    except: 
+                        #if not default is num
+                        keytype = "num"               
+                    if keytype == "text" :
+                        definedkey[keyword] = result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)]
+                        definedkey[keyword] = codecs.decode(definedkey[keyword], "hex").decode('utf-8')
+                        #print(definedkey[keyword])
+                    if keytype == "num" :
+                    #else:                    
+                        definedkey[keyword] = int(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)],16)                                     
+                    if keytype == "numx" :
+                        #process signed integer 
+                        keybytes = bytes.fromhex(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)])
+                        definedkey[keyword] = int.from_bytes(keybytes, byteorder='big', signed=True)
                     
         # test if pvserial was defined, if not take inverterid from config. 
         try: 
@@ -312,20 +328,30 @@ def procdata(conf,data):
 
         #create JSON message  (first create obj dict and then convert to a JSON message)                   
 
-        jsonobj = {
-                    "device" : definedkey["pvserial"],
-                    "time" : jsondate, 
-                    "buffered" : buffered,
-                    "values" : {}
-                 }
+        # if record is a smart monitor record use datalogserial as device (to distinguish from solar record) 
+        if header[14:16] != "20" :
+            jsonobj = {
+                        "device" : definedkey["pvserial"],
+                        "time" : jsondate, 
+                        "buffered" : buffered,
+                        "values" : {}
+                    }
+        else : 
+                jsonobj = {
+                        "device" : definedkey["datalogserial"],
+                        "time" : jsondate, 
+                        "buffered" : buffered,
+                        "values" : {}
+                    }            
 
         for key in definedkey : 
 
             if key != "pvserial" : 
-                #if conf.recorddict[layout][key]["type"] == "num" :                   
+                #if conf.recorddict[layout][key]["type"] == "num" : 
+                # only add int values to the json object                  
                 if type(definedkey[key]) == type(1) :                                                                     
                      jsonobj["values"][key] = definedkey[key]
-
+                     
         jsonmsg = json.dumps(jsonobj) 
         
         if conf.verbose:
@@ -375,20 +401,53 @@ def procdata(conf,data):
             }
             
             pvodate = jsondate[:4] +jsondate[5:7] + jsondate[8:10]
-            pvotime = jsondate[11:16]                      
-            pvdata = { 
-                "d"     : pvodate,
-                "t"     : pvotime,
-                "v1"    : definedkey["pvenergytoday"]*100,
-                "v2"    : definedkey["pvpowerout"]/10,
-                "v6"    : definedkey["pvgridvoltage"]/10
-                }
-            #print(pvheader)
-            if conf.verbose : print("\t\t - ", pvheader)
-            if conf.verbose : print("\t\t - ", pvdata)
-            reqret = requests.post(conf.pvurl, data = pvdata, headers = pvheader)
-            if conf.verbose :  print("\t - " + "Grott PVOutput response: ") 
-            if conf.verbose : print("\t\t - ", reqret.text)
+            # debug: pvodate = jsondate[:4] +jsondate[5:7] + "16" 
+            pvotime = jsondate[11:16] 
+            # debug: pvotime = "09:05" 
+            # if record is a smart monitor record sent smart monitor data to PVOutput
+            if header[14:16] != "20" :
+                pvdata = { 
+                    "d"     : pvodate,
+                    "t"     : pvotime,
+                    "v1"    : definedkey["pvenergytoday"]*100,
+                    "v2"    : definedkey["pvpowerout"]/10,
+                    "v6"    : definedkey["pvgridvoltage"]/10
+                    }
+                #print(pvheader)
+                if conf.verbose : print("\t\t - ", pvheader)
+                if conf.verbose : print("\t\t - ", pvdata)
+                reqret = requests.post(conf.pvurl, data = pvdata, headers = pvheader)
+                if conf.verbose :  print("\t - " + "Grott PVOutput response: ") 
+                if conf.verbose : print("\t\t - ", reqret.text)
+            else: 
+                # send smat monitor data c1 = 3 indiates v3 is lifetime energy (day wil be calculated), n=1 indicates is net data (import /export)
+                # value seprated because it is not allowed to sent combination at once
+                pvdata1 = { 
+                    "d"     : pvodate,
+                    "t"     : pvotime,
+                    "v3"    : definedkey["pos_act_energy"]*100,
+                    "c1"    : 3, 
+                    "v6"    : definedkey["voltage_l1"]/10
+                    }          
+                    
+                pvdata2 = { 
+                   "d"     : pvodate,
+                   "t"     : pvotime,
+                   "v4"    : definedkey["pos_rev_act_power"]/10,
+                   "v6"    : definedkey["voltage_l1"]/10,
+                   "n"     : 1
+                   }                       
+                    #"v4"    : definedkey["pos_act_power"]/10,
+                #print(pvheader)
+                if conf.verbose : print("\t\t - ", pvheader)
+                if conf.verbose : print("\t\t - ", pvdata1)
+                if conf.verbose : print("\t\t - ", pvdata2)
+                reqret = requests.post(conf.pvurl, data = pvdata1, headers = pvheader)
+                if conf.verbose :  print("\t - " + "Grott PVOutput response SM1: ") 
+                if conf.verbose : print("\t\t - ", reqret.text)
+                reqret = requests.post(conf.pvurl, data = pvdata2, headers = pvheader)
+                if conf.verbose :  print("\t - " + "Grott PVOutput response SM2: ") 
+                if conf.verbose : print("\t\t - ", reqret.text)
         else: 
             if conf.verbose : print("\t - " + "Grott Send data to PVOutput disabled ") 
 
@@ -423,11 +482,20 @@ def procdata(conf,data):
         if conf.verbose :  print("\t - " + "Grott original time : ",jsondate,"adjusted UTC time for influx : ",ifdt)
     
         # prepare influx jsonmsg dictionary    
-        ifobj = {
-                    "measurement" : definedkey["pvserial"],
-                    "time" : ifdt,
-                    "fields" : {}
-                }    
+
+        # if record is a smart monitor record use datalogserial as measurement (to distinguish from solar record) 
+        if header[14:16] != "20" :
+            ifobj = {
+                        "measurement" : definedkey["pvserial"],
+                        "time" : ifdt,
+                        "fields" : {}
+                    }    
+        else: 
+            ifobj = {
+                                "measurement" : definedkey["datalogserial"],
+                                "time" : ifdt,
+                               "fields" : {}
+                    }    
 
         for key in definedkey : 
             if key != "date" : 

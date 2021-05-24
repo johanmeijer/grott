@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2021-04-07
-# Version 2.5.4
+# Updated: 2021-05-20 
+# Version 2.6.1
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -20,6 +20,8 @@ class Conf :
         self.minrecl = 100
         self.decrypt = True
         self.compat = False
+        self.invtype = "default"                                                                    #specify sepcial invertype default (spf, sph)
+        self.includeall = False                                                                      #Include all defined keys from layout (also incl = no)
         self.blockcmd = False                                                                       #Block Inverter and Shine configure commands                
         self.noipf = False                                                                          #Allow IP change if needed
         self.gtime  = "auto"                                                                        #time used =  auto: use record time or if not valid server time, alternative server: use always server time 
@@ -192,6 +194,8 @@ class Conf :
         print("\tminrecl:     \t",self.minrecl)
         print("\tdecrypt:     \t",self.decrypt)
         print("\tcompat:      \t",self.compat)
+        print("\tinvtype:     \t",self.invtype)
+        print("\tinclude_all: \t",self.includeall)
         print("\tblockcmd:    \t",self.blockcmd)
         print("\tnoipf:       \t",self.noipf)
         print("\ttime:        \t",self.gtime)
@@ -317,6 +321,7 @@ class Conf :
         self.trace = str2bool(self.trace)        
         self.decrypt = str2bool(self.decrypt)
         self.compat = str2bool(self.compat)
+        self.includeall = str2bool(self.includeall)
         self.blockcmd = str2bool(self.blockcmd)     
         self.noipf = str2bool(self.noipf) 
         self.sendbuf = str2bool(self.sendbuf)      
@@ -335,6 +340,8 @@ class Conf :
         if config.has_option("Generic","verbose"): self.verbose = config.getboolean("Generic","verbose")
         if config.has_option("Generic","decrypt"): self.decrypt = config.getboolean("Generic","decrypt")
         if config.has_option("Generic","compat"): self.compat = config.getboolean("Generic","compat")
+        if config.has_option("Generic","includeall"): self.includeall = config.getboolean("Generic","includeall")
+        if config.has_option("Generic","invtype"): self.invtype = config.get("Generic","invtype")
         if config.has_option("Generic","inverterid"): self.inverterid = config.get("Generic","inverterid")
         if config.has_option("Generic","blockcmd"): self.blockcmd = config.get("Generic","blockcmd")
         if config.has_option("Generic","noipf"): self.noipf = config.get("Generic","noipf")
@@ -388,6 +395,8 @@ class Conf :
             if 0 <= int(os.getenv('gminrecl')) <= 255  :     self.minrecl = os.getenv('gminrecl')
         if os.getenv('gdecrypt') != None : self.decrypt = os.getenv('gdecrypt') 
         if os.getenv('gcompat') != None :  self.compat = os.getenv('gcompat')
+        if os.getenv('gincludeall') != None :  self.includeall = os.getenv('gincludeall')
+        if os.getenv('ginvtype') != None :  self.invtype = os.getenv('ginvtype')
         if os.getenv('gblockcmd') != None : self.blockcmd = os.getenv('gblockcmd')
         if os.getenv('gnoipf') != None : self.noipf = os.getenv('gnoipf')     
         if os.getenv('gtime') in ("auto", "server") : self.gtime = os.getenv('gtime')   
@@ -469,6 +478,7 @@ class Conf :
                          "0104",                                    #data record    
                          "0116",                                    #ping    
                          "0119",                                    #identify                       
+                         "0120",                                    #Smart Monitor Record
                          "0150",                                    #Archived record
                          "5003",                                    #announce record
                          "5004",                                    #data record    
@@ -499,6 +509,8 @@ class Conf :
             "decrypt"           : {"value" :"False"},
             "pvserial"          : {"value" :36, "length" : 10, "type" : "text", "divide" : 10},
             "date"              : {"value" :56, "divide" : 10}, 
+            "recortype1"        : {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype2"        : {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
             "pvstatus"          : {"value" :78, "length" : 2, "type" : "num"},  
             "pvpowerin"         : {"value" :82, "length" : 4, "type" : "num", "divide" : 10},        
             "pv1voltage"        : {"value" :90, "length" : 2, "type" : "num", "divide" : 10},        
@@ -522,31 +534,33 @@ class Conf :
             "pvenergytotal"     : {"value" :190, "length" : 4, "type" : "num", "divide" : 10},
             "totworktime"       : {"value" :198, "length" : 4, "type" : "num", "divide" : 7200},         
             "pvtemperature"     : {"value" :206, "length" : 2, "type" : "num", "divide" : 10},                 
-            #"isof"              : {"value" :210, "length" : 2, "type" : "num", "divide" : 1},                
-            #"gfcif"             : {"value" :214, "length" : 2, "type" : "num", "divide" : 1},                
-            #"dcif"              : {"value" :218, "length" : 2, "type" : "num", "divide" : 1},                
-            #"vpvfault"          : {"value" :222, "length" : 2, "type" : "num", "divide" : 1},                
-            #"vacfault"          : {"value" :226, "length" : 2, "type" : "num", "divide" : 1},                
-            #"facfault"          : {"value" :230, "length" : 2, "type" : "num", "divide" : 1},                
-            #"tmpfault"          : {"value" :234, "length" : 2, "type" : "num", "divide" : 1},                
-            #"faultcode"         : {"value" :238, "length" : 2, "type" : "num", "divide" : 1},                
+            "isof"              : {"value" :210, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "gfcif"             : {"value" :214, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "dcif"              : {"value" :218, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "vpvfault"          : {"value" :222, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "vacfault"          : {"value" :226, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "facfault"          : {"value" :230, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "tmpfault"          : {"value" :234, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "faultcode"         : {"value" :238, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
             "pvipmtemperature"  : {"value" :242, "length" : 2, "type" : "num", "divide" : 10},          
-            #"pbusvolt"          : {"value" :246, "length" : 2, "type" : "num", "divide" : 1},                  
-            #"nbusvolt"          : {"value" :250, "length" : 2, "type" : "num", "divide" : 1},                
+            "pbusvolt"          : {"value" :246, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                  
+            "nbusvolt"          : {"value" :250, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                
             "epv1today"         : {"value" :278, "length" : 4, "type" : "num", "divide" : 10},                
             "epv1total"         : {"value" :286, "length" : 4, "type" : "num", "divide" : 10},                
             "epv2today"         : {"value" :294, "length" : 4, "type" : "num", "divide" : 10},                
             "epv2total"         : {"value" :302, "length" : 4, "type" : "num", "divide" : 10},                
             "epvtotal"          : {"value" :310, "length" : 4, "type" : "num", "divide" : 10},                
-            #"rac"               : {"value" :318, "length" : 4, "type" : "num", "divide" : 1},                
-            #"eractoday"         : {"value" :326, "length" : 4, "type" : "num", "divide" : 1},                
-            #"eractotal"         : {"value" :334, "length" : 4, "type" : "num", "divide" : 1} 
+            "rac"               : {"value" :318, "length" : 4, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "eractoday"         : {"value" :326, "length" : 4, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "eractotal"         : {"value" :334, "length" : 4, "type" : "num", "divide" : 1,"incl" : "no"} 
             } } 
 
         self.recorddict2 = {"T05NNNN": {
             "decrypt"           : {"value" :"True"},
             "pvserial"          : {"value" :36, "length" : 10, "type" : "text", "divide" : 10},
             "date"              : {"value" :56, "divide" : 10}, 
+            "recortype1"        : {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype2"        : {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
             "pvstatus"          : {"value" :78, "length" : 2, "type" : "num"},  
             "pvpowerin"         : {"value" :82, "length" : 4, "type" : "num", "divide" : 10},        
             "pv1voltage"        : {"value" :90, "length" : 2, "type" : "num", "divide" : 10},        
@@ -570,31 +584,33 @@ class Conf :
             "pvenergytotal"     : {"value" :190, "length" : 4, "type" : "num", "divide" : 10},
             "totworktime"       : {"value" :198, "length" : 4, "type" : "num", "divide" : 7200},         
             "pvtemperature"     : {"value" :206, "length" : 2, "type" : "num", "divide" : 10},                 
-            #"isof"              : {"value" :210, "length" : 2, "type" : "num", "divide" : 1},                
-            #"gfcif"             : {"value" :214, "length" : 2, "type" : "num", "divide" : 1},                
-            #"dcif"              : {"value" :218, "length" : 2, "type" : "num", "divide" : 1},                
-            #"vpvfault"          : {"value" :222, "length" : 2, "type" : "num", "divide" : 1},                
-            #"vacfault"          : {"value" :226, "length" : 2, "type" : "num", "divide" : 1},                
-            #"facfault"          : {"value" :230, "length" : 2, "type" : "num", "divide" : 1},                
-            #"tmpfault"          : {"value" :234, "length" : 2, "type" : "num", "divide" : 1},                
-            #"faultcode"         : {"value" :238, "length" : 2, "type" : "num", "divide" : 1},                
+            "isof"              : {"value" :210, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "gfcif"             : {"value" :214, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "dcif"              : {"value" :218, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "vpvfault"          : {"value" :222, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "vacfault"          : {"value" :226, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "facfault"          : {"value" :230, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "tmpfault"          : {"value" :234, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "faultcode"         : {"value" :238, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
             "pvipmtemperature"  : {"value" :242, "length" : 2, "type" : "num", "divide" : 10},          
-            #"pbusvolt"          : {"value" :246, "length" : 2, "type" : "num", "divide" : 1},                  
-            #"nbusvolt"          : {"value" :250, "length" : 2, "type" : "num", "divide" : 1},                
+            "pbusvolt"          : {"value" :246, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                  
+            "nbusvolt"          : {"value" :250, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                
             "epv1today"         : {"value" :278, "length" : 4, "type" : "num", "divide" : 10},                
             "epv1total"         : {"value" :286, "length" : 4, "type" : "num", "divide" : 10},                
             "epv2today"         : {"value" :294, "length" : 4, "type" : "num", "divide" : 10},                
             "epv2total"         : {"value" :302, "length" : 4, "type" : "num", "divide" : 10},                
             "epvtotal"          : {"value" :310, "length" : 4, "type" : "num", "divide" : 10},                
-            #"rac"               : {"value" :318, "length" : 4, "type" : "num", "divide" : 1},                
-            #"eractoday"         : {"value" :326, "length" : 4, "type" : "num", "divide" : 1},                
-            #"eractotal"         : {"value" :334, "length" : 4, "type" : "num", "divide" : 1}  
+            "rac"               : {"value" :318, "length" : 4, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "eractoday"         : {"value" :326, "length" : 4, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "eractotal"         : {"value" :334, "length" : 4, "type" : "num", "divide" : 1,"incl" : "no"}  
             } } 
         
         self.recorddict4 = {"T05NNNNX": {
             "decrypt"           : {"value" :"True"},
             "pvserial"          : {"value" :36, "length" : 10, "type" : "text", "divide" : 10},
             "date"              : {"value" :56, "divide" : 10}, 
+            "recortype1"        : {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype2"        : {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
             "pvstatus"          : {"value" :78, "length" : 2, "type" : "num"},  
             "pvpowerin"         : {"value" :82, "length" : 4, "type" : "num", "divide" : 10},        
             "pv1voltage"        : {"value" :90, "length" : 2, "type" : "num", "divide" : 10},        
@@ -624,14 +640,16 @@ class Conf :
             "epv2total"         : {"value" :322, "length" : 4, "type" : "num", "divide" : 10},                           
             "pvtemperature"     : {"value" :450, "length" : 2, "type" : "num", "divide" : 10},                 
             "pvipmtemperature"  : {"value" :466, "length" : 2, "type" : "num", "divide" : 10},          
-            #"pbusvolt"          : {"value" :470, "length" : 2, "type" : "num", "divide" : 1},                  
-            #"nbusvolt"          : {"value" :474, "length" : 2, "type" : "num", "divide" : 1}  
+            "pbusvolt"          : {"value" :470, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                  
+            "nbusvolt"          : {"value" :474, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"}  
             } }   
             
         self.recorddict3 = {"T06NNNN": {
             "decrypt"           : {"value" :"True"},
             "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
             "date"              : {"value" :136, "divide" : 10}, 
+            "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
             "pvstatus"          : {"value" :158, "length" : 2, "type" : "num"},  
             "pvpowerin"         : {"value" :162, "length" : 4, "type" : "num", "divide" : 10},        
             "pv1voltage"        : {"value" :170, "length" : 2, "type" : "num", "divide" : 10},        
@@ -655,17 +673,17 @@ class Conf :
             "pvenergytotal"     : {"value" :270, "length" : 4, "type" : "num", "divide" : 10},
             "totworktime"       : {"value" :278, "length" : 4, "type" : "num", "divide" : 7200},         
             "pvtemperature"     : {"value" :286, "length" : 2, "type" : "num", "divide" : 10},                 
-            #"isof"              : {"value" :290, "length" : 2, "type" : "num", "divide" : 1},                
-            #"gfcif"             : {"value" :294, "length" : 2, "type" : "num", "divide" : 1},                
-            #"dcif"              : {"value" :298, "length" : 2, "type" : "num", "divide" : 1},                
-            #"vpvfault"          : {"value" :302, "length" : 2, "type" : "num", "divide" : 1},                
-            #"vacfault"          : {"value" :306, "length" : 2, "type" : "num", "divide" : 1},                
-            #"facfault"          : {"value" :310, "length" : 2, "type" : "num", "divide" : 1},                
-            #"tmpfault"          : {"value" :314, "length" : 2, "type" : "num", "divide" : 1},                
-            #"faultcode"         : {"value" :318, "length" : 2, "type" : "num", "divide" : 1},                
+            "isof"              : {"value" :290, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "gfcif"             : {"value" :294, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "dcif"              : {"value" :298, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "vpvfault"          : {"value" :302, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "vacfault"          : {"value" :306, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "facfault"          : {"value" :310, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "tmpfault"          : {"value" :314, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
+            "faultcode"         : {"value" :318, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},                
             "pvipmtemperature"  : {"value" :322, "length" : 2, "type" : "num", "divide" : 10},          
-            #"pbusvolt"          : {"value" :326, "length" : 2, "type" : "num", "divide" : 1},                  
-            #"nbusvolt"          : {"value" :330, "length" : 2, "type" : "num", "divide" : 1},                
+            "pbusvolt"          : {"value" :326, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                  
+            "nbusvolt"          : {"value" :330, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                
             "epv1today"         : {"value" :358, "length" : 4, "type" : "num", "divide" : 10},                
             "epv1total"         : {"value" :366, "length" : 4, "type" : "num", "divide" : 10},                
             "epv2today"         : {"value" :374, "length" : 4, "type" : "num", "divide" : 10},                
@@ -674,8 +692,12 @@ class Conf :
             } } 
 
         self.recorddict5 = {"T06NNNNX": {
+            "decrypt"           : {"value" :"True"},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10,"incl" : "no"},
             "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
             "date"              : {"value" :136, "divide" : 10}, 
+            "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
             "pvstatus"          : {"value" :158, "length" : 2, "type" : "num"},  
             "pvpowerin"         : {"value" :162, "length" : 4, "type" : "num", "divide" : 10},        
             "pv1voltage"        : {"value" :170, "length" : 2, "type" : "num", "divide" : 10},        
@@ -705,15 +727,264 @@ class Conf :
             "epv2total"         : {"value" :402, "length" : 4, "type" : "num", "divide" : 10},                           
             "pvtemperature"     : {"value" :530, "length" : 2, "type" : "num", "divide" : 10},                 
             "pvipmtemperature"  : {"value" :546, "length" : 2, "type" : "num", "divide" : 10},          
-            #"pbusvolt"          : {"value" :550, "length" : 2, "type" : "num", "divide" : 1},                  
-            #"nbusvolt"          : {"value" :554, "length" : 2, "type" : "num", "divide" : 1}    
+            "pbusvolt"          : {"value" :550, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                  
+            "nbusvolt"          : {"value" :554, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"}    
             } }     
+
+        self.recorddict6 = {"T06NNNNXSPH": {
+            "decrypt"           : {"value" :"True"},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "date"              : {"value" :136, "divide" : 10}, 
+            "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
+            "pvstatus"          : {"value" :158, "length" : 2, "type" : "num"},  
+            "pvpowerin"         : {"value" :162, "length" : 4, "type" : "num", "divide" : 10},        
+            "pv1voltage"        : {"value" :170, "length" : 2, "type" : "num", "divide" : 10},        
+            "pv1current"        : {"value" :174, "length" : 2, "type" : "num", "divide" : 10},                        
+            "pv1watt"           : {"value" :178, "length" : 4, "type" : "num", "divide" : 10},                      
+            "pv2voltage"        : {"value" :186, "length" : 2, "type" : "num", "divide" : 10},                
+            "pv2current"        : {"value" :190, "length" : 2, "type" : "num", "divide" : 10},                
+            "pv2watt"           : {"value" :194, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvpowerout"        : {"value" :298, "length" : 4, "type" : "numx", "divide" : 10},                
+            "pvfrequentie"      : {"value" :306, "length" : 2, "type" : "num", "divide" : 100},                
+            "pvgridvoltage"     : {"value" :310, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent"     : {"value" :314, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower"       : {"value" :318, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvgridvoltage2"    : {"value" :326, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent2"    : {"value" :330, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower2"      : {"value" :334, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvgridvoltage3"    : {"value" :342, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent3"    : {"value" :346, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower3"      : {"value" :350, "length" : 4, "type" : "num", "divide" : 10},  
+            "totworktime"       : {"value" :386, "length" : 4, "type" : "num", "divide" : 7200},
+            "eactoday"          : {"value" :370, "length" : 4, "type" : "num", "divide" : 10}, 
+            "pvenergytoday"     : {"value" :370, "length" : 4, "type" : "num", "divide" : 10},                  
+            "eactotal"          : {"value" :378, "length" : 4, "type" : "num", "divide" : 10},
+            "epvtotal"          : {"value" :522, "length" : 4, "type" : "num", "divide" : 10},
+            "epv1today"         : {"value" :394, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv1total"         : {"value" :402, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv2today"         : {"value" :410, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv2total"         : {"value" :418, "length" : 4, "type" : "num", "divide" : 10},                           
+            "pvtemperature"     : {"value" :530, "length" : 2, "type" : "num", "divide" : 10},                 
+            "pvipmtemperature"  : {"value" :534, "length" : 2, "type" : "num", "divide" : 10}, 
+            "pvboosttemp"       : {"value" :538, "length" : 2, "type" : "num", "divide" : 10},                   
+            "bat_dsp"           : {"value" :546, "length" : 2, "type" : "num", "divide" : 10},
+            "pbusvolt"          : {"value" :550, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                  
+            "#nbusvolt"          : {"value" :554, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},  
+            "#ipf"               : {"value" :558, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},
+            "#realoppercent"     : {"value" :562, "length" : 2, "type" : "num", "divide" : 100,"incl" : "no"}, 
+            "#opfullwatt"        : {"value" :566, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},
+            "#deratingmode"      : {"value" :574, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},
+            "eacharge_today"     : {"value" :606, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eacharge_total"     : {"value" :614, "length" : 4, "type" : "num", "divide" : 10}, 
+            "batterytype"        : {"value" :634, "length" : 2, "type" : "num", "divide" : 1}, 
+            "uwsysworkmode"      : {"value" :666, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword0"   : {"value" :670, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword1"   : {"value" :674, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword2"   : {"value" :678, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword3"   : {"value" :682, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword4"   : {"value" :686, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword5"   : {"value" :690, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword6"   : {"value" :694, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword7"   : {"value" :698, "length" : 2, "type" : "num", "divide" : 1},
+            "pdischarge1"        : {"value" :702, "length" : 4, "type" : "num", "divide" : 10}, 
+            "p1charge1"          : {"value" :710, "length" : 4, "type" : "num", "divide" : 10}, 
+            "vbat"               : {"value" :718, "length" : 2, "type" : "num", "divide" : 10}, 
+            "SOC"                : {"value" :722, "length" : 2, "type" : "num", "divide" : 100}, 
+            "pactouserr"         : {"value" :726, "length" : 4, "type" : "num", "divide" : 10}, 
+            "#pactousers"        : {"value" :734, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "#pactousert"        : {"value" :742, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "pactousertot"       : {"value" :750, "length" : 4, "type" : "num", "divide" : 10},
+            "pactogridr"         : {"value" :758, "length" : 4, "type" : "num", "divide" : 10}, 
+            "#pactogrids"        : {"value" :766, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "#pactogridt"        : {"value" :774, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "pactogridtot"       : {"value" :782, "length" : 4, "type" : "num", "divide" : 10}, 
+            "plocaloadr"         : {"value" :790, "length" : 4, "type" : "num", "divide" : 10}, 
+            "#plocaloads"        : {"value" :798, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "#plocaloadt"        : {"value" :806, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "plocaloadtot"       : {"value" :814, "length" : 4, "type" : "num", "divide" : 10},   
+            "#ipm"               : {"value" :822, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},   
+            "#battemp"           : {"value" :826, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},   
+            "spdspstatus"        : {"value" :830, "length" : 2, "type" : "num", "divide" : 10},   
+            "spbusvolt"          : {"value" :834, "length" : 2, "type" : "num", "divide" : 10},
+            "etouser_tod"        : {"value" :842, "length" : 4, "type" : "num", "divide" : 10}, 
+            "etouser_tot"        : {"value" :850, "length" : 4, "type" : "num", "divide" : 10}, 
+            "etogrid_tod"        : {"value" :858, "length" : 4, "type" : "num", "divide" : 10}, 
+            "etogrid_tot"      : {"value" :866, "length" : 4, "type" : "num", "divide" : 10},
+            "edischarge1_tod"  : {"value" :874, "length" : 4, "type" : "num", "divide" : 10}, 
+            "edischarge1_tot"  : {"value" :882, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eharge1_tod"      : {"value" :890, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eharge1_tot"      : {"value" :898, "length" : 4, "type" : "num", "divide" : 10}, 
+            "elocalload_tod"  : {"value" :906, "length" : 4, "type" : "num", "divide" : 10}, 
+            "elocalload_tot"  : {"value" :914, "length" : 4, "type" : "num", "divide" : 10} 
+        } }
+
+        self.recorddict7 = {"T05NNNNSPF": {
+            "decrypt"           : {"value" :"True"},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10,"incl" : "no"},
+            "pvserial"          : {"value" :36, "length" : 10, "type" : "text", "divide" : 10},
+            "date"              : {"value" :56, "divide" : 10}, 
+            "recortype1"        : {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype2"        : {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
+            "pvstatus"          : {"value" :78, "length" : 2, "type" : "num"},  
+            "vpv1"              : {"value" :82, "length" : 2, "type" : "num", "divide" : 10},        
+            "vpv2"              : {"value" :86, "length" : 2, "type" : "num", "divide" : 10},        
+            "ppv1"              : {"value" :90, "length" : 4, "type" : "num", "divide" : 10},                        
+            "ppv2"              : {"value" :98, "length" : 4, "type" : "num", "divide" : 10},                      
+            "buck1curr"         : {"value" :106, "length" : 2, "type" : "num", "divide" : 10},                
+            "buck2curr"         : {"value" :110, "length" : 2, "type" : "num", "divide" : 10},                
+            "op_watt"           : {"value" :114, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvpowerout"        : {"value" :114, "length" : 4, "type" : "num", "divide" : 10},               
+            "op_va"             : {"value" :122, "length" : 4, "type" : "num", "divide" : 10},                
+            "acchr_watt"        : {"value" :130, "length" : 4, "type" : "num", "divide" : 10},                
+            "acchr_VA"          : {"value" :138, "length" : 4, "type" : "num", "divide" : 10},                
+            "bat_Volt"          : {"value" :146, "length" : 2, "type" : "num", "divide" : 100},                
+            "batterySoc"        : {"value" :150, "length" : 2, "type" : "num", "divide" : 1},                
+            "bus_volt"          : {"value" :154, "length" : 2, "type" : "num", "divide" : 10},                
+            "grid_volt"         : {"value" :158, "length" : 2, "type" : "num", "divide" : 10},                
+            "line_freq"         : {"value" :162, "length" : 2, "type" : "num", "divide" : 100},                
+            "outputvolt"        : {"value" :166, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridvoltage"     : {"value" :166, "length" : 2, "type" : "num", "divide" : 10},                          
+            "outputfreq"        : {"value" :170, "length" : 2, "type" : "num", "divide" : 100},                
+            "invtemp"           : {"value" :178, "length" : 2, "type" : "num", "divide" : 10},                  
+            "dcdctemp"          : {"value" :182, "length" : 2, "type" : "num", "divide" : 10},
+            "loadpercent"       : {"value" :186, "length" : 2, "type" : "num", "divide" : 10},                
+            "buck1_ntc"         : {"value" :206, "length" : 2, "type" : "num", "divide" : 10},                
+            "buck2_ntc"         : {"value" :210, "length" : 2, "type" : "num", "divide" : 10},                
+            "OP_Curr"           : {"value" :214, "length" : 2, "type" : "num", "divide" : 10},                
+            "Inv_Curr"          : {"value" :218, "length" : 2, "type" : "num", "divide" : 10},               
+            "AC_InWatt"         : {"value" :222, "length" : 4, "type" : "num", "divide" : 10},                
+            "AC_InVA"           : {"value" :230, "length" : 4, "type" : "num", "divide" : 10},                
+            "faultBit"          : {"value" :238, "length" : 2, "type" : "num", "divide" : 1},                
+            "warningBit"        : {"value" :242, "length" : 2, "type" : "num", "divide" : 1},                
+            "faultValue"        : {"value" :246, "length" : 2, "type" : "num", "divide" : 1},                
+            "warningValue"      : {"value" :250, "length" : 2, "type" : "num", "divide" : 1},                
+            "constantPowerOK"   : {"value" :266, "length" : 2, "type" : "num", "divide" : 1},                
+            "epvtoday"          : {"value" :274, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvenergytoday"     : {"value" :274, "length" : 4, "type" : "num", "divide" : 10}, 
+            "epvtotal"          : {"value" :282, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eacCharToday"      : {"value" :310, "length" : 4, "type" : "num", "divide" : 10},    
+            "eacCharTotal"      : {"value" :318, "length" : 4, "type" : "num", "divide" : 10},  
+            "ebatDischarToday"  : {"value" :326, "length" : 4, "type" : "num", "divide" : 10},  
+            "ebatDischarTotal"  : {"value" :334, "length" : 4, "type" : "num", "divide" : 10},  
+            "eacDischarToday"   : {"value" :342, "length" : 4, "type" : "num", "divide" : 10},  
+            "eacDischarTotal"   : {"value" :350, "length" : 4, "type" : "num", "divide" : 10},  
+            "ACCharCurr"        : {"value" :358, "length" : 2, "type" : "num", "divide" : 10},  
+            "ACDischarWatt"     : {"value" :362, "length" : 4, "type" : "num", "divide" : 10},  
+            "ACDischarVA"       : {"value" :370, "length" : 4, "type" : "num", "divide" : 10},  
+            "BatDischarWatt"    : {"value" :378, "length" : 4, "type" : "num", "divide" : 10},  
+            "BatDischarVA"      : {"value" :386, "length" : 4, "type" : "num", "divide" : 10},  
+            "BatWatt"           : {"value" :394, "length" : 4, "type" : "numx", "divide" : 10}                                                 
+        } }            
+
+        self.recorddict8 = {"T06NNNNSPF": {
+            "decrypt"           : {"value" :"True"},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "date"              : {"value" :136, "divide" : 10}, 
+            "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
+            "pvstatus"          : {"value" :158, "length" : 2, "type" : "num"},  
+            "vpv1"              : {"value" :162, "length" : 2, "type" : "num", "divide" : 10},        
+            "vpv2"              : {"value" :166, "length" : 2, "type" : "num", "divide" : 10},        
+            "ppv1"              : {"value" :170, "length" : 4, "type" : "num", "divide" : 10},                        
+            "ppv2"              : {"value" :178, "length" : 4, "type" : "num", "divide" : 10},                      
+            "buck1curr"         : {"value" :186, "length" : 2, "type" : "num", "divide" : 10},                
+            "buck2curr"         : {"value" :190, "length" : 2, "type" : "num", "divide" : 10},                
+            "op_watt"           : {"value" :194, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvpowerout"        : {"value" :194, "length" : 4, "type" : "num", "divide" : 10},               
+            "op_va"             : {"value" :204, "length" : 4, "type" : "num", "divide" : 10},                
+            "acchr_watt"        : {"value" :210, "length" : 4, "type" : "num", "divide" : 10},                
+            "acchr_VA"          : {"value" :218, "length" : 4, "type" : "num", "divide" : 10},                
+            "bat_Volt"          : {"value" :226, "length" : 2, "type" : "num", "divide" : 100},                
+            "batterySoc"        : {"value" :230, "length" : 2, "type" : "num", "divide" : 1},                
+            "bus_volt"          : {"value" :234, "length" : 2, "type" : "num", "divide" : 10},                
+            "grid_volt"         : {"value" :238, "length" : 2, "type" : "num", "divide" : 10},                
+            "line_freq"         : {"value" :242, "length" : 2, "type" : "num", "divide" : 100},                
+            "outputvolt"        : {"value" :246, "length" : 2, "type" : "num", "divide" : 10},      
+            "pvgridvoltage"     : {"value" :246, "length" : 2, "type" : "num", "divide" : 10},                          
+            "outputfreq"        : {"value" :250, "length" : 2, "type" : "num", "divide" : 100},                
+            "invtemp"           : {"value" :258, "length" : 2, "type" : "num", "divide" : 10},                  
+            "dcdctemp"          : {"value" :262, "length" : 2, "type" : "num", "divide" : 10},
+            "loadpercent"       : {"value" :266, "length" : 2, "type" : "num", "divide" : 10},                
+            "buck1_ntc"         : {"value" :286, "length" : 2, "type" : "num", "divide" : 10},                
+            "buck2_ntc"         : {"value" :290, "length" : 2, "type" : "num", "divide" : 10},                
+            "OP_Curr"           : {"value" :294, "length" : 2, "type" : "num", "divide" : 10},                
+            "Inv_Curr"          : {"value" :298, "length" : 2, "type" : "num", "divide" : 10},               
+            "AC_InWatt"         : {"value" :302, "length" : 4, "type" : "num", "divide" : 10},                
+            "AC_InVA"           : {"value" :310, "length" : 4, "type" : "num", "divide" : 10},                
+            "faultBit"          : {"value" :318, "length" : 2, "type" : "num", "divide" : 1},                
+            "warningBit"        : {"value" :322, "length" : 2, "type" : "num", "divide" : 1},                
+            "faultValue"        : {"value" :326, "length" : 2, "type" : "num", "divide" : 1},                
+            "warningValue"      : {"value" :330, "length" : 2, "type" : "num", "divide" : 1},                
+            "constantPowerOK"   : {"value" :346, "length" : 2, "type" : "num", "divide" : 1},                
+            "epvtoday"          : {"value" :358, "length" : 4, "type" : "num", "divide" : 10}, 
+            "pvenergytoday"     : {"value" :358, "length" : 4, "type" : "num", "divide" : 10}, 
+            "epvtotal"          : {"value" :366, "length" : 4, "type" : "num", "divide" : 10},                
+            "eacCharToday"      : {"value" :390, "length" : 4, "type" : "num", "divide" : 10},    
+            "eacCharTotal"      : {"value" :398, "length" : 4, "type" : "num", "divide" : 10},  
+            "ebatDischarToday"  : {"value" :406, "length" : 4, "type" : "num", "divide" : 10},  
+            "ebatDischarTotal"  : {"value" :414, "length" : 4, "type" : "num", "divide" : 10},  
+            "eacDischarToday"   : {"value" :422, "length" : 4, "type" : "num", "divide" : 10},  
+            "eacDischarTotal"   : {"value" :430, "length" : 4, "type" : "num", "divide" : 10},  
+            "ACCharCurr"        : {"value" :438, "length" : 2, "type" : "num", "divide" : 10},  
+            "ACDischarWatt"     : {"value" :442, "length" : 4, "type" : "num", "divide" : 10},  
+            "ACDischarVA"       : {"value" :450, "length" : 4, "type" : "num", "divide" : 10},  
+            "BatDischarWatt"    : {"value" :458, "length" : 4, "type" : "num", "divide" : 10},  
+            "BatDischarVA"      : {"value" :466, "length" : 4, "type" : "num", "divide" : 10},  
+            "BatWatt"           : {"value" :474, "length" : 4, "type" : "numx", "divide" : 10}                                                 
+        }}
+
+        self.recorddict8 = {"T060120": {
+            "decrypt"           : {"value" :"True"},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "date"              : {"value" :136, "divide" : 10}, 
+            "voltage_l1"        : {"value" :160, "length" : 4, "type" : "num", "divide" : 10},  
+            "voltage_l2"        : {"value" :168, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},  
+            "voltage_l3"        : {"value" :176, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},  
+            "Current_l1"        : {"value" :184, "length" : 4, "type" : "num", "divide" : 10},
+            "Current_l2"        : {"value" :192, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},
+            "Current_l3"        : {"value" :200, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},            
+            "act_power_l1"      : {"value" :208, "length" : 4, "type" : "numx", "divide" : 10},        
+            "act_power_l2"      : {"value" :216, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},        
+            "act_power_l3"      : {"value" :224, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},        
+            "app_power_l1"      : {"value" :232, "length" : 4, "type" : "numx", "divide" : 10},        
+            "app_power_l2"      : {"value" :240, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},        
+            "app_power_l3"      : {"value" :248, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},        
+            "react_power_l1"    : {"value" :256, "length" : 4, "type" : "numx","divide" : 10},        
+            "react_power_l2"    : {"value" :264, "length" : 4, "type" : "numx","divide" : 10,"incl" : "no"},        
+            "react_power_l3"    : {"value" :272, "length" : 4, "type" : "numx","divide" : 10,"incl" : "no"},        
+            "powerfactor_l1"    : {"value" :280, "length" : 4, "type" : "numx", "divide" : 1000},                      
+            "powerfactor_l2"    : {"value" :288, "length" : 4, "type" : "numx", "divide" : 1000,"incl" : "no"},                      
+            "powerfactor_l3"    : {"value" :296, "length" : 4, "type" : "numx", "divide" : 1000,"incl" : "no"},                      
+            "pos_rev_act_power" : {"value" :304, "length" : 4, "type" : "numx", "divide" : 10}, 
+            "pos_act_power"     : {"value" :304, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"}, 
+            "rev_act_power"     : {"value" :304, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},
+            "app_power"         : {"value" :312, "length" : 4, "type" : "numx", "divide" : 10}, 
+            "react_power"       : {"value" :320, "length" : 4, "type" : "numx", "divide" : 10}, 
+            "powerfactor"       : {"value" :328, "length" : 4, "type" : "numx", "divide" : 1000},   
+            "frequency"         : {"value" :336, "length" : 4, "type" : "num", "divide" : 10},   
+            "L1-2_voltage"      : {"value" :344, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "L2-3_voltage"      : {"value" :352, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},   
+            "L3-1_voltage"      : {"value" :360, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},   
+            "pos_act_energy"    : {"value" :368, "length" : 4, "type" : "numx", "divide" : 10},  
+            "rev_act_energy"    : {"value" :376, "length" : 4, "type" : "numx", "divide" : 10},   
+            "pos_act_energy_kvar" : {"value" :384, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},    
+            "rev_act_energy_kvar" : {"value" :392, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},   
+            "app_energy_kvar"   : {"value" :400, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},   
+            "act_energy_kwh"    : {"value" :408, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},   
+            "react_energy_kvar" : {"value" :416, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"}   
+        }}
 
         self.recorddict.update(self.recorddict1)
         self.recorddict.update(self.recorddict2)
         self.recorddict.update(self.recorddict3)
         self.recorddict.update(self.recorddict4)
         self.recorddict.update(self.recorddict5)       
+        self.recorddict.update(self.recorddict6)       
+        self.recorddict.update(self.recorddict7)  
+        self.recorddict.update(self.recorddict8)  
 
         f = []
         print("\nGrott process json layout files")
