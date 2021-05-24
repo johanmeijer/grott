@@ -23,7 +23,7 @@ Please see the wiki (https://github.com/johanmeijer/grott/wiki) for more informa
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=RQFS46F9JTESQ&item_name=Grott+&currency_code=EUR)
 
 # Version History 
-## New in Version 2.6.x  (2.6 Branche)
+## New in Version 2.6.x  (2.6 Branch)
 #### SPF off grid inverter support 
 see issue #42/#46: add invtype=spf in grott.ini [Generic] section (or use ginvtype=spf environmental variable e.g. for docker)
 #### SPH hybrid (grid/battery) support 
