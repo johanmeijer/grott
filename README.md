@@ -23,9 +23,13 @@ Please see the wiki (https://github.com/johanmeijer/grott/wiki) for more informa
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=RQFS46F9JTESQ&item_name=Grott+&currency_code=EUR)
 
 # Version History 
-## Under Development (available for testing)
-* SPF off grid inverter support (see issue #42/#46)
-* SPH hybrid (grid/battery) support (see issue #34)
+## New in Version 2.6.x  (2.6 Branche)
+#### SPF off grid inverter support 
+see issue #42/#46: add invtype=spf in grott.ini [Generic] section (or use ginvtype=spf environmental variable e.g. for docker)
+#### SPH hybrid (grid/battery) support 
+see issue #34: add invtype=sph in grott.ini [Generic] section (or use ginvtype=sph environmental variable e.g. for docker)
+#### Growatt Smart Meter support
+see issue #47: data will be processed automatically and send to MQTT, InfluxDB and PVOutput.org
 ## New in Version 2.5.x  
 Improved dynamic data processing  and dynamic generation of output allowing: 
 * add new output (values) without changing code (using external layout definitions)
