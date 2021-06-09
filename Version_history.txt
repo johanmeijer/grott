@@ -164,3 +164,4 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - Include support for Growatt Smart Meter (connected with inverter)
   Seperate MQTT, Influx records will be created (with datalogserial, smart meter id,  as device/mesurement)
   Power and tot energy being used from grid are sent to PVOutput.org in 2 additional calls. 
+  
