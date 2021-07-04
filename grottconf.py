@@ -385,92 +385,98 @@ class Conf :
         #extensionINFLUX
         if config.has_option("extension","extension"): self.extension = config.get("extension","extension") 
         if config.has_option("extension","extname"): self.extname = config.get("extension","extname") 
-        if config.has_option("extension","extvar"): self.extvar = eval(config.get("extension","extvar")) 
-        
+        if config.has_option("extension","extvar"): self.extvar = eval(config.get("extension","extvar"))
+
+    def getenv(self, envvar):
+        envval = os.getenv(envvar)
+
+        if self.verbose: print(f"\n\tPulled '{envvar}={envval}' from the environment")
+        return envval
+
     def procenv(self): 
         print("\nGrott process environmental variables")
-        if os.getenv('gmode') in ("sniff", "proxy") :  self.mode = os.getenv('gmode')
-        if os.getenv('gverbose') != None :  self.verbose = os.getenv('verbose')
+        if os.getenv('gmode') in ("sniff", "proxy") :  self.mode = self.getenv('gmode')
+        if os.getenv('gverbose') != None :  self.verbose = self.getenv('verbose')
         if os.getenv('gminrecl') != None : 
-            if 0 <= int(os.getenv('gminrecl')) <= 255  :     self.minrecl = os.getenv('gminrecl')
-        if os.getenv('gdecrypt') != None : self.decrypt = os.getenv('gdecrypt') 
-        if os.getenv('gcompat') != None :  self.compat = os.getenv('gcompat')
-        if os.getenv('gincludeall') != None :  self.includeall = os.getenv('gincludeall')
-        if os.getenv('ginvtype') != None :  self.invtype = os.getenv('ginvtype')
-        if os.getenv('gblockcmd') != None : self.blockcmd = os.getenv('gblockcmd')
-        if os.getenv('gnoipf') != None : self.noipf = os.getenv('gnoipf')     
-        if os.getenv('gtime') in ("auto", "server") : self.gtime = os.getenv('gtime')   
-        if os.getenv('gtimezone') != None : self.tmzone = os.getenv('gtimezone')   
-        if os.getenv('gsendbuf') != None : self.sendbuf = os.getenv('gsendbuf')   
-        if os.getenv('ginverterid') != None :  self.inverterid = os.getenv('ginverterid')
+            if 0 <= int(os.getenv('gminrecl')) <= 255  :     self.minrecl = self.getenv('gminrecl')
+        if os.getenv('gdecrypt') != None : self.decrypt = self.getenv('gdecrypt')
+        if os.getenv('gcompat') != None :  self.compat = self.getenv('gcompat')
+        if os.getenv('gincludeall') != None :  self.includeall = self.getenv('gincludeall')
+        if os.getenv('ginvtype') != None :  self.invtype = self.getenv('ginvtype')
+        if os.getenv('gblockcmd') != None : self.blockcmd = self.getenv('gblockcmd')
+        if os.getenv('gnoipf') != None : self.noipf = self.getenv('gnoipf')
+        if os.getenv('gtime') in ("auto", "server") : self.gtime = self.getenv('gtime')
+        if os.getenv('gtimezone') != None : self.tmzone = self.getenv('gtimezone')
+        if os.getenv('gsendbuf') != None : self.sendbuf = self.getenv('gsendbuf')
+        if os.getenv('ginverterid') != None :  self.inverterid = self.getenv('ginverterid')
         if os.getenv('ggrottip') != None : 
             try: 
                 ipaddress.ip_address(os.getenv('ggrottip'))
-                self.grottip = os.getenv('ggrottip') 
+                self.grottip = self.getenv('ggrottip')
             except: 
                 if self.verbose : print("\nGrott IP address env invalid")
         if os.getenv('ggrottport') != None : 
-            if 0 <= int(os.getenv('ggrottport')) <= 65535  :  self.grottport = os.getenv('ggrottport')
+            if 0 <= int(os.getenv('ggrottport')) <= 65535  :  self.grottport = self.getenv('ggrottport')
         if os.getenv('gvalueoffset') != None :     
-            if 0 <= int(os.getenv('gvalueoffset')) <= 255  :  self.valueoffset = os.getenv('gvalueoffset')
+            if 0 <= int(os.getenv('gvalueoffset')) <= 255  :  self.valueoffset = self.getenv('gvalueoffset')
         if os.getenv('ggrowattip') != None :    
             try: 
                 ipaddress.ip_address(os.getenv('ggrowattip'))
-                self.growattip = os.getenv('ggrowattip') 
+                self.growattip = self.getenv('ggrowattip')
             except: 
                 if self.verbose : print("\nGrott Growatt server IP address env invalid")
         if os.getenv('ggrowattport') != None :     
-            if 0 <= int(os.getenv('ggrowattport')) <= 65535  :  self.growattport = int(os.getenv('ggrowattport'))
+            if 0 <= int(os.getenv('ggrowattport')) <= 65535  :  self.growattport = int(self.getenv('ggrowattport'))
             else : 
                if self.verbose : print("\nGrott Growatt server Port address env invalid")   
         #handle mqtt environmentals    
-        if os.getenv('gnomqtt') != None :  self.nomqtt = os.getenv('gnomqtt')    
+        if os.getenv('gnomqtt') != None :  self.nomqtt = self.getenv('gnomqtt')
         if os.getenv('gmqttip') != None :    
             try: 
                 ipaddress.ip_address(os.getenv('gmqttip'))
-                self.mqttip = os.getenv('gmqttip') 
+                self.mqttip = self.getenv('gmqttip')
             except: 
                 if self.verbose : print("\nGrott MQTT server IP address env invalid")
         if os.getenv('gmqttport') != None :     
-            if 0 <= int(os.getenv('gmqttport')) <= 65535  :  self.mqttport = int(os.getenv('gmqttport'))
+            if 0 <= int(os.getenv('gmqttport')) <= 65535  :  self.mqttport = int(self.getenv('gmqttport'))
             else : 
                 if self.verbose : print("\nGrott MQTT server Port address env invalid")
-        if os.getenv('gmqttauth') != None :  self.mqttauth = os.getenv('gmqttauth')
-        if os.getenv('gmqtttopic') != None :  self.mqtttopic = os.getenv('gmqtttopic')
-        if os.getenv('gmqttuser') != None :  self.mqttuser = os.getenv('gmqttuser')
-        if os.getenv('gmqttpassword') != None : self.mqttpsw = os.getenv('gmqttpassword')
+        if os.getenv('gmqttauth') != None :  self.mqttauth = self.getenv('gmqttauth')
+        if os.getenv('gmqtttopic') != None :  self.mqtttopic = self.getenv('gmqtttopic')
+        if os.getenv('gmqttuser') != None :  self.mqttuser = self.getenv('gmqttuser')
+        if os.getenv('gmqttpassword') != None : self.mqttpsw = self.getenv('gmqttpassword')
         #Handle PVOutput variables
-        if os.getenv('gpvoutput') != None :  self.pvoutput = os.getenv('gpvoutput') 
-        if os.getenv('gpvapikey') != None :  self.pvapikey = os.getenv('gpvapikey')   
-        if os.getenv('gpvinverters') != None :  self.pvinverters = int(os.getenv('gpvinverters'))    
+        if os.getenv('gpvoutput') != None :  self.pvoutput = self.getenv('gpvoutput')
+        if os.getenv('gpvapikey') != None :  self.pvapikey = self.getenv('gpvapikey')
+        if os.getenv('gpvinverters') != None :  self.pvinverters = int(self.getenv('gpvinverters'))
         for x in range(self.pvinverters+1) : 
-                if os.getenv('gpvsystemid'+str(x)) != None :  self.pvsystemid[x] = os.getenv('gpvsystemid'+ str(x))
-                if os.getenv('gpvinverterid'+str(x)) != None :  self.pvinverterid[x] = os.getenv('gpvinverterid'+ str(x))
+                if os.getenv('gpvsystemid'+str(x)) != None :  self.pvsystemid[x] = self.getenv('gpvsystemid'+ str(x))
+                if os.getenv('gpvinverterid'+str(x)) != None :  self.pvinverterid[x] = self.getenv('gpvinverterid'+ str(x))
         if self.pvinverters == 1 : 
-            if os.getenv('gpvsystemid') != None :  self.pvsystemid[1] = os.getenv('gpvsystemid')   
+            if os.getenv('gpvsystemid') != None :  self.pvsystemid[1] = self.getenv('gpvsystemid')
         #Handle Influx
-        if os.getenv('ginflux') != None :  self.influx = os.getenv('ginflux') 
-        if os.getenv('ginflux2') != None :  self.influx2 = os.getenv('ginflux2') 
-        if os.getenv('gifdbname') != None :  self.ifdbname = os.getenv('gifdbname') 
+        if os.getenv('ginflux') != None :  self.influx = self.getenv('ginflux')
+        if os.getenv('ginflux2') != None :  self.influx2 = self.getenv('ginflux2')
+        if os.getenv('gifdbname') != None :  self.ifdbname = self.getenv('gifdbname')
         if os.getenv('gifip') != None :    
             try: 
                 ipaddress.ip_address(os.getenv('gifip'))
-                self.ifip = os.getenv('gifip') 
+                self.ifip = self.getenv('gifip')
             except: 
                 if self.verbose : print("\nGrott InfluxDB server IP address env invalid")
         if os.getenv('gifport') != None :     
-            if 0 <= int(os.getenv('gifport')) <= 65535  :  self.ifport = int(os.getenv('gifport'))
+            if 0 <= int(os.getenv('gifport')) <= 65535  :  self.ifport = int(self.getenv('gifport'))
             else : 
                 if self.verbose : print("\nGrott InfluxDB server Port address env invalid")      
-        if os.getenv('gifuser') != None :  self.ifuser = os.getenv('gifuser') 
-        if os.getenv('gifpassword') != None :  self.ifpsw = os.getenv('gifpassword') 
-        if os.getenv('giforg') != None :  self.iforg = os.getenv('giforg') 
-        if os.getenv('gifbucket') != None :  self.ifbucket = os.getenv('gifbucket') 
-        if os.getenv('giftoken') != None :  self.iftoken = os.getenv('giftoken') 
+        if os.getenv('gifuser') != None :  self.ifuser = self.getenv('gifuser')
+        if os.getenv('gifpassword') != None :  self.ifpsw = self.getenv('gifpassword')
+        if os.getenv('giforg') != None :  self.iforg = self.getenv('giforg')
+        if os.getenv('gifbucket') != None :  self.ifbucket = self.getenv('gifbucket')
+        if os.getenv('giftoken') != None :  self.iftoken = self.getenv('giftoken')
         #Handle Extension
-        if os.getenv('gextension') != None :  self.extension = os.getenv('gextension') 
-        if os.getenv('gextname') != None :  self.extname = os.getenv('gextname') 
-        if os.getenv('gextvar') != None :  self.extvar = eval(os.getenv('gextvar'))
+        if os.getenv('gextension') != None :  self.extension = self.getenv('gextension')
+        if os.getenv('gextname') != None :  self.extname = self.getenv('gextname')
+        if os.getenv('gextvar') != None :  self.extvar = eval(self.getenv('gextvar'))
         
     def set_recwl(self):    
         #define record that will not be blocked or inspected if blockcmd is specified
