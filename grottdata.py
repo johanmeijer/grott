@@ -411,7 +411,7 @@ def procdata(conf,data):
                     "t"     : pvotime,
                     "v1"    : definedkey["pvenergytoday"]*100,
                     "v2"    : definedkey["pvpowerout"]/10,
-                    "v6"    : definedkey["pvgridvoltage"]/10
+                    "v6"    : definedkey["pv1voltage"]/10
                     }
                 #print(pvheader)
                 if conf.verbose : print("\t\t - ", pvheader)
