@@ -34,7 +34,8 @@ class Conf :
         self.outfile ="sys.stdout"  
         self.tmzone = "local"                                                                       #set timezone (at this moment only used for influxdb)                
 
-        #Growatt server default 
+        #Growatt server default
+        self.forward = True
         self.growattip = "47.91.67.66"
         self.growattport = 5279
 
@@ -218,6 +219,7 @@ class Conf :
         print("\tmqttpsw:     \t","**secret**")                       #scramble output if tested!
         #print("\tmqttpsw:     \t",self.mqttpsw)                       #scramble output if tested!
         print("_Growatt server:")
+        print("\tforward:     \t",self.Forward)
         print("\tgrowattip:   \t",self.growattip)
         print("\tgrowattport: \t",self.growattport)
         print("_PVOutput:")
@@ -352,6 +354,7 @@ class Conf :
         if config.has_option("Generic","ip"): self.grottip = config.get("Generic","ip")
         if config.has_option("Generic","port"): self.grottport = config.getint("Generic","port")
         if config.has_option("Generic","valueoffset"): self.valueoffset = config.get("Generic","valueoffset")
+        if config.has_option("Growatt","forward"): self.forward = config.get("Growatt","forward")
         if config.has_option("Growatt","ip"): self.growattip = config.get("Growatt","ip") 
         if config.has_option("Growatt","port"): self.growattport = config.getint("Growatt","port")
         if config.has_option("MQTT","nomqtt"): self.nomqtt = config.get("MQTT","nomqtt")

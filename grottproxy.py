@@ -27,16 +27,26 @@ buffer_size = 4096
 delay = 0.0002
 
 class Forward:
-    def __init__(self):
+    def __init__(self, conf):
         self.forward = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.conf = conf
 
     def start(self, host, port):
-        try:
-            self.forward.connect((host, port))
-            return self.forward
-        except Exception as e:
-            print(e)
-            return False  
+        if self.conf.forward:
+            try:
+                self.forward.connect((host, port))
+                return self.forward
+            except Exception as e:
+                print(e)
+                return False
+        else:
+            if sys.platform.startswith('linux') != True:
+                print("Cannot use `forward = False` on this platform")
+                return False
+
+            # This is only available on Unix systems
+            client, testsocket = socket.socketpair()
+            return testsocket
 
 class Proxy:
     input_list = []
@@ -85,7 +95,7 @@ class Proxy:
                     self.on_recv(conf)
 
     def on_accept(self,conf):
-        forward = Forward().start(self.forward_to[0], self.forward_to[1])
+        forward = Forward(conf).start(self.forward_to[0], self.forward_to[1])
         clientsock, clientaddr = self.server.accept()
         if forward:
             if conf.verbose: print("\t -", clientaddr, "has connected")
