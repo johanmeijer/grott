@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2021-05-20 
-# Version 2.6.1
+# Updated: 2021-09-01 
+# Version 2.6.1a
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -935,7 +935,7 @@ class Conf :
             "BatWatt"           : {"value" :474, "length" : 4, "type" : "numx", "divide" : 10}                                                 
         }}
 
-        self.recorddict8 = {"T060120": {
+        self.recorddict9 = {"T060120": {
             "decrypt"           : {"value" :"True"},
             "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10},
             "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
@@ -984,7 +984,8 @@ class Conf :
         self.recorddict.update(self.recorddict5)       
         self.recorddict.update(self.recorddict6)       
         self.recorddict.update(self.recorddict7)  
-        self.recorddict.update(self.recorddict8)  
+        self.recorddict.update(self.recorddict8) 
+        self.recorddict.update(self.recorddict9)  
 
         f = []
         print("\nGrott process json layout files")
