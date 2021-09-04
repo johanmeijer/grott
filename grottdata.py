@@ -1,6 +1,6 @@
 # grottdata.py processing data  functions
-# Updated: 2021-05-20
-# Version 2.6.1
+# Updated: 2021-09-04
+# Version 2.6.1b
 
 #import time
 from datetime import datetime, timedelta
@@ -329,6 +329,7 @@ def procdata(conf,data):
         #create JSON message  (first create obj dict and then convert to a JSON message)                   
 
         # if record is a smart monitor record use datalogserial as device (to distinguish from solar record) 
+        # and filter if invalid record (0 < voltage_l1 > 500 )
         if header[14:16] != "20" :
             jsonobj = {
                         "device" : definedkey["pvserial"],
@@ -337,6 +338,11 @@ def procdata(conf,data):
                         "values" : {}
                     }
         else : 
+                # filter if invalid 0120 record (0 < voltage_l1 > 500 ) 
+                if (definedkey["voltage_l1"]/10 > 500) or (definedkey["voltage_l1"]/10 < 0) :
+                    print("\t - " + "Grott invalid 0120 record processing stopped") 
+                    return 
+
                 jsonobj = {
                         "device" : definedkey["datalogserial"],
                         "time" : jsondate, 

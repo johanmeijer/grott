@@ -166,3 +166,5 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
   Power and tot energy being used from grid are sent to PVOutput.org in 2 additional calls. 
 2.6.1a
 - Bugfix SPF record processing
+2.6.1b
+- Filter (ignore) invalid 0120 smart meter record
