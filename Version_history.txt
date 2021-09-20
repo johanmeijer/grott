@@ -168,3 +168,6 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - Bugfix SPF record processing
 2.6.1b
 - Filter (ignore) invalid 0120 smart meter record
+2.6.1c
+- Bugfix when sendbuf = False now only buffered records are filtered.  In the pase if specified also non buffered records were filtered. 
+  Be aware: Buffered records with invalid time (time from server) are also filtered. 
