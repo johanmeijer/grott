@@ -148,27 +148,7 @@ Add additional checking for IP address definitions in environmentals.
 Allow negative values for pvpowerout (added type = numx to recordlayout) because new Growatt inverter can also publish neagtive values
 Complement bugfix prepared by KBraham (issue / pull request #41)
 2.5.4
--Change PVIMPTEMP for the extend records (T05nnnnX and t06nnnnX)
--Added new values for to T05nnnnX records. 
-2.6.0 (Never published)
-- Support for SPF (offgrid/Battery) and SPH (on-grid/Battery) inverters. New parameter, invtype= (env variable ginvtype=) to specify the inverttype and 
-  and select new record lauout (e.g. T060104XSPH). Be awere this can also be used to create own record layout (no check on record type, so invtype=test 
-  will search for T060104XTEST). Default invtype=default, this means normal processing without suffix. 
-  Standard processing is include in Grott for SPH/SPF
-- Add PVOutput for SPH (add pvenerytoday == eactoday, same offset => double keyword!) !be awere not tested with real inverters yet!
-- Add PVOutput for SPF (add pvenerytoday == epvtoday, pvpowerout=opwatt, pvgridvoltage = outputvolt, same offset => double keywords!) !be awere not tested with real inverters yet!
-- Added keyword incl :  yes/no  to layout value definition. "incl" : "no"  means this value processing is suppresed and will not be shown in
-  verbose output and not sent to MQTT and Influxdb. Added some keyword with incl = no (where commented out in prev versions) 
-  includeall=True (gincludall=True) will process also exluded values. 
-2.6.1
-- Include support for Growatt Smart Meter (connected with inverter)
-  Seperate MQTT, Influx records will be created (with datalogserial, smart meter id,  as device/mesurement)
-  Power and tot energy being used from grid are sent to PVOutput.org in 2 additional calls. 
-2.6.1a
-- Bugfix SPF record processing
-2.6.1b
-- Filter (ignore) invalid 0120 smart meter record
-2.6.1c
-- Bugfix when sendbuf = False now only buffered records are filtered.  In the pase if specified also non buffered records were filtered. 
-  Be aware: Buffered records with invalid time (time from server) are also filtered. 
-- Added pvinverter = 2 to grott.ini example (updated wiki). This tells Grott the amount of inverters to process 
+Change PVIMPTEMP for the extend records (T05nnnnX and t06nnnnX)
+Added new values for to T05nnnnX records.
+2.5.4+
+- Added pvinverters = 2 to grott.ini example (updated wiki). This tells Grott the amount of inverters to process  
