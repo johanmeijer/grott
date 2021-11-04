@@ -10,8 +10,8 @@ SyslogIdentifier=grott
 Type=simple
 User=root
 
-WorkingDirectory=/home/pi/growatt/
-ExecStart=-/usr/bin/python3 -u /home/pi/growatt/grott.py -v
+WorkingDirectory=/home/pi/grott/
+ExecStart=-/usr/bin/python3 -u /home/pi/grott/grott.py -v
 #StandardInput=socket
 StandardOutput=journal
 

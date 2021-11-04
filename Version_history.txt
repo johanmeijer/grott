@@ -170,5 +170,7 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - Filter (ignore) invalid 0120 smart meter record
 2.6.1c
 - Bugfix when sendbuf = False now only buffered records are filtered.  In the pase if specified also non buffered records were filtered. 
-  Be aware: Buffered records with invalid time (time from server) are also filtered. 
-- Added pvinverters = 2 to grott.ini example (updated wiki). This tells Grott the amount of inverters to process 
+- Be aware: Buffered records with invalid time (time from server) are also filtered.
+2.6.1d
+-Added statement to [pvoutput] section: pvinverter = 2 [This specifies # inverters to be processed, See also issue #53]
+-Change grott home directory from Growatt in Grott [see issue #71]
