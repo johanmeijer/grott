@@ -1,6 +1,6 @@
 # grottdata.py processing data  functions
-# Updated: 2021-09-04
-# Version 2.6.1b
+# Updated: 2021-09-06
+# Version 2.6.1c
 
 #import time
 from datetime import datetime, timedelta
@@ -365,9 +365,10 @@ def procdata(conf,data):
             print(format_multi_line("\t\t\t ", jsonmsg))   
 
         #do net invalid records (e.g. buffered records with time from server) or buffered records if sendbuf = False
-        if (conf.sendbuf == False) or (buffered == "yes" and timefromserver == True) :
-            if conf.verbose: print("\t - " + 'Buffered record not sent: sendbuf = False or invalid date/time format')  
-            return
+        if (buffered == "yes") : 
+            if (conf.sendbuf == False) or (timefromserver == True) :
+                if conf.verbose: print("\t - " + 'Buffered record not sent: sendbuf = False or invalid date/time format')  
+                return
 
         if conf.nomqtt != True:
             try: 

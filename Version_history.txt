@@ -174,3 +174,5 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 2.6.1d
 -Added statement to [pvoutput] section: pvinverter = 2 [This specifies # inverters to be processed, See also issue #53]
 -Change grott home directory from Growatt in Grott [see issue #71]
+2.6.1e
+- Merge pull request #57 from redthor/2.6-print-env

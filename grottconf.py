@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2021-09-01 
-# Version 2.6.1a
+# Updated: 2021-11-18 
+# Version 2.6.1e
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
