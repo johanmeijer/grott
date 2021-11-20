@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2021-11-18 
-# Version 2.6.1e
+# Updated: 2021-11-20 
+# Version 2.6.1f
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -866,9 +866,14 @@ class Conf :
             "faultValue"        : {"value" :246, "length" : 2, "type" : "num", "divide" : 1},                
             "warningValue"      : {"value" :250, "length" : 2, "type" : "num", "divide" : 1},                
             "constantPowerOK"   : {"value" :266, "length" : 2, "type" : "num", "divide" : 1},                
-            "epvtoday"          : {"value" :274, "length" : 4, "type" : "num", "divide" : 10},                
-            "pvenergytoday"     : {"value" :274, "length" : 4, "type" : "num", "divide" : 10}, 
-            "epvtotal"          : {"value" :282, "length" : 4, "type" : "num", "divide" : 10}, 
+            "epv1tod"           : {"value" :270, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},                
+            "epv1tot"           : {"value" :278, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "epvToday"          : {"value" :278, "length" : 4, "type" : "num", "divide" : 10}, 
+            "pvenergytoday"     : {"value" :278, "length" : 4, "type" : "num", "divide" : 10}, 
+            "epv2tod"           : {"value" :286, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},                
+            "epvTotal"          : {"value" :286, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvenergytotal"     : {"value" :286, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv2tot"           : {"value" :294, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},              
             "eacCharToday"      : {"value" :310, "length" : 4, "type" : "num", "divide" : 10},    
             "eacCharTotal"      : {"value" :318, "length" : 4, "type" : "num", "divide" : 10},  
             "ebatDischarToday"  : {"value" :326, "length" : 4, "type" : "num", "divide" : 10},  
