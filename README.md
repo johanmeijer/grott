@@ -1,17 +1,25 @@
 # Grott
-## The Growatt inverter monitor 
+## The Growatt Inverter Monitor 
 
-The growatt inverter sends log data to the growatt website at the internet. At this website (or with the mobile app) you can see detailed information on how the inverter is performing. 
+The Growatt inverter can send performance and status metrics (log data) to the Growatt company servers. It does this by either using either a ShineWIFI-module or an RF-module on the inverter which transmits data to the ShineLAN box. The metrics sent to the Growatt servers can be viewed on the Gorwatt website or using the mobile app. 
 
-**Grott** will monitor and process this data (containing information about performance and status of the inverter) and send this to: 
+The purpose of Grott is to read these metrics as they are sent to Growatt servers. The data *as it is sent to the Growatt servers*, can then be used to *additional* purposes. This means those additional purposes can fetch and store the original raw metrics without relying on the Growatt API.
 
+## How metric data can be retrieved
+Grott can intercept the inverter metrics in two distinct modes:
+* Proxy mode (man in the middle): The Growatt ShineWifi or ShineLAN box can be configured to use Grott as an alternative server to server.growatt.com. Grott then acts as a relay to the Growatt servers. Grott reads the transmitted data and then forwards the to server.grott.com.
+* Sniff mode (original connection): Linux iptables NAT masquerading is used in conjuction with a python packet sniffer to read data. More resource intensive on the linux host, requires no config changes in the ShineLAN/Wifi module.
+
+## Where metric data can be sent
+**Grott** will then parse the metrics from the received data from either method. Grott then forwards the parsed metrics to: 
 * MQTT
 * PVOutput.org
 * InfluxDB (V1 and V2) 
-* Using the extension functionality you can add your own processing and output functionality, 
+* A custom output using the extension functionality 
  
 MQTT can be used to distribute the data to other applications like: NodeRed, Grafana (using InfluxDB), Home Assistant, OpenHab and Domoticz. Descriptions and examples are available in the Wiki 
 
+## Compatibility
 The program is written in python and runs under Linux, Windows and is available in a docker container on Docker Hub (see: https://github.com/johanmeijer/grott/wiki/Docker-support, containers available at:https://hub.docker.com/u/ledidobe).  
 
 Grott can be started from the command line or as a (linux or Windows ) service. 
