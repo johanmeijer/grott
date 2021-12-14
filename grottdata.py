@@ -1,6 +1,6 @@
 # grottdata.py processing data  functions
-# Updated: 2021-09-06
-# Version 2.6.1c
+# Updated: 2021-12-14
+# Version 2.6.1g
 
 #import time
 from datetime import datetime, timedelta
@@ -118,7 +118,8 @@ def procdata(conf,data):
                                                         
     if conf.verbose: 
         print("\t - " + 'Growatt plain data:')
-        print(format_multi_line("\t\t ", result_string)) 
+        print(format_multi_line("\t\t ", result_string))
+        #debug only: print(result_string)
 
     # test position : 
     # print(result_string.find('0074' ))

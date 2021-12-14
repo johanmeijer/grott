@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2021-11-20 
-# Version 2.6.1f
+# Updated: 2021-12-14 
+# Version 2.6.1g
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -654,8 +654,8 @@ class Conf :
             "decrypt"           : {"value" :"True"},
             "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
             "date"              : {"value" :136, "divide" : 10}, 
-            "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
-            "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "yes"}, 
+            "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "yes "}, 
             "pvstatus"          : {"value" :158, "length" : 2, "type" : "num"},  
             "pvpowerin"         : {"value" :162, "length" : 4, "type" : "num", "divide" : 10},        
             "pv1voltage"        : {"value" :170, "length" : 2, "type" : "num", "divide" : 10},        
@@ -702,8 +702,8 @@ class Conf :
             "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10,"incl" : "no"},
             "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
             "date"              : {"value" :136, "divide" : 10}, 
-            "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
-            "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "yes"}, 
+            "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "yes"}, 
             "pvstatus"          : {"value" :158, "length" : 2, "type" : "num"},  
             "pvpowerin"         : {"value" :162, "length" : 4, "type" : "num", "divide" : 10},        
             "pv1voltage"        : {"value" :170, "length" : 2, "type" : "num", "divide" : 10},        
@@ -946,7 +946,56 @@ class Conf :
             "BatWatt"           : {"value" :474, "length" : 4, "type" : "numx", "divide" : 10}                                                 
         }}
 
-        self.recorddict9 = {"T060120": {
+        self.recorddict9 = {"T06NNNNXTL3": {
+            "decrypt"           : {"value" :"True"},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "date"              : {"value" :136, "divide" : 10}, 
+            "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
+            "pvstatus"          : {"value" :158, "length" : 2, "type" : "num"},  
+            "pvpowerin"         : {"value" :162, "length" : 4, "type" : "num", "divide" : 10},        
+            "pv1voltage"        : {"value" :170, "length" : 2, "type" : "num", "divide" : 10},        
+            "pv1current"        : {"value" :174, "length" : 2, "type" : "num", "divide" : 10},                        
+            "pv1watt"           : {"value" :178, "length" : 4, "type" : "num", "divide" : 10},                      
+            "pv2voltage"        : {"value" :186, "length" : 2, "type" : "num", "divide" : 10},                
+            "pv2current"        : {"value" :190, "length" : 2, "type" : "num", "divide" : 10},                
+            "pv2watt"           : {"value" :194, "length" : 4, "type" : "num", "divide" : 10},
+            "pv3voltage"        : {"value" :202, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                
+            "pv3current"        : {"value" :206, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                
+            "pv3watt"           : {"value" :210, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},                    
+            "pvpowerout"        : {"value" :298, "length" : 4, "type" : "numx", "divide" : 10},                
+            "pvfrequentie"      : {"value" :306, "length" : 2, "type" : "num", "divide" : 100},                
+            "pvgridvoltage"     : {"value" :310, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent"     : {"value" :314, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower"       : {"value" :318, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvgridvoltage2"    : {"value" :326, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent2"    : {"value" :330, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower2"      : {"value" :334, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvgridvoltage3"    : {"value" :342, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent3"    : {"value" :346, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower3"      : {"value" :350, "length" : 4, "type" : "num", "divide" : 10},  
+            "Vac_RS"            : {"value" :358, "length" : 2, "type" : "num", "divide" : 10},                
+            "Vac_ST"            : {"value" :362, "length" : 2, "type" : "num", "divide" : 10},                
+            "Vac_TR"            : {"value" :366, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvenergytoday"     : {"value" :370, "length" : 4, "type" : "num", "divide" : 10},                  
+            "pvenergytotal"     : {"value" :378, "length" : 4, "type" : "num", "divide" : 10},
+            "totworktime"       : {"value" :386, "length" : 4, "type" : "num", "divide" : 7200},
+            "epv1today"         : {"value" :394, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv1total"         : {"value" :402, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv2today"         : {"value" :410, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv2total"         : {"value" :418, "length" : 4, "type" : "num", "divide" : 10},
+            "epvtotal"          : {"value" :522, "length" : 4, "type" : "num", "divide" : 10},                           
+            "pvtemperature"     : {"value" :530, "length" : 2, "type" : "num", "divide" : 10},                 
+            "pvipmtemperature"  : {"value" :534, "length" : 2, "type" : "num", "divide" : 10},          
+            "pvboottemperature" : {"value" :538, "length" : 2, "type" : "num", "divide" : 10},          
+            "temp4"             : {"value" :542, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},          
+            "uwBatVolt_DSP"     : {"value" :546, "length" : 2, "type" : "num", "divide" : 10},          
+            "pbusvolt"          : {"value" :550, "length" : 2, "type" : "num", "divide" : 1},                  
+            "nbusvolt"          : {"value" :554, "length" : 2, "type" : "num", "divide" : 1}     
+        }}
+
+        self.recorddict10 = {"T060120": {
             "decrypt"           : {"value" :"True"},
             "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10},
             "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
@@ -988,6 +1037,8 @@ class Conf :
             "react_energy_kvar" : {"value" :416, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"}   
         }}
 
+        
+
         self.recorddict.update(self.recorddict1)
         self.recorddict.update(self.recorddict2)
         self.recorddict.update(self.recorddict3)
@@ -997,6 +1048,7 @@ class Conf :
         self.recorddict.update(self.recorddict7)  
         self.recorddict.update(self.recorddict8) 
         self.recorddict.update(self.recorddict9)  
+        self.recorddict.update(self.recorddict10)  
 
         f = []
         print("\nGrott process json layout files")
