@@ -24,10 +24,12 @@ Please see the wiki (https://github.com/johanmeijer/grott/wiki) for more informa
 
 # Version History 
 ## New in Version 2.6.x  (2.6 Branch)
+#### TL3-X 3 phase inverter support 
+see issue #81/#82/#85: add invtype=tl3 in grott.ini [Generic] section (or use ginvtype="tl3" environmental variable e.g. for docker ledidome/grott:2.6.1f)
 #### SPF off grid inverter support 
-see issue #42/#46: add invtype=spf in grott.ini [Generic] section (or use ginvtype=spf environmental variable e.g. for docker)
+see issue #42/#46: add invtype=spf in grott.ini [Generic] section (or use ginvtype="spf" environmental variable e.g. for docker)
 #### SPH hybrid (grid/battery) support 
-see issue #34: add invtype=sph in grott.ini [Generic] section (or use ginvtype=sph environmental variable e.g. for docker)
+see issue #34: add invtype=sph in grott.ini [Generic] section (or use ginvtype="sph" environmental variable e.g. for docker)
 #### Growatt Smart Meter support
 see issue #47: data will be processed automatically and send to MQTT, InfluxDB and PVOutput.org
 ## New in Version 2.5.x  
