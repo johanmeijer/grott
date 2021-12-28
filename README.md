@@ -51,7 +51,7 @@ If Grott is running in proxy mode the ShineLAN box or ShineWIFI module [needs to
 Please see the [Wiki](https://github.com/johanmeijer/grott/wiki) for further information and installation details. 
 
 ## What's new
-### New in Version 2.6.x  (2.6 Branch)
+### New in Version 2.6.1  (Master)
 #### TL3-X 3 phase inverter support 
 see issue #81/#82/#85: add invtype=tl3 in grott.ini [Generic] section (or use ginvtype="tl3" environmental variable e.g. for docker ledidome/grott:2.6.1f)
 #### SPF off grid inverter support 
