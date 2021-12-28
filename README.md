@@ -1,38 +1,67 @@
-# Grott
-## The Growatt inverter monitor 
-
-The growatt inverter sends log data to the growatt website at the internet. At this website (or with the mobile app) you can see detailed information on how the inverter is performing. 
-
-**Grott** will monitor and process this data (containing information about performance and status of the inverter) and send this to: 
-
-* MQTT
-* PVOutput.org
-* InfluxDB (V1 and V2) 
-* Using the extension functionality you can add your own processing and output functionality, 
- 
-MQTT can be used to distribute the data to other applications like: NodeRed, Grafana (using InfluxDB), Home Assistant, OpenHab and Domoticz. Descriptions and examples are available in the Wiki 
-
-The program is written in python and runs under Linux, Windows and is available in a docker container on Docker Hub (see: https://github.com/johanmeijer/grott/wiki/Docker-support, containers available at:https://hub.docker.com/u/ledidobe).  
-
-Grott can be started from the command line or as a (linux or Windows ) service. 
-
-To "see" the growatt data, the network traffic needs to be routed via the system Grott is running (see: https://github.com/johanmeijer/grott/wiki/Rerouting-Growatt-Wifi-TCPIP-data-via-your-Grott-Server).  
-
-Please see the wiki (https://github.com/johanmeijer/grott/wiki) for more information and installation details. There is also a short first time installation description available. 
-
+## The Growatt Inverter Monitor 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=RQFS46F9JTESQ&item_name=Grott+&currency_code=EUR)
 
-# Version History 
-## New in Version 2.6.x  (2.6 Branch)
+<i><b>(Per 28-12-2021 version 2.6 (2.6.1g) has been promoted to master branche)</b></i> 
+
+Growatt inverters can send performance and status metrics (log data) to the Growatt company servers. The inverters rely on either a ShineWIFI module or a ShineLAN box to relay the data to Growatt. The metrics stored on the Growatt servers then can be viewed on the Growatt website or using the ShinePhone mobile app. 
+
+The purpose of Grott is to read, parse and forward the *raw metrics as they are sent* to Growatt servers. This means other applications can consume the raw Growatt metrics without relying on the Growatt API and servers and without delay. 
+
+
+### Two modes of metric data retrieval
+Grott can intercept the inverter metrics in two distinct modes:
+* Proxy mode (man in the middle): The Growatt ShineWifi or ShineLAN box can be easily configured to use Grott as an alternative server to the default server.growatt.com. Grott then acts as a relay to the Growatt servers. Grott reads the transmitted data, and then forwards the data to server.grott.com.
+* Sniff mode (original connection): Can be used if your router is linux based. IPTables NAT masquerading is used in conjuction with a python packet sniffer to read the data. (This is more resource intensive on the linux host).
+
+
+### Where Grott can forward metric data to
+Grott can forward the parsed metrics to: 
+* MQTT (suggested option for many home automation systems such as Home Assistant, OpenHAB and Domoticz)
+* InfluxDB v1 and v2 (a time series database with dashboarding functionality) 
+* PVOutput.org (a service for sharing and comparing PV output data)
+* Custom output using the extension functionality 
+
+
+### Compatibility
+The program is written in python and runs under Linux, Windows.
+It can run:
+* Interactive from the command line interface
+* As a Linux or Windows service
+* As a [Docker container](https://github.com/johanmeijer/grott/wiki/Docker-support).  
+
+And is tested, but not limited to, inverter models:
++ 1500-S (ShineWiFi)
++ 3000-S  (Shinelan)
++ 2500-MTL-S (ShineWiFi)
++ 4200-MTL-S (Shinelan)
++ 5000TL-X   (ShineWifi-X)
++ 3600TL-XE (ShineLink-X)
++ 3600TL-XE (ShineLan)
++ MOD 5000TL3-X* (ShineLan)
++ MOD 9000TL3-X*
+
+**Experimental in latest 2.6 branch*
+
+The Docker images are tested RPI(arm32), Ubuntu and Synology NAS
+
+## Grott installation
+
+### ShineLAN or ShineWIFI configuration
+If Grott is running in proxy mode the ShineLAN box or ShineWIFI module [needs to be configured](https://github.com/johanmeijer/grott/wiki/Rerouting-Growatt-Wifi-TCPIP-data-via-your-Grott-Server) to send data to Grott instead of the Growatt server API.
+Please see the [Wiki](https://github.com/johanmeijer/grott/wiki) for further information and installation details. 
+
+## What's new
+### New in Version 2.6.x  (2.6 Branch)
 #### TL3-X 3 phase inverter support 
 see issue #81/#82/#85: add invtype=tl3 in grott.ini [Generic] section (or use ginvtype="tl3" environmental variable e.g. for docker ledidome/grott:2.6.1f)
 #### SPF off grid inverter support 
-see issue #42/#46: add invtype=spf in grott.ini [Generic] section (or use ginvtype="spf" environmental variable e.g. for docker)
+see issue #42/#46: add invtype=spf in grott.ini [Generic] section (or use ginvtype=spf environmental variable e.g. for docker)
 #### SPH hybrid (grid/battery) support 
-see issue #34: add invtype=sph in grott.ini [Generic] section (or use ginvtype="sph" environmental variable e.g. for docker)
+see issue #34: add invtype=sph in grott.ini [Generic] section (or use ginvtype=sph environmental variable e.g. for docker)
 #### Growatt Smart Meter support
 see issue #47: data will be processed automatically and send to MQTT, InfluxDB and PVOutput.org
-## New in Version 2.5.x  
+
+### New in Version 2.5.x  
 Improved dynamic data processing  and dynamic generation of output allowing: 
 * add new output (values) without changing code (using external layout definitions)
 * rename keywords in MQTT JSON message and influxDB to own naming convention 
@@ -47,16 +76,16 @@ Added new outout values to mqtt and influxDB to support 3 phase grid connection 
      
 Improve environmental processing for mqtt/influxDB/growatt ip and port definitions
 
-## New in Version 2.4.0  
+### New in Version 2.4.0  
 Introduce possibility to add extensions for additional (personalized) processing. 
 ,br.     
 see: https://github.com/johanmeijer/grott/wiki/Extensions
 
-## New in Version 2.3.1  
+### New in Version 2.3.1  
 Direct output to inlfuxdb (v1 and v2)   
 <br> 
 see: https://github.com/johanmeijer/grott/wiki/InfluxDB-Support
-## New in Version 2.2.6  
+### New in Version 2.2.6  
 Mulitiple inverter (multiple system id's) support in PVOutput.org 
 <br> 
 see: https://github.com/johanmeijer/grott/wiki/PVOutput.org-support 
@@ -65,7 +94,7 @@ see: https://github.com/johanmeijer/grott/wiki/PVOutput.org-support
 This file is deleted from the grott default directory to simply github installation (not overwrite your settings). 
 It is advised to copy this file into the Grott default directory (and customise it) during first time installation 
 
-## New in Version 2.2.1  
+### New in Version 2.2.1  
 #### Automatic protocol detection and processing
 Limited .ini configuration needed (inverterid, encryption, offset and record layout is automaticially detected)
 #### Direct output to PVOutput.org (no mqtt processing needed). 
@@ -80,8 +109,7 @@ If date/time is available in the data (inserted by the inverter) this will be us
 If date/time is not available in the data record the server time will be used (as it was originally). 
 In the mqtt message the  key buffered is added (yes/no) which indicates that the message is from the buffer (past) or actual. 
 
-## Version 2: Introduction of 2 modes support: sniff and proxy. 
-
+### Version 2: Introduction of 2 modes support: sniff and proxy. 
 In sniff mode (default and compatable with older Grott versions) IP sniffering technology is used (based on: https://github.com/buckyroberts/Python-Packet-Sniffer). In this mode the data needs to be "re-routed" using linux IP forwarding on the device Grott is running. In this mode Grott "sees" every IP package and when a Growatt TCP packages passes it will be processed and a MQTT will be sent if inverter status information is detected. 
 
 With the proxy mode Grott is listening on a IP port (default 5279), processes the data (sent MQTT message) and routes the original packet to the growatt website. 
@@ -114,9 +142,7 @@ Sniff mode is not supported under Windows
 <br>
 In sniff mode it is necessary to run Grott with SUDO rights. 
 
-*** 
-
-## Minimal installation 
+#### Minimal installation 
 The following modules are needed the use Grott:
 - grott.py
 - grott.ini (available in examples direcory) 
@@ -125,20 +151,5 @@ The following modules are needed the use Grott:
 - grottproxy.py
 - grottsniffer.py
 
-
-### The Grott monitor is tested on Raspian (Raspberry PI),Ubuntu and windows 10 (proxy only), with
-+ 1500-S (ShineWiFi)
-+ 3000-S  (Shinelan)
-+ 2500-MTL-S (ShineWiFi)
-+ 4200-MTL-S (Shinelan)
-+ 5000TL-X   (ShineWifi-X)
-+ 3600TL-XE (ShineLink-X)
-+ 3600TL-XE (ShineLan)
-
-## The Docker images are tested RPI(arm32), Ubuntu and Synology NAS
-
 #### More Version History: see Version_history.txt file. 
 #### Grott is a "hobby" project you can use it as it is (with the potential errors and imperfections). Remarks and requests for improvement are welcome. 
-
-
-
