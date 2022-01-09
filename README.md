@@ -1,7 +1,16 @@
+### New in Version 2.7  (Beta)
+#### Suppor for SDM630 smart monitor connected via Raillog device 
+see issue #88 for more information 
+
+### planned in Version 2.7.x (not commited yet)
+* Auto detect for SPF, SPH, TL3 inverters
+* Improved / configurable PVOutput support 
+* MQTT Retain message support      
+* Enhanced record layout for SPH 
+* tbd
+
 ## The Growatt Inverter Monitor 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=RQFS46F9JTESQ&item_name=Grott+&currency_code=EUR)
-
-<i><b>(Per 28-12-2021 version 2.6 (2.6.1g) has been promoted to master branche)</b></i> 
 
 Growatt inverters can send performance and status metrics (log data) to the Growatt company servers. The inverters rely on either a ShineWIFI module or a ShineLAN box to relay the data to Growatt. The metrics stored on the Growatt servers then can be viewed on the Growatt website or using the ShinePhone mobile app. 
 
