@@ -1,6 +1,6 @@
 ### New in Version 2.7  (Beta)
-#### Suppor for SDM630 smart monitor connected via Raillog device 
-see issue #88 for more information 
+* Support for SDM630/Raillog connected (see issue #88)
+* Support for SDM630/Inverter (modbus) connected 3 phases support
 
 ### planned in Version 2.7.x (not commited yet)
 * Auto detect for SPF, SPH, TL3 inverters
