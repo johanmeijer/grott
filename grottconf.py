@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2021-12-14 
-# Version 2.6.1g
+# Updated: 2022-01-08 
+# Version 2.7.0
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -155,11 +155,10 @@ class Conf :
 
                 #self.influxclient = InfluxDBClient(url='192.168.0.211:8086',org=self.iforg, token=self.iftoken)
                 self.influxclient = InfluxDBClient(url="{}:{}".format(self.ifip, self.ifport),org=self.iforg, token=self.iftoken)
-                
                 self.ifbucket_api = self.influxclient.buckets_api()
                 self.iforganization_api = self.influxclient.organizations_api()              
-                self.ifwrite_api = self.influxclient.write_api(write_options=SYNCHRONOUS)
-                
+                self.ifwrite_api = self.influxclient.write_api(write_options=SYNCHRONOUS)  
+
                 try:
                     buckets = self.ifbucket_api.find_bucket_by_name(self.ifbucket)
                     organizations = self.iforganization_api.find_organizations()  
@@ -490,12 +489,20 @@ class Conf :
                          "5004",                                    #data record    
                          "5016",                                    #ping    
                          "5019",                                    #identify
+                         "501b",                                    #SDM630 with Raillog
                          "5050",                                    #Archived record
                          "5103",                                    #announce record
                          "5104",                                    #data record                          
                          "5116",                                    #ping    
                          "5119",                                    #identify
-                         "5150"                                     #Archived record
+                         "5129",                                    #announce record
+                         "5150",                                    #Archived record
+                         "5103",                                    #announce record
+                         "5104",                                    #data record                          
+                         "5216",                                    #ping    
+                         "5219",                                    #identify
+                         "5229",                                    #announce record
+                         "5250"                                     #Archived record
                          
         } 
 
@@ -513,7 +520,8 @@ class Conf :
         
         self.recorddict1 = {"T02NNNN": {
             "decrypt"           : {"value" :"False"},
-            "pvserial"          : {"value" :36, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "incl" : "yes"},
+            "pvserial"          : {"value" :36, "length" : 10, "type" : "text"},
             "date"              : {"value" :56, "divide" : 10}, 
             "recortype1"        : {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
             "recortype2"        : {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
@@ -563,7 +571,8 @@ class Conf :
 
         self.recorddict2 = {"T05NNNN": {
             "decrypt"           : {"value" :"True"},
-            "pvserial"          : {"value" :36, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "incl" : "yes"},
+            "pvserial"          : {"value" :36, "length" : 10, "type" : "text"},
             "date"              : {"value" :56, "divide" : 10}, 
             "recortype1"        : {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
             "recortype2"        : {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
@@ -613,7 +622,8 @@ class Conf :
         
         self.recorddict4 = {"T05NNNNX": {
             "decrypt"           : {"value" :"True"},
-            "pvserial"          : {"value" :36, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "incl" : "yes"},
+            "pvserial"          : {"value" :36, "length" : 10, "type" : "text"},
             "date"              : {"value" :56, "divide" : 10}, 
             "recortype1"        : {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
             "recortype2"        : {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
@@ -652,10 +662,11 @@ class Conf :
             
         self.recorddict3 = {"T06NNNN": {
             "decrypt"           : {"value" :"True"},
-            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text","incl" : "yes"},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text"},
             "date"              : {"value" :136, "divide" : 10}, 
-            "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "yes"}, 
-            "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "yes "}, 
+            "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
             "pvstatus"          : {"value" :158, "length" : 2, "type" : "num"},  
             "pvpowerin"         : {"value" :162, "length" : 4, "type" : "num", "divide" : 10},        
             "pv1voltage"        : {"value" :170, "length" : 2, "type" : "num", "divide" : 10},        
@@ -699,11 +710,11 @@ class Conf :
 
         self.recorddict5 = {"T06NNNNX": {
             "decrypt"           : {"value" :"True"},
-            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10,"incl" : "no"},
-            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text","incl" : "yes"},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text"},
             "date"              : {"value" :136, "divide" : 10}, 
-            "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "yes"}, 
-            "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "yes"}, 
+            "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
             "pvstatus"          : {"value" :158, "length" : 2, "type" : "num"},  
             "pvpowerin"         : {"value" :162, "length" : 4, "type" : "num", "divide" : 10},        
             "pv1voltage"        : {"value" :170, "length" : 2, "type" : "num", "divide" : 10},        
@@ -739,7 +750,8 @@ class Conf :
 
         self.recorddict6 = {"T06NNNNXSPH": {
             "decrypt"           : {"value" :"True"},
-            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text","incl" : "yes"},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text"},
             "date"              : {"value" :136, "divide" : 10}, 
             "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
             "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
@@ -827,8 +839,8 @@ class Conf :
 
         self.recorddict7 = {"T05NNNNSPF": {
             "decrypt"           : {"value" :"True"},
-            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10,"incl" : "no"},
-            "pvserial"          : {"value" :36, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10,"incl" : "yes"},
+            "pvserial"          : {"value" :36, "length" : 10, "type" : "text"},
             "date"              : {"value" :56, "divide" : 10}, 
             "recortype1"        : {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
             "recortype2"        : {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
@@ -890,8 +902,8 @@ class Conf :
 
         self.recorddict8 = {"T06NNNNSPF": {
             "decrypt"           : {"value" :"True"},
-            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10},
-            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text","incl" : "yes"},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text"},
             "date"              : {"value" :136, "divide" : 10}, 
             "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
             "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
@@ -948,8 +960,8 @@ class Conf :
 
         self.recorddict9 = {"T06NNNNXTL3": {
             "decrypt"           : {"value" :"True"},
-            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10},
-            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "incl" : "yes"},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text"},
             "date"              : {"value" :136, "divide" : 10}, 
             "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
             "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
@@ -997,37 +1009,37 @@ class Conf :
 
         self.recorddict10 = {"T060120": {
             "decrypt"           : {"value" :"True"},
-            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10},
-            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text","incl" : "yes"},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text"},
             "date"              : {"value" :136, "divide" : 10}, 
             "voltage_l1"        : {"value" :160, "length" : 4, "type" : "num", "divide" : 10},  
-            "voltage_l2"        : {"value" :168, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},  
-            "voltage_l3"        : {"value" :176, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},  
+            "voltage_l2"        : {"value" :168, "length" : 4, "type" : "num", "divide" : 10,"incl" : "yes"},  
+            "voltage_l3"        : {"value" :176, "length" : 4, "type" : "num", "divide" : 10,"incl" : "yes"},  
             "Current_l1"        : {"value" :184, "length" : 4, "type" : "num", "divide" : 10},
-            "Current_l2"        : {"value" :192, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},
-            "Current_l3"        : {"value" :200, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},            
+            "Current_l2"        : {"value" :192, "length" : 4, "type" : "num", "divide" : 10,"incl" : "yes"},
+            "Current_l3"        : {"value" :200, "length" : 4, "type" : "num", "divide" : 10,"incl" : "yes"},            
             "act_power_l1"      : {"value" :208, "length" : 4, "type" : "numx", "divide" : 10},        
-            "act_power_l2"      : {"value" :216, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},        
-            "act_power_l3"      : {"value" :224, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},        
+            "act_power_l2"      : {"value" :216, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "yes"},        
+            "act_power_l3"      : {"value" :224, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "yes"},        
             "app_power_l1"      : {"value" :232, "length" : 4, "type" : "numx", "divide" : 10},        
-            "app_power_l2"      : {"value" :240, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},        
-            "app_power_l3"      : {"value" :248, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},        
+            "app_power_l2"      : {"value" :240, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "yes"},        
+            "app_power_l3"      : {"value" :248, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "yes"},        
             "react_power_l1"    : {"value" :256, "length" : 4, "type" : "numx","divide" : 10},        
-            "react_power_l2"    : {"value" :264, "length" : 4, "type" : "numx","divide" : 10,"incl" : "no"},        
-            "react_power_l3"    : {"value" :272, "length" : 4, "type" : "numx","divide" : 10,"incl" : "no"},        
+            "react_power_l2"    : {"value" :264, "length" : 4, "type" : "numx","divide" : 10,"incl" : "yes"},        
+            "react_power_l3"    : {"value" :272, "length" : 4, "type" : "numx","divide" : 10,"incl" : "yes"},        
             "powerfactor_l1"    : {"value" :280, "length" : 4, "type" : "numx", "divide" : 1000},                      
-            "powerfactor_l2"    : {"value" :288, "length" : 4, "type" : "numx", "divide" : 1000,"incl" : "no"},                      
-            "powerfactor_l3"    : {"value" :296, "length" : 4, "type" : "numx", "divide" : 1000,"incl" : "no"},                      
+            "powerfactor_l2"    : {"value" :288, "length" : 4, "type" : "numx", "divide" : 1000,"incl" : "yes"},                      
+            "powerfactor_l3"    : {"value" :296, "length" : 4, "type" : "numx", "divide" : 1000,"incl" : "yes"},                      
             "pos_rev_act_power" : {"value" :304, "length" : 4, "type" : "numx", "divide" : 10}, 
-            "pos_act_power"     : {"value" :304, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"}, 
-            "rev_act_power"     : {"value" :304, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},
+            "pos_act_power"     : {"value" :304, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "yes"}, 
+            "rev_act_power"     : {"value" :304, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "yes"},
             "app_power"         : {"value" :312, "length" : 4, "type" : "numx", "divide" : 10}, 
             "react_power"       : {"value" :320, "length" : 4, "type" : "numx", "divide" : 10}, 
             "powerfactor"       : {"value" :328, "length" : 4, "type" : "numx", "divide" : 1000},   
             "frequency"         : {"value" :336, "length" : 4, "type" : "num", "divide" : 10},   
-            "L1-2_voltage"      : {"value" :344, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
-            "L2-3_voltage"      : {"value" :352, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},   
-            "L3-1_voltage"      : {"value" :360, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},   
+            "L1-2_voltage"      : {"value" :344, "length" : 4, "type" : "num", "divide" : 10,"incl" : "yes"}, 
+            "L2-3_voltage"      : {"value" :352, "length" : 4, "type" : "num", "divide" : 10,"incl" : "yes"},   
+            "L3-1_voltage"      : {"value" :360, "length" : 4, "type" : "num", "divide" : 10,"incl" : "yes"},   
             "pos_act_energy"    : {"value" :368, "length" : 4, "type" : "numx", "divide" : 10},  
             "rev_act_energy"    : {"value" :376, "length" : 4, "type" : "numx", "divide" : 10},   
             "pos_act_energy_kvar" : {"value" :384, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},    
@@ -1037,7 +1049,82 @@ class Conf :
             "react_energy_kvar" : {"value" :416, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"}   
         }}
 
-        
+        self.recorddict11 = {"T06501b": {
+            "decrypt"           	: {"value" :"True"},
+            #"rectype"		    	: {"value": "log","type" : "text","incl" : "no"}, 
+            "datalogserial"         : {"value" :16, "length" : 10, "type" : "text","incl" : "yes"},
+            "device"                : {"value": "SDM630","type" : "def","incl" : "no"}, 
+            #"pvserial"          	: {"value" :36, "length" : 10, "type" : "text"},
+            #"recortype1"        	: {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
+            #"recortype2"        	: {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
+            "logstart"            	: {"value" :96,"type" : "def","incl" : "no"}, 
+            "active_energy"     	: {"pos" :1, "type" : "log"},
+            "reactie_energy"    	: {"pos" :2, "type" : "log"},
+            "activePowerL1"     	: {"pos" :3, "type" : "log"},
+            "activePowerL2"     	: {"pos" :4, "type" : "log"},
+            "activePowerL3"     	: {"pos" :5, "type" : "log"},
+            "reactivePowerL1"   	: {"pos" :6, "type" : "log"},
+            "reactivePowerL2"   	: {"pos" :7, "type" : "log"},
+            "reactivePowerL3"   	: {"pos" :8, "type" : "log"},
+            "apperentPowerL1"   	: {"pos" :9, "type" : "log"},
+            "apperentPowerL2"     	: {"pos" :10, "type" : "log"},
+            "apperentPowerL3"     	: {"pos" :11, "type" : "log"},
+            "powerFactorL1"     	: {"pos" :12, "type" : "log"},
+            "powerFactorL2"     	: {"pos" :13, "type" : "log"},
+            "powerFactorL3"    		: {"pos" :14, "type" : "log"},
+            "voltageL1"           	: {"pos" :15, "type" : "log"},
+            "voltageL2"            	: {"pos" :16, "type" : "log"},
+            "voltageL3"            	: {"pos" :17, "type" : "log"},
+            "currentL1"            	: {"pos" :18, "type" : "log"},
+            "currentL2"            	: {"pos" :19, "type" : "log"},
+            "currentL3"            	: {"pos" :20, "type" : "log"},
+            "active_power"         	: {"pos" :21, "type" : "log"},
+            "apparent_power"       	: {"pos" :22, "type" : "log"},
+            "reactive_power"       	: {"pos" :23, "type" : "log"},
+            "power_factor"         	: {"pos" :24, "type" : "log"},
+            "frequency"            	: {"pos" :25, "type" : "log"},
+            "posiActivePower"      	: {"pos" :26, "type" : "log"},
+            "reverActivePower"     	: {"pos" :27, "type" : "log"},
+            "posiReactivePower"    	: {"pos" :28, "type" : "log"},
+            "reverReactivePower"   	: {"pos" :29, "type" : "log"},
+            "apperentEnergy"       	: {"pos" :30, "type" : "log"},
+            "totalActiveEnergyL1"	: {"pos" :31, "type" : "log"},
+            "totalActiveEnergyL2"  	: {"pos" :32, "type" : "log"},
+            "totalActiveEnergyL3"  	: {"pos" :33, "type" : "log"},
+            "totalRectiveEnergyL1" 	: {"pos" :34, "type" : "log"},
+            "totalRectiveEnergyL2" 	: {"pos" :35, "type" : "log"},
+            "totalRectiveEnergyL3" 	: {"pos" :36, "type" : "log"},
+            "total_energy"     		: {"pos" :37, "type" : "log"},
+            "l1Voltage2"     		: {"pos" :38, "type" : "log"},
+            "l2Voltage3"     		: {"pos" :39, "type" : "log"},
+            "l3Voltage1"     		: {"pos" :40, "type" : "log"},
+            "pos41"    				: {"pos" :41, "type" : "log","incl" : "no"},
+            "pos42"     			: {"pos" :42, "type" : "log","incl" : "no"},
+            "pos43"     			: {"pos" :43, "type" : "log","incl" : "no"},
+            "pos44"     			: {"pos" :44, "type" : "log","incl" : "no"},
+            "pos45"     			: {"pos" :45, "type" : "log","incl" : "no"},
+            "pos46"     			: {"pos" :46, "type" : "log","incl" : "no"},
+            "pos47"     			: {"pos" :47, "type" : "log","incl" : "no"},
+            "pos48"     			: {"pos" :48, "type" : "log","incl" : "no"},
+            "pos49"     			: {"pos" :49, "type" : "log","incl" : "no"},
+            "pos50"     			: {"pos" :50, "type" : "log","incl" : "no"},
+            "pos51"     			: {"pos" :51, "type" : "log","incl" : "no"},
+            "pos52"     			: {"pos" :52, "type" : "log","incl" : "no"},
+            "pos53"     			: {"pos" :53, "type" : "log","incl" : "no"},
+            "pos54"     			: {"pos" :54, "type" : "log","incl" : "no"},
+            "pos55"     			: {"pos" :55, "type" : "log","incl" : "no"},
+            "pos56"     			: {"pos" :56, "type" : "log","incl" : "no"},
+            "pos57"     			: {"pos" :57, "type" : "log","incl" : "no"},
+            "pos58"     			: {"pos" :58, "type" : "log","incl" : "no"},
+            "pos59"					: {"pos" :59, "type" : "log","incl" : "no"},
+            "pos60" 			    : {"pos" :60, "type" : "log","incl" : "no"},
+            "pos61"     			: {"pos" :61, "type" : "log","incl" : "no"},
+            "pos62"     			: {"pos" :62, "type" : "log","incl" : "no"},
+            "pos63"     			: {"pos" :63, "type" : "log","incl" : "no"},
+            "pos64"     			: {"pos" :64, "type" : "log","incl" : "no"},
+            "pos65"     			: {"pos" :65, "type" : "log","incl" : "no"},
+            "pos66"     			: {"pos" :66, "type" : "log","incl" : "no"}
+        }}
 
         self.recorddict.update(self.recorddict1)
         self.recorddict.update(self.recorddict2)
@@ -1049,6 +1136,7 @@ class Conf :
         self.recorddict.update(self.recorddict8) 
         self.recorddict.update(self.recorddict9)  
         self.recorddict.update(self.recorddict10)  
+        self.recorddict.update(self.recorddict11)  
 
         f = []
         print("\nGrott process json layout files")

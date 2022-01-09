@@ -1,9 +1,10 @@
 # grottdata.py processing data  functions
-# Updated: 2021-12-14
-# Version 2.6.1g
+# Updated: 2022-01-09
+# Version 2.7.0
 
 #import time
 from datetime import datetime, timedelta
+from os import times_result
 #import pytz
 import time
 import sys
@@ -70,10 +71,12 @@ def procdata(conf,data):
             print("\t - " + "Grott data record length", ndata)
         #print(header)
         layout = "T" + header[6:8] + header[12:14] + header[14:16]
-        if ndata > 375:  layout = layout + "X"
+        #v270 add X for extended except for smart monitor records
+        if ((ndata > 375) and (header[14:16] not in ("20","1b"))) :  layout = layout + "X"
 
-        if conf.invtype != "default" :
-            layout = layout + conf.invtype.upper()
+        #v270 no invtype added to layout for smart monitor records
+        if (conf.invtype != "default") and (header[14:16] not in ("20","1b")) :
+                layout = layout + conf.invtype.upper()
 
         if header[14:16] == "50" : buffered = "yes"
         else: buffered = "no" 
@@ -137,18 +140,30 @@ def procdata(conf,data):
 
 
     if conf.compat is False: 
-        # new method if compat = False (autoatic detection):  
+        # new method if compat = False (automatic detection):  
        
         if conf.verbose: 
            print("\t - " + 'Growatt new layout processing')
            print("\t\t - " + "decrypt       : ",conf.decrypt)
            print("\t\t - " + "offset        : ", conf.offset)
            print("\t\t - " + "record layout : ", layout)
-           print() 
+           print()
 
+        
+        
+        try:
+            #v270 try if logstart and log fields are defined, if yes prepare log fields 
+            logstart = conf.recorddict[layout]["logstart"]["value"] 
+            logdict = {}
+            logdict = bytes.fromhex(result_string[conf.recorddict[layout]["logstart"]["value"]:len(result_string)-4]).decode("ASCII").split(",")
+        except:
+            pass
+
+        #v270 log data record processing (SDM630 smart monitor with railog 
+        #if rectype == "data" : 
         for keyword in  conf.recorddict[layout].keys() :
             
-            if keyword not in ("decrypt","date") :  
+            if keyword not in ("decrypt","date","logstart","device") :  
                 #try if keyword should be included 
                 include=True
                 try:
@@ -177,14 +192,24 @@ def procdata(conf,data):
                         #process signed integer 
                         keybytes = bytes.fromhex(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)])
                         definedkey[keyword] = int.from_bytes(keybytes, byteorder='big', signed=True)
-                    
-        # test if pvserial was defined, if not take inverterid from config. 
-        try: 
-            test = definedkey["pvserial"]
-        except: 
-            definedkey["pvserial"] = conf.inverterid
-            conf.recorddict[layout]["pvserial"] = {"value" : 0, "type" : "text"}
-            if conf.verbose : print("\t - pvserial not found used configuration defined invertid:", definedkey["pvserial"] ) 
+                    if keytype == "log" :
+                        # Proces log fields
+                        definedkey[keyword] = logdict[conf.recorddict[layout][keyword]["pos"]-1]
+                      
+                                 
+        # test if pvserial was defined, if not take inverterid from config.
+        device_defined = False 
+        try:    
+            definedkey["device"] = conf.recorddict[layout]["device"]["value"]
+            device_defined = True
+        except:         
+            # test if pvserial was defined, if not take inverterid from config.     
+            try: 
+                test = definedkey["pvserial"]
+            except: 
+                definedkey["pvserial"] = conf.inverterid
+                conf.recorddict[layout]["pvserial"] = {"value" : 0, "type" : "text"}
+                if conf.verbose : print("\t - pvserial not found and device not specified used configuration defined invertid:", definedkey["pvserial"] ) 
      
         # test if dateoffset is defined, if not take set to 0 (no futher date retrieval processing) . 
         try: 
@@ -239,6 +264,7 @@ def procdata(conf,data):
         dataprocessed = True
 
     else:
+        # old data processing only here for compatibility 
         serialfound = False 
         if(result_string.find(conf.SN) > -1):
             serialfound = True   
@@ -279,9 +305,7 @@ def procdata(conf,data):
             if conf.verbose: print("\t - "+ 'No Growatt data processed or SN not found:')
             if conf.trace: 
                 print("\t - "+ 'Growatt unprocessed Data:')
-                print(format_multi_line("\t\t - ", result_string))
-    
-    
+                print(format_multi_line("\t\t - ", result_string))  
         
     if dataprocessed: 
         # only sendout data to MQTT if it is processed. 
@@ -329,35 +353,52 @@ def procdata(conf,data):
 
         #create JSON message  (first create obj dict and then convert to a JSON message)                   
 
-        # if record is a smart monitor record use datalogserial as device (to distinguish from solar record) 
-        # and filter if invalid record (0 < voltage_l1 > 500 )
-        if header[14:16] != "20" :
+        
+       
+        # filter invalid 0120 record (0 < voltage_l1 > 500 ) 
+        if header[14:16] == "20" :
+            if (definedkey["voltage_l1"]/10 > 500) or (definedkey["voltage_l1"]/10 < 0) :
+                print("\t - " + "Grott invalid 0120 record processing stopped") 
+                return 
+
+        #v270
+        #compatibility with prev releases for "20" smart monitor record!
+        #if device is not specified in layout record datalogserial is used as device (to distinguish record from inverter record)
+
+        if device_defined == True: 
             jsonobj = {
-                        "device" : definedkey["pvserial"],
+                        "device" : definedkey["device"],
                         "time" : jsondate, 
                         "buffered" : buffered,
                         "values" : {}
                     }
         else : 
-                # filter if invalid 0120 record (0 < voltage_l1 > 500 ) 
-                if (definedkey["voltage_l1"]/10 > 500) or (definedkey["voltage_l1"]/10 < 0) :
-                    print("\t - " + "Grott invalid 0120 record processing stopped") 
-                    return 
 
+            if header[14:16] not in ("20","1b") :
                 jsonobj = {
-                        "device" : definedkey["datalogserial"],
-                        "time" : jsondate, 
-                        "buffered" : buffered,
-                        "values" : {}
-                    }            
+                            "device" : definedkey["pvserial"],
+                            "time" : jsondate, 
+                            "buffered" : buffered,
+                            "values" : {}
+                        }
+            else : 
+                    jsonobj = {
+                            "device" : definedkey["datalogserial"],
+                            "time" : jsondate, 
+                            "buffered" : buffered,
+                            "values" : {}
+                        }            
 
         for key in definedkey : 
 
-            if key != "pvserial" : 
+            #if key != "pvserial" : 
                 #if conf.recorddict[layout][key]["type"] == "num" : 
-                # only add int values to the json object                  
-                if type(definedkey[key]) == type(1) :                                                                     
-                     jsonobj["values"][key] = definedkey[key]
+                # only add int values to the json object 
+                #print(definedkey[key])
+                #print(type(definedkey[key]))                                 
+                #if type(definedkey[key]) == type(1) :                                                                     
+                #    jsonobj["values"][key] = definedkey[key]
+            jsonobj["values"][key] = definedkey[key]
                      
         jsonmsg = json.dumps(jsonobj) 
         
