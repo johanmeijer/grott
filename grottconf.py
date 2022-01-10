@@ -1,6 +1,6 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2022-01-08 
+# Updated: 2022-01-10 
 # Version 2.7.0
 
 import configparser, sys, argparse, os, json, io
@@ -1059,7 +1059,7 @@ class Conf :
             #"recortype2"        	: {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
             "logstart"            	: {"value" :96,"type" : "def","incl" : "no"}, 
             "active_energy"     	: {"pos" :1, "type" : "log"},
-            "reactie_energy"    	: {"pos" :2, "type" : "log"},
+            "reactive_energy"    	: {"pos" :2, "type" : "log"},
             "activePowerL1"     	: {"pos" :3, "type" : "log"},
             "activePowerL2"     	: {"pos" :4, "type" : "log"},
             "activePowerL3"     	: {"pos" :5, "type" : "log"},
@@ -1087,7 +1087,7 @@ class Conf :
             "reverActivePower"     	: {"pos" :27, "type" : "log"},
             "posiReactivePower"    	: {"pos" :28, "type" : "log"},
             "reverReactivePower"   	: {"pos" :29, "type" : "log"},
-            "apperentEnergy"       	: {"pos" :30, "type" : "log"},
+            "apparentEnergy"       	: {"pos" :30, "type" : "log"},
             "totalActiveEnergyL1"	: {"pos" :31, "type" : "log"},
             "totalActiveEnergyL2"  	: {"pos" :32, "type" : "log"},
             "totalActiveEnergyL3"  	: {"pos" :33, "type" : "log"},
