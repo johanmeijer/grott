@@ -545,14 +545,13 @@ def procdata(conf,data):
             return
         try:
             ext_result = module.grottext(conf,result_string,jsonmsg) 
+            if conf.verbose :
+                print("\t - " + "Grott extension processing ended:", ext_result)
         except Exception as e:
-            print("\t - " + "Grott extension processing error ")
-            print(e) 
-            return
+            print("\t - " + "Grott extension processing error:", repr(e))
+            import traceback
+            traceback.format_exc()
 
-        if conf.verbose :  
-            print("\t - " + "Grott extension processing ended : ", ext_result)
-            #print("\t -", ext_result)
     else: 
             if conf.verbose : print("\t - " + "Grott extension processing disabled ")      
             
