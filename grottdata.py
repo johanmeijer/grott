@@ -98,6 +98,7 @@ def procdata(conf,data):
             else:         
                 novalidrec = True     
     
+        conf.layout = layout
         if conf.verbose : print("\t - " + "Record layout used : ", layout)
     
     #Decrypt 
