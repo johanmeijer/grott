@@ -1,5 +1,5 @@
 # grottdata.py processing data  functions
-# Updated: 2022-01-09
+# Updated: 2022-01-15
 # Version 2.7.0
 
 #import time
@@ -195,6 +195,18 @@ def procdata(conf,data):
                     if keytype == "log" :
                         # Proces log fields
                         definedkey[keyword] = logdict[conf.recorddict[layout][keyword]["pos"]-1]
+                    if keytype == "logpos" :
+                    #only display this field if positive    
+                        # Proces log fields
+                        if float(logdict[conf.recorddict[layout][keyword]["pos"]-1]) > 0 : 
+                            definedkey[keyword] = logdict[conf.recorddict[layout][keyword]["pos"]-1]
+                        else : definedkey[keyword] = 0
+                    if keytype == "logneg" :
+                    #only display this field if negative    
+                        # Proces log fields
+                        if float(logdict[conf.recorddict[layout][keyword]["pos"]-1]) < 0 : 
+                            definedkey[keyword] = logdict[conf.recorddict[layout][keyword]["pos"]-1]    
+                        else : definedkey[keyword] = 0
                       
                                  
         # test if pvserial was defined, if not take inverterid from config.
