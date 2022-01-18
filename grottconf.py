@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2022-01-15 
-# Version 2.7.0
+# Updated: 2022-01-16 
+# Version 2.7.0a
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -42,6 +42,8 @@ class Conf :
         self.mqttip = "localhost"
         self.mqttport = 1883
         self.mqtttopic= "energy/growatt"
+        self.mqttmtopic = "False"
+        self.mqttmtopicname= "energy/meter"
         self.nomqtt = False                                                                          #not in ini file, can only be changed via start parms
         self.mqttauth = False
         self.mqttuser = "grott"
@@ -212,6 +214,8 @@ class Conf :
         print("\tmqttip:      \t",self.mqttip)
         print("\tmqttport:    \t",self.mqttport)
         print("\tmqtttopic:   \t",self.mqtttopic)
+        print("\tmqttmtopic:  \t",self.mqttmtopic)
+        print("\tmqttmtopicname:\t",self.mqttmtopicname)
         print("\tmqtttauth:   \t",self.mqttauth)
         print("\tmqttuser:    \t",self.mqttuser)
         print("\tmqttpsw:     \t","**secret**")                       #scramble output if tested!
@@ -326,6 +330,7 @@ class Conf :
         self.sendbuf = str2bool(self.sendbuf)      
         self.pvoutput = str2bool(self.pvoutput)
         self.nomqtt = str2bool(self.nomqtt)        
+        self.mqttmtopic = str2bool(self.mqttmtopic)        
         self.mqttauth = str2bool(self.mqttauth)
         self.influx = str2bool(self.influx)
         self.influx2 = str2bool(self.influx2)
@@ -357,6 +362,8 @@ class Conf :
         if config.has_option("MQTT","ip"): self.mqttip = config.get("MQTT","ip")
         if config.has_option("MQTT","port"): self.mqttport = config.getint("MQTT","port")
         if config.has_option("MQTT","topic"): self.mqtttopic = config.get("MQTT","topic")
+        if config.has_option("MQTT","mtopic"): self.mqttmtopic = config.get("MQTT","mtopic")
+        if config.has_option("MQTT","mtopicname"): self.mqttmtopicname = config.get("MQTT","mtopicname")
         if config.has_option("MQTT","auth"): self.mqttauth = config.getboolean("MQTT","auth")
         if config.has_option("MQTT","user"): self.mqttuser = config.get("MQTT","user")
         if config.has_option("MQTT","password"): self.mqttpsw = config.get("MQTT","password")
@@ -440,8 +447,11 @@ class Conf :
             if 0 <= int(os.getenv('gmqttport')) <= 65535  :  self.mqttport = int(self.getenv('gmqttport'))
             else : 
                 if self.verbose : print("\nGrott MQTT server Port address env invalid")
-        if os.getenv('gmqttauth') != None :  self.mqttauth = self.getenv('gmqttauth')
+        
         if os.getenv('gmqtttopic') != None :  self.mqtttopic = self.getenv('gmqtttopic')
+        if os.getenv('gmqttmtopic') != None :  self.mqttmtopic = self.getenv('gmqttmtopic')
+        if os.getenv('gmqttmtopicname') != None :  self.mqttmtopicname = self.getenv('gmqttmtopicname')
+        if os.getenv('gmqttauth') != None :  self.mqttauth = self.getenv('gmqttauth')
         if os.getenv('gmqttuser') != None :  self.mqttuser = self.getenv('gmqttuser')
         if os.getenv('gmqttpassword') != None : self.mqttpsw = self.getenv('gmqttpassword')
         #Handle PVOutput variables

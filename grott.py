@@ -12,7 +12,7 @@
 
 # Updated: 2022-01-08'
 
-verrel = "2.7.0"
+verrel = "2.7.0a"
 
 import sys
 

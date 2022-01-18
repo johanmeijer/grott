@@ -183,3 +183,9 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 2.7.0
 - SDM630/Raillog connect support
 - SDM630/Inverter connected 3 phases support
+- (a) added support for seperate topic for smart meter 
+    - by default noting changes topic name will be energy/growatt (unless overidden in .ini: topic = <topic> in MQTT section or environmental variable gmqtttopic = "<topic>" )
+    - if mtopic = True in .ini [MQTT section] or gmqttmtopic = "True" environmental smart meter topic will be: energy/meter 
+    - smartmeter topic name can be overridden by: 
+      - if mtopicname = <topciname> True in .ini [MQTT] 
+      - gmqttmtopicname = "<topicname" environmental 
