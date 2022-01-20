@@ -189,3 +189,4 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
     - smartmeter topic name can be overridden by: 
       - mtopicname = <topicname> in .ini [MQTT] 
       - gmqttmtopicname = "<topicname" environmental 
+- (b) fix MQTT message is not sent

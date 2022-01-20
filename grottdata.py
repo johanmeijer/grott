@@ -1,6 +1,5 @@
 # grottdata.py processing data  functions
-# Updated: 2022-01-16
-# Version 2.7.0a
+# Version 2.7.0b
 
 #import time
 from datetime import datetime, timedelta
@@ -432,7 +431,7 @@ def procdata(conf,data):
             print("\t - " + 'Grott MQTT topic used : ' + mqtttopic)   
             
             try: 
-                #publish.single(mqtttopic, payload=jsonmsg, qos=0, retain=False, hostname=conf.mqttip,port=conf.mqttport, client_id=conf.inverterid, keepalive=60, auth=conf.pubauth)
+                publish.single(mqtttopic, payload=jsonmsg, qos=0, retain=False, hostname=conf.mqttip,port=conf.mqttport, client_id=conf.inverterid, keepalive=60, auth=conf.pubauth)
                 if conf.verbose: print("\t - " + 'MQTT message message sent') 
             except TimeoutError:     
                 if conf.verbose: print("\t - " + 'MQTT connection time out error') 
