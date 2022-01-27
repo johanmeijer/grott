@@ -60,6 +60,8 @@ see issue #42/#46: add invtype=spf in grott.ini [Generic] section (or use ginvty
 see issue #34: add invtype=sph in grott.ini [Generic] section (or use ginvtype=sph environmental variable e.g. for docker)
 #### Growatt Smart Meter support
 see issue #47: data will be processed automatically and send to MQTT, InfluxDB and PVOutput.org
+#### Export to CSV file
+see issue #79, pull request #91. Moe information can be found in the wiki: https://github.com/johanmeijer/grott/wiki/Extensions 
 
 ### New in Version 2.5.x  
 Improved dynamic data processing  and dynamic generation of output allowing: 
