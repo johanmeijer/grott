@@ -19,7 +19,7 @@ Grott can forward the parsed metrics to:
 * MQTT (suggested option for many home automation systems such as Home Assistant, OpenHAB and Domoticz)
 * InfluxDB v1 and v2 (a time series database with dashboarding functionality) 
 * PVOutput.org (a service for sharing and comparing PV output data)
-* Custom output using the extension functionality 
+* Custom output using the extension functionality (Examples available for Export to CSV files and writing to a Http Server).  
 
 
 ### Compatibility
