@@ -1,6 +1,18 @@
 ### New in Version 2.7  (Beta)
 * Support for SDM630/Raillog connected (see issue #88)
 * Support for SDM630/Inverter (modbus) connected 3 phases support
+* Export to CSV file (see issue #79, pull request #91). 
+  - Also avaialble in 2.6.1 (master) 
+  - More information can be found in the wiki: https://github.com/johanmeijer/grott/wiki/Extensions
+* Add parameter to enable message retain in MQTT (#84)
+  - .ini [MQTT section] retain = True
+  - environmental gmqttretain = "True" (docker: -e gmqttretain = "True") 
+* Add parameter to enable sent inverter temperature as temperature value to pvoutput (not advised PVOutemp should be outside temperature) Issue #60
+  - .ini [PVOutput section] pvtemp = True
+  - environmental gpvtemp = "True" (docker: -e gpvtemp = "True")
+* Add parameter to disable sending energytoday to pvoutput (disable V1 input). This should show better avarages. Issue: #51  
+  - .ini [PVOutput section] pvdisv1 = True
+  - environmental gpvdisv1 = "True" (docker: -e gpvdisv1 = "True")  
 
 ### planned in Version 2.7.x (not commited yet)
 * Auto detect for SPF, SPH, TL3 inverters
@@ -28,7 +40,7 @@ Grott can forward the parsed metrics to:
 * MQTT (suggested option for many home automation systems such as Home Assistant, OpenHAB and Domoticz)
 * InfluxDB v1 and v2 (a time series database with dashboarding functionality) 
 * PVOutput.org (a service for sharing and comparing PV output data)
-* Custom output using the extension functionality 
+* Custom output using the extension functionality (Examples available for Export to CSV files and writing to a Http Server).
 
 
 ### Compatibility
@@ -69,6 +81,8 @@ see issue #42/#46: add invtype=spf in grott.ini [Generic] section (or use ginvty
 see issue #34: add invtype=sph in grott.ini [Generic] section (or use ginvtype=sph environmental variable e.g. for docker)
 #### Growatt Smart Meter support
 see issue #47: data will be processed automatically and send to MQTT, InfluxDB and PVOutput.org
+#### Export to CSV file
+see issue #79, pull request #91. More information can be found in the wiki: https://github.com/johanmeijer/grott/wiki/Extensions
 
 ### New in Version 2.5.x  
 Improved dynamic data processing  and dynamic generation of output allowing: 
