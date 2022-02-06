@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2022-01-16 
-# Version 2.7.0a
+# Updated: 2022-02-06 
+# Version 2.7.1
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -48,6 +48,7 @@ class Conf :
         self.mqttauth = False
         self.mqttuser = "grott"
         self.mqttpsw = "growatt2020"
+        self.mqttretain = False
 
         #pvoutput default 
         self.pvoutput = False
@@ -58,6 +59,8 @@ class Conf :
         self.pvinverterid = {}
         self.pvsystemid[1] = "systemid1"
         self.pvinverterid[1] = "inverter1"
+        self.pvdisv1 = False
+        self.pvtemp = False
         
         #influxdb default 
         self.influx = False
@@ -216,6 +219,7 @@ class Conf :
         print("\tmqtttopic:   \t",self.mqtttopic)
         print("\tmqttmtopic:  \t",self.mqttmtopic)
         print("\tmqttmtopicname:\t",self.mqttmtopicname)
+        print("\tmqtttretain: \t",self.mqttretain)
         print("\tmqtttauth:   \t",self.mqttauth)
         print("\tmqttuser:    \t",self.mqttuser)
         print("\tmqttpsw:     \t","**secret**")                       #scramble output if tested!
@@ -225,6 +229,8 @@ class Conf :
         print("\tgrowattport: \t",self.growattport)
         print("_PVOutput:")
         print("\tpvoutput:    \t",self.pvoutput)
+        print("\tpvdisv1:     \t",self.pvdisv1)
+        print("\tpvtemp:      \t",self.pvtemp)   
         print("\tpvurl:       \t",self.pvurl)
         print("\tpvapikey:    \t",self.pvapikey)                
         print("\tpvinverters: \t",self.pvinverters)
@@ -328,10 +334,16 @@ class Conf :
         self.blockcmd = str2bool(self.blockcmd)     
         self.noipf = str2bool(self.noipf) 
         self.sendbuf = str2bool(self.sendbuf)      
-        self.pvoutput = str2bool(self.pvoutput)
+        #
         self.nomqtt = str2bool(self.nomqtt)        
         self.mqttmtopic = str2bool(self.mqttmtopic)        
         self.mqttauth = str2bool(self.mqttauth)
+        self.mqttretain = str2bool(self.mqttretain)
+        #
+        self.pvoutput = str2bool(self.pvoutput)
+        self.pvdisv1 = str2bool(self.pvdisv1)
+        self.pvtemp = str2bool(self.pvtemp)
+        # 
         self.influx = str2bool(self.influx)
         self.influx2 = str2bool(self.influx2)
         self.extension = str2bool(self.extension)
@@ -364,10 +376,13 @@ class Conf :
         if config.has_option("MQTT","topic"): self.mqtttopic = config.get("MQTT","topic")
         if config.has_option("MQTT","mtopic"): self.mqttmtopic = config.get("MQTT","mtopic")
         if config.has_option("MQTT","mtopicname"): self.mqttmtopicname = config.get("MQTT","mtopicname")
+        if config.has_option("MQTT","retain"): self.mqttretain = config.getboolean("MQTT","retain")
         if config.has_option("MQTT","auth"): self.mqttauth = config.getboolean("MQTT","auth")
         if config.has_option("MQTT","user"): self.mqttuser = config.get("MQTT","user")
         if config.has_option("MQTT","password"): self.mqttpsw = config.get("MQTT","password")
         if config.has_option("PVOutput","pvoutput"): self.pvoutput = config.get("PVOutput","pvoutput")
+        if config.has_option("PVOutput","pvtemp"): self.pvtemp = config.get("PVOutput","pvtemp")
+        if config.has_option("PVOutput","pvdisv1"): self.pvdisv1 = config.get("PVOutput","pvdisv1")
         if config.has_option("PVOutput","pvinverters"): self.pvinverters = config.getint("PVOutput","pvinverters")
         if config.has_option("PVOutput","apikey"): self.pvapikey = config.get("PVOutput","apikey")
         # if more inverter are installed at the same interface (shinelink) get systemids
@@ -451,11 +466,14 @@ class Conf :
         if os.getenv('gmqtttopic') != None :  self.mqtttopic = self.getenv('gmqtttopic')
         if os.getenv('gmqttmtopic') != None :  self.mqttmtopic = self.getenv('gmqttmtopic')
         if os.getenv('gmqttmtopicname') != None :  self.mqttmtopicname = self.getenv('gmqttmtopicname')
+        if os.getenv('gmqttretain') != None :  self.mqttretain = self.getenv('gmqttretain')
         if os.getenv('gmqttauth') != None :  self.mqttauth = self.getenv('gmqttauth')
         if os.getenv('gmqttuser') != None :  self.mqttuser = self.getenv('gmqttuser')
         if os.getenv('gmqttpassword') != None : self.mqttpsw = self.getenv('gmqttpassword')
         #Handle PVOutput variables
         if os.getenv('gpvoutput') != None :  self.pvoutput = self.getenv('gpvoutput')
+        if os.getenv('gpvtemp') != None :  self.pvtemp = self.getenv('gpvtemp')
+        if os.getenv('gpvdisv1') != None :  self.pvdisv1 = self.getenv('gpvdisv1')
         if os.getenv('gpvapikey') != None :  self.pvapikey = self.getenv('gpvapikey')
         if os.getenv('gpvinverters') != None :  self.pvinverters = int(self.getenv('gpvinverters'))
         for x in range(self.pvinverters+1) : 

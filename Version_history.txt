@@ -190,3 +190,21 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
       - mtopicname = <topicname> in .ini [MQTT] 
       - gmqttmtopicname = "<topicname" environmental 
 - (b) fix MQTT message is not sent
+2.7.1
+- Add coding from Pull req #91 (csv export exentsion)
+  Add a CSV export extension in the examples/extensions dir. Closes #76
+
+  One CSV file per day is saved.
+
+  extvar configuration:
+  "outpath": path where to save CSV files, default: "/home/pi/grottlog"
+  "csvheader": comma separated string with fields to store, defaults to all available fields
+- Add parameter to enable message retain in MQTT (#84)
+  - .ini [MQTT section] retain = True
+  - environmental gmqttretain = "True" (docker: -e gmqttretain = "True") 
+- Add parameter to enable sent inverter temperature as temperature value to pvoutput (not advised PVOutemp should be outside temperature) 
+  - .ini [PVOutput section] pvtemp = True
+  - environmental gpvtemp = "True" (docker: -e gpvtemp = "True")
+- Add parameter to disable sending energytoday to pvoutput (disable V1 input). This should show better avarages. Issue: #51  
+  - .ini [PVOutput section] pvdisv1 = True
+  - environmental gpvdisv1 = "True" (docker: -e gpvdisv1 = "True")  

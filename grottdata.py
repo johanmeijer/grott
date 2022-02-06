@@ -1,5 +1,6 @@
 # grottdata.py processing data  functions
-# Version 2.7.0b
+# Version 2.7.1
+# Updated: 2022-02-06
 
 #import time
 from datetime import datetime, timedelta
@@ -100,6 +101,7 @@ def procdata(conf,data):
             else:         
                 novalidrec = True     
     
+        conf.layout = layout
         if conf.verbose : print("\t - " + "Record layout used : ", layout)
     
     #Decrypt 
@@ -430,8 +432,12 @@ def procdata(conf,data):
             else : mqtttopic = conf.mqtttopic    
             print("\t - " + 'Grott MQTT topic used : ' + mqtttopic)   
             
-            try: 
-                publish.single(mqtttopic, payload=jsonmsg, qos=0, retain=False, hostname=conf.mqttip,port=conf.mqttport, client_id=conf.inverterid, keepalive=60, auth=conf.pubauth)
+            if conf.mqttretain:
+               if conf.verbose: print("\t - " + 'Grott MQTT message retain enabled')  
+
+            try:
+                #v2.7.1 add retrain variable  
+                publish.single(mqtttopic, payload=jsonmsg, qos=0, retain=conf.mqttretain, hostname=conf.mqttip,port=conf.mqttport, client_id=conf.inverterid, keepalive=60, auth=conf.pubauth)
                 if conf.verbose: print("\t - " + 'MQTT message message sent') 
             except TimeoutError:     
                 if conf.verbose: print("\t - " + 'MQTT connection time out error') 
@@ -475,11 +481,19 @@ def procdata(conf,data):
                 pvdata = { 
                     "d"     : pvodate,
                     "t"     : pvotime,
-                    "v1"    : definedkey["pvenergytoday"]*100,
+                #2.7.1    "v1"    : definedkey["pvenergytoday"]*100,
                     "v2"    : definedkey["pvpowerout"]/10,
                     "v6"    : definedkey["pvgridvoltage"]/10
                     }
-                #print(pvheader)
+                if not conf.pvdisv1 :
+                    pvdata["v1"] = definedkey["pvenergytoday"]*100
+                else:   
+                    if conf.verbose :  print("\t - " + "Grott PVOutput send V1 disabled") 
+    
+                if conf.pvtemp :
+                    pvdata["v5"] = definedkey["pvtemperature"]/10
+                
+                #print(pvdata)
                 if conf.verbose : print("\t\t - ", pvheader)
                 if conf.verbose : print("\t\t - ", pvdata)
                 reqret = requests.post(conf.pvurl, data = pvdata, headers = pvheader)
@@ -601,16 +615,22 @@ def procdata(conf,data):
         except :
             if conf.verbose : print("\t - " + "Grott import extension failed:", conf.extname)      
             return
+
         try:
             ext_result = module.grottext(conf,result_string,jsonmsg) 
+            if conf.verbose :  
+                print("\t - " + "Grott extension processing ended : ", ext_result)
         except Exception as e:
-            print("\t - " + "Grott extension processing error ")
-            print(e) 
-            return
+            print("\t - " + "Grott extension processing error:", repr(e))
+            import traceback
+            traceback.format_exc()
+            #print("\t - " + "Grott extension processing error ")
+            #print(e) 
+            #return
 
-        if conf.verbose :  
-            print("\t - " + "Grott extension processing ended : ", ext_result)
-            #print("\t -", ext_result)
+        #if conf.verbose :  
+            #print("\t - " + "Grott extension processing ended : ", ext_result)
+            ##print("\t -", ext_result)
     else: 
             if conf.verbose : print("\t - " + "Grott extension processing disabled ")      
             
