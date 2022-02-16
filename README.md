@@ -1,4 +1,6 @@
 ### New in Version 2.7  (Beta)
+* Added first beta of grottserver to act as destination for inverter/datalogger data (remove need to cummunicate with internet). 
+  - see discussions (#98) for more information: https://github.com/johanmeijer/grott/discussions/98
 * Support for SDM630/Raillog connected (see issue #88)
 * Support for SDM630/Inverter (modbus) connected 3 phases support
 * Export to CSV file (see issue #79, pull request #91). 
