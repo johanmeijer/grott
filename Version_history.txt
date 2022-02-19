@@ -211,4 +211,4 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - Added first beta of grottserver to act as destination for inverter/datalogger data (remove need to cummunicate with internet).
   - see discussions (#98) for more information: https://github.com/johanmeijer/grott/discussions/98
 2.7.2
-- added support for  SPH5000 T05nnnnX data record 
+- added support for  SPH5000 T05nnnnXSPH data record 
