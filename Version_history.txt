@@ -202,9 +202,13 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - Add parameter to enable message retain in MQTT (#84)
   - .ini [MQTT section] retain = True
   - environmental gmqttretain = "True" (docker: -e gmqttretain = "True") 
-- Add parameter to enable sent inverter temperature as temperature value to pvoutput (not advised PVOutemp should be outside temperature) 
+- Add parameter to enable sent inverter temperature as temperature value to pvoutput (not advised PVOutemp should be outside temperature) Issue #60
   - .ini [PVOutput section] pvtemp = True
   - environmental gpvtemp = "True" (docker: -e gpvtemp = "True")
 - Add parameter to disable sending energytoday to pvoutput (disable V1 input). This should show better avarages. Issue: #51  
   - .ini [PVOutput section] pvdisv1 = True
   - environmental gpvdisv1 = "True" (docker: -e gpvdisv1 = "True")  
+- Added first beta of grottserver to act as destination for inverter/datalogger data (remove need to cummunicate with internet).
+  - see discussions (#98) for more information: https://github.com/johanmeijer/grott/discussions/98
+2.7.2
+- added support for  SPH5000 T05nnnnX data record 

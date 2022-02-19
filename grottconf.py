@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2022-02-06 
-# Version 2.7.1
+# Updated: 2022-02-19 
+# Version 2.7.2
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -1156,6 +1156,95 @@ class Conf :
             "pos66"     			: {"pos" :66, "type" : "log","incl" : "no"}
         }}
 
+        self.recorddict12 = {"T05NNNNXSPH": {
+            "decrypt"           : {"value" :"True"},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text","incl" : "yes"},
+            "pvserial"          : {"value" :36, "length" : 10, "type" : "text"},
+            "date"              : {"value" :56, "divide" : 10}, 
+            "recortype1"        : {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype2"        : {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
+            "pvstatus"          : {"value" :78, "length" : 2, "type" : "num"},  
+            "pvpowerin"         : {"value" :82, "length" : 4, "type" : "num", "divide" : 10},        
+            "pv1voltage"        : {"value" :90, "length" : 2, "type" : "num", "divide" : 10},        
+            "pv1current"        : {"value" :94, "length" : 2, "type" : "num", "divide" : 10},                        
+            "pv1watt"           : {"value" :98, "length" : 4, "type" : "num", "divide" : 10},                      
+            "pv2voltage"        : {"value" :106, "length" : 2, "type" : "num", "divide" : 10},                
+            "pv2current"        : {"value" :110, "length" : 2, "type" : "num", "divide" : 10},                
+            "pv2watt"           : {"value" :114, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvpowerout"        : {"value" :218, "length" : 4, "type" : "numx", "divide" : 10},                
+            "pvfrequentie"      : {"value" :226, "length" : 2, "type" : "num", "divide" : 100},                
+            "pvgridvoltage"     : {"value" :230, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent"     : {"value" :234, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower"       : {"value" :238, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvgridvoltage2"    : {"value" :246, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent2"    : {"value" :250, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower2"      : {"value" :254, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvgridvoltage3"    : {"value" :262, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent3"    : {"value" :266, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower3"      : {"value" :270, "length" : 4, "type" : "num", "divide" : 10},  
+            "totworktime"       : {"value" :306, "length" : 4, "type" : "num", "divide" : 7200},
+            "eactoday"          : {"value" :290, "length" : 4, "type" : "num", "divide" : 10}, 
+            "pvenergytoday"     : {"value" :290, "length" : 4, "type" : "num", "divide" : 10},                  
+            "eactotal"          : {"value" :298, "length" : 4, "type" : "num", "divide" : 10},
+            "epvtotal"          : {"value" :442, "length" : 4, "type" : "num", "divide" : 10},
+            "epv1today"         : {"value" :314, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv1total"         : {"value" :322, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv2today"         : {"value" :330, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv2total"         : {"value" :338, "length" : 4, "type" : "num", "divide" : 10},                           
+            "pvtemperature"     : {"value" :450, "length" : 2, "type" : "num", "divide" : 10},                 
+            "pvipmtemperature"  : {"value" :454, "length" : 2, "type" : "num", "divide" : 10}, 
+            "pvboosttemp"       : {"value" :458, "length" : 2, "type" : "num", "divide" : 10},                   
+            "bat_dsp"           : {"value" :466, "length" : 2, "type" : "num", "divide" : 10},
+            "pbusvolt"          : {"value" :470, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                  
+            "#nbusvolt"          : {"value" :474, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},  
+            "#ipf"               : {"value" :478, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},
+            "#realoppercent"     : {"value" :482, "length" : 2, "type" : "num", "divide" : 100,"incl" : "no"}, 
+            "#opfullwatt"        : {"value" :486, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},
+            "#deratingmode"      : {"value" :494, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},
+            "eacharge_today"     : {"value" :526, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eacharge_total"     : {"value" :534, "length" : 4, "type" : "num", "divide" : 10}, 
+            "batterytype"        : {"value" :554, "length" : 2, "type" : "num", "divide" : 1}, 
+            "uwsysworkmode"      : {"value" :586, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword0"   : {"value" :590, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword1"   : {"value" :594, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword2"   : {"value" :588, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword3"   : {"value" :602, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword4"   : {"value" :606, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword5"   : {"value" :610, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword6"   : {"value" :614, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword7"   : {"value" :618, "length" : 2, "type" : "num", "divide" : 1},
+            "pdischarge1"        : {"value" :622, "length" : 4, "type" : "num", "divide" : 10}, 
+            "p1charge1"          : {"value" :630, "length" : 4, "type" : "num", "divide" : 10}, 
+            "vbat"               : {"value" :738, "length" : 2, "type" : "num", "divide" : 10}, 
+            "SOC"                : {"value" :742, "length" : 2, "type" : "num", "divide" : 100}, 
+            "pactouserr"         : {"value" :746, "length" : 4, "type" : "num", "divide" : 10}, 
+            "#pactousers"        : {"value" :654, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "#pactousert"        : {"value" :662, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "pactousertot"       : {"value" :670, "length" : 4, "type" : "num", "divide" : 10},
+            "pactogridr"         : {"value" :678, "length" : 4, "type" : "num", "divide" : 10}, 
+            "#pactogrids"        : {"value" :686, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "#pactogridt"        : {"value" :694, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "pactogridtot"       : {"value" :702, "length" : 4, "type" : "num", "divide" : 10}, 
+            "plocaloadr"         : {"value" :710, "length" : 4, "type" : "num", "divide" : 10}, 
+            "#plocaloads"        : {"value" :718, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "#plocaloadt"        : {"value" :726, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "plocaloadtot"       : {"value" :734, "length" : 4, "type" : "num", "divide" : 10},   
+            "#ipm"               : {"value" :742, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},   
+            "#battemp"           : {"value" :746, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},   
+            "spdspstatus"        : {"value" :750, "length" : 2, "type" : "num", "divide" : 10},   
+            "spbusvolt"          : {"value" :754, "length" : 2, "type" : "num", "divide" : 10},
+            "etouser_tod"        : {"value" :762, "length" : 4, "type" : "num", "divide" : 10}, 
+            "etouser_tot"        : {"value" :770, "length" : 4, "type" : "num", "divide" : 10}, 
+            "etogrid_tod"        : {"value" :778, "length" : 4, "type" : "num", "divide" : 10}, 
+            "etogrid_tot"      : {"value" :786, "length" : 4, "type" : "num", "divide" : 10},
+            "edischarge1_tod"  : {"value" :794, "length" : 4, "type" : "num", "divide" : 10}, 
+            "edischarge1_tot"  : {"value" :802, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eharge1_tod"      : {"value" :810, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eharge1_tot"      : {"value" :818, "length" : 4, "type" : "num", "divide" : 10}, 
+            "elocalload_tod"  : {"value" :826, "length" : 4, "type" : "num", "divide" : 10}, 
+            "elocalload_tot"  : {"value" :834, "length" : 4, "type" : "num", "divide" : 10} 
+        } }
+
         self.recorddict.update(self.recorddict1)
         self.recorddict.update(self.recorddict2)
         self.recorddict.update(self.recorddict3)
@@ -1166,8 +1255,8 @@ class Conf :
         self.recorddict.update(self.recorddict8) 
         self.recorddict.update(self.recorddict9)  
         self.recorddict.update(self.recorddict10)  
-        self.recorddict.update(self.recorddict11)  
-
+        self.recorddict.update(self.recorddict11)
+        self.recorddict.update(self.recorddict12)                   #T05NNNNXSPH
         f = []
         print("\nGrott process json layout files")
         for (dirpath, dirnames, filenames) in walk('.'):            
