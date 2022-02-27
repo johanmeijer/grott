@@ -1,0 +1,6 @@
+#Grottserver_history.txt
+Version history
+0.0.1
+- initial Version 
+0.0.2
+- improve restartability 

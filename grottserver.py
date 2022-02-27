@@ -1,7 +1,7 @@
 # grottserver.py emulates the server.growatt.com website and is initial developed  for debugging and testing grott. 
-# Updated: 2021-12-16
+# Updated: 2022-02-27
 # Version: 
-verrel = "0.0.1"    
+verrel = "0.0.2"    
 
 import socketserver
 #import json
@@ -109,6 +109,8 @@ if __name__ == "__main__":
     print("Grottserver - Version: " + verrel)
     print("Grottserver - Started to listen at:", HOST, ":" , PORT)  
     
+    #v.0.0.2 improve restartability 
+    socketserver.TCPServer.allow_reuse_address = True 
     with socketserver.TCPServer((HOST, PORT), MyTCPHandler) as server:
         # Activate the server; this will keep running until you
         # interrupt the program with Ctrl-C
