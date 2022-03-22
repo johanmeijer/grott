@@ -1,16 +1,24 @@
 FROM arm64v8/python:3.7-alpine
 
-ENV LANG en_US.UTF-8 \
-    LC_ALL en_US.UTF-8
+ARG INFLUXDB_CLIENT_VERSION=1.26.0
+
+ENV LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8
 
 # Update base image to fix security issues.
 RUN apk --no-cache --available --latest -v upgrade
 
-RUN pip install \
+# Install temporary (influxdb-client[ciso]) dependencies.
+RUN apk add --no-cache --virtual .build-deps \
+        gcc \
+        musl-dev && \
+    pip install \
         paho-mqtt \
         requests \
         # Fix error: Grott Influxdb-client Library not installed in Python.
-        influxdb-client
+        # It is recommended to use ciso8601 with client for parsing dates: https://github.com/influxdata/influxdb-client-python.
+        influxdb-client[ciso]==$INFLUXDB_CLIENT_VERSION && \
+    apk del --purge .build-deps
 
 COPY grott.py /app/grott.py
 COPY grottconf.py /app/grottconf.py

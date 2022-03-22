@@ -398,7 +398,7 @@ class Conf :
         if os.getenv('gmode') in ("sniff", "proxy") :  self.mode = self.getenv('gmode')
         if os.getenv('gverbose') != None :  self.verbose = self.getenv('gverbose')
         if os.getenv('gminrecl') != None : 
-            if 0 <= int(os.getenv('gminrecl')) <= 255  :     self.minrecl = self.getenv('gminrecl')
+            if 0 <= int(os.getenv('gminrecl')) <= 255  :     self.minrecl = int(self.getenv('gminrecl'))
         if os.getenv('gdecrypt') != None : self.decrypt = self.getenv('gdecrypt')
         if os.getenv('gcompat') != None :  self.compat = self.getenv('gcompat')
         if os.getenv('gincludeall') != None :  self.includeall = self.getenv('gincludeall')
