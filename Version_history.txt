@@ -212,3 +212,6 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
   - see discussions (#98) for more information: https://github.com/johanmeijer/grott/discussions/98
 2.7.2
 - added support for  SPH5000 T05nnnnXSPH data record 
+2.7.3
+- Added detail data record trace information when command is blocked (blockkcmd = True) to be able to analyse command given from growatt website (inverter / data logger setting).
+- New version of grottserver (0.0.3f) which supports datalogger/inverter read/write commands. 

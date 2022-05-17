@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2022-02-19 
-# Version 2.7.2
+# Updated: 2022-05-17 
+# Version 2.7.3
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -510,25 +510,29 @@ class Conf :
         self.recwl = {"0103",                                    #announce record
                          "0104",                                    #data record    
                          "0116",                                    #ping    
-                         "0119",                                    #identify                       
+                         "0105",                                    #identify/display inverter config
+                         "0119",                                    #identify/display datalogger config
                          "0120",                                    #Smart Monitor Record
                          "0150",                                    #Archived record
                          "5003",                                    #announce record
                          "5004",                                    #data record    
                          "5016",                                    #ping    
-                         "5019",                                    #identify
+                         "5005",                                    #identify/display inverter config
+                         "5019",                                    #identify/display datalogger config 
                          "501b",                                    #SDM630 with Raillog
                          "5050",                                    #Archived record
                          "5103",                                    #announce record
                          "5104",                                    #data record                          
                          "5116",                                    #ping    
-                         "5119",                                    #identify
+                         "5105",                                    #identify/display inverter config
+                         "5119",                                    #identify/display datalogger config
                          "5129",                                    #announce record
                          "5150",                                    #Archived record
                          "5103",                                    #announce record
                          "5104",                                    #data record                          
                          "5216",                                    #ping    
-                         "5219",                                    #identify
+                         "5105",                                    #identify/display inverter config
+                         "5219",                                    #identify/display datalogger config
                          "5229",                                    #announce record
                          "5250"                                     #Archived record
                          

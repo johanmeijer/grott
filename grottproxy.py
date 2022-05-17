@@ -1,7 +1,7 @@
 #Grott Growatt monitor :  Proxy 
 #       
-# Updated: 2020-10-04
-# Version 2.2.1d
+# Updated: 2022-05-17
+# Version 2.7.3
 
 import socket
 import select
@@ -15,7 +15,7 @@ import time, json, datetime, codecs
 if sys.platform != 'win32' :
    from signal import signal, SIGPIPE, SIG_DFL
 
-from grottdata import procdata, decrypt
+from grottdata import procdata, decrypt, format_multi_line
 
 #import mqtt                       
 import paho.mqtt.publish as publish
@@ -128,6 +128,7 @@ class Proxy:
         header = "".join("{:02x}".format(n) for n in data[0:8])
         if conf.blockcmd : 
             #standard everything is blocked!
+            print("\t - " + "Growatt command block checking started") 
             blockflag = True 
             #partly block configure Shine commands                   
             if header[14:16] == "18" :         
@@ -156,6 +157,9 @@ class Proxy:
 
             if blockflag : 
                 print("\t - Grott: Record blocked: ", header[12:16])
+                if header[6:8] == "05" or header[6:8] == "06" : blockeddata = decrypt(data) 
+                else :  blockeddata = data
+                print(format_multi_line("\t\t ",blockeddata))
                 return
 
         # send data to destination

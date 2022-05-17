@@ -10,9 +10,9 @@
 #
 #       For version history see: version_history.txt
 
-# Updated: 2022-02-06
+# Updated: 2022-05-17
 
-verrel = "2.7.1"
+verrel = "2.7.3"
 
 import sys
 
