@@ -215,3 +215,4 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 2.7.3
 - Added detail data record trace information when command is blocked (blockkcmd = True) to be able to analyse command given from growatt website (inverter / data logger setting).
 - New version of grottserver (0.0.4) which supports datalogger/inverter read/write commands. 
+- added new version of grottserver (0.0.5) with improve error handling (stability)

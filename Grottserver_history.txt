@@ -4,3 +4,9 @@ Version history
 - initial Version 
 0.0.2
 - improve restartability 
+0.0.3 
+- improve coding 
+0.0.4 
+- New version of grottserver  which supports datalogger/inverter read/write commands. 
+0.0.5
+- Improve error handling (stability)
