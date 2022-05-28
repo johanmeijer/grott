@@ -14,9 +14,9 @@ from urllib.parse import urlparse, parse_qs, parse_qsl
 from collections import defaultdict
 
 # grottserver.py emulates the server.growatt.com website and is initial developed for debugging and testing grott.
-# Updated: 2022-05-26
+# Updated: 2022-05-28
 # Version:
-verrel = "0.0.5"
+verrel = "0.0.6"
 
 # Declare Variables (to be moved to config file later)
 serverhost = "0.0.0.0"
@@ -364,7 +364,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                 self.send_error(400, "Bad request")
         
         except Exception as e:
-            print("\t - Grottserver - Undefined error in htppserver thread - get occured : ", e)    
+            print("\t - Grottserver - exception in htppserver thread - get occured : ", e)    
 
     def do_PUT(self):
         try: 
@@ -628,7 +628,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                 return
 
         except Exception as e:
-            print("\t - Grottserver - Undefined error in htppserver thread - put occured : ", e)    
+            print("\t - Grottserver - exception in htppserver thread - put occured : ", e)    
         
 
 class GrottHttpServer:
@@ -691,11 +691,12 @@ class sendrecvserver:
                     else:
                         # Empty read means connection is closed, perform cleanup
                         self.close_connection(s)
-                except ConnectionResetError:
+                #except ConnectionResetError:
+                except:
                     self.close_connection(s) 
             
         except Exception as e:
-            print("\t - Grottserver - Undefined error in server thread - handle_readable_socket : ", e)    
+            print("\t - Grottserver - exception in server thread - handle_readable_socket : ", e)    
 
 
     def handle_writable_socket(self, s):
@@ -715,7 +716,9 @@ class sendrecvserver:
                 pass
 
         except Exception as e:
-            print("\t - Grottserver - Undefined error in server thread - handle_writable_socket : ", e)    
+            print("\t - Grottserver - exception in server thread - handle_writable_socket : ", e)
+            self.close_connection(s)
+            #print(s)
 
     def handle_exceptional_socket(self, s):
         if verbose: print("\t - " + "Grottserver - Encountered an exception")
@@ -736,14 +739,15 @@ class sendrecvserver:
             #print(send_queuereg)
             if verbose: print(f"\t - Grottserver - Send queue created for : {qname}")
         except Exception as e:
-            print("\t - Grottserver - Undefined error in server thread - handle_new_connection : ", e)    
+            print("\t - Grottserver - exception in server thread - handle_new_connection : ", e) 
+            self.close_connection(s)   
 
 
     def close_connection(self, s):
         try: 
             client_address, client_port = s.getpeername() 
             print("\t - Grottserver - Close connection : ", s)
-            print(client_address, client_port)
+            #print(client_address, client_port)
             if s in self.outputs:
                 self.outputs.remove(s)
             self.inputs.remove(s)
@@ -752,16 +756,23 @@ class sendrecvserver:
             del send_queuereg[qname]
             ### after this also clean the logger reg. To be implemented ? 
             for key in loggerreg.keys() : 
-                print(key, loggerreg[key])
-                print(key, loggerreg[key]["ip"], loggerreg[key]["port"])
+                #print(key, loggerreg[key])
+                #print(key, loggerreg[key]["ip"], loggerreg[key]["port"])
                 if loggerreg[key]["ip"] == client_address and loggerreg[key]["port"] == client_port :
                     del loggerreg[key] 
                     print("\t - Grottserver - config information deleted for datalogger and connected inverters : ", key)
                     # to be developed delete also register information for this datalogger (and  connected inverters).  Be aware this need redef of commandresp!
                     break     
             s.close()
+        
         except Exception as e:
-            print("\t - Grottserver - Undefined error in server thread - close_connection : ", e)    
+            print("\t - Grottserver - exception in server thread - close connection :", e)   
+            # try: 
+            #     s.close()
+            # except:     
+            #     print("\t - Grottserver - socket close error",s)
+
+        
 
     def process_data(self, s, data):
         
@@ -899,7 +910,7 @@ class sendrecvserver:
                     print(format_multi_line("\t\t ", response))
                 self.send_queuereg[qname].put(response) 
         except Exception as e:
-            print("\t - Grottserver - Undefined error in server thread occured : ", e)        
+            print("\t - Grottserver - exception in main server thread occured : ", e)        
 
 
 if __name__ == "__main__":

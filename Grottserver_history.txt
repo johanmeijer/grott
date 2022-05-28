@@ -10,3 +10,5 @@ Version history
 - New version of grottserver  which supports datalogger/inverter read/write commands. 
 0.0.5
 - Improve error handling (stability)
+0.0.6
+- Improve error handling (stability)
