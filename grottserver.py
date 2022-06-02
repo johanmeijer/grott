@@ -14,9 +14,9 @@ from urllib.parse import urlparse, parse_qs, parse_qsl
 from collections import defaultdict
 
 # grottserver.py emulates the server.growatt.com website and is initial developed for debugging and testing grott.
-# Updated: 2022-05-28
+# Updated: 2022-06-02
 # Version:
-verrel = "0.0.6"
+verrel = "0.0.7"
 
 # Declare Variables (to be moved to config file later)
 serverhost = "0.0.0.0"
@@ -696,12 +696,21 @@ class sendrecvserver:
                     self.close_connection(s) 
             
         except Exception as e:
-            print("\t - Grottserver - exception in server thread - handle_readable_socket : ", e)    
+            print("\t - Grottserver - exception in server thread - handle_readable_socket : ", e)
+            print("\t - socket: ",s)    
 
 
     def handle_writable_socket(self, s):
         try: 
-            client_address, client_port = s.getpeername()
+            try: 
+                #try for debug 007
+                client_address, client_port = s.getpeername()
+            except: 
+                print("\t - Grottserver - socket closed :")
+                print("\t\t ", s )
+                s.close
+                return
+
             #with print statement no crash, without crash, does sleep solve this problem ? 
             time.sleep(0.1)
             try: 
@@ -717,7 +726,8 @@ class sendrecvserver:
 
         except Exception as e:
             print("\t - Grottserver - exception in server thread - handle_writable_socket : ", e)
-            self.close_connection(s)
+            print("\t\t ", s)
+            #self.close_connection(s)
             #print(s)
 
     def handle_exceptional_socket(self, s):
@@ -740,7 +750,7 @@ class sendrecvserver:
             if verbose: print(f"\t - Grottserver - Send queue created for : {qname}")
         except Exception as e:
             print("\t - Grottserver - exception in server thread - handle_new_connection : ", e) 
-            self.close_connection(s)   
+            #self.close_connection(s)   
 
 
     def close_connection(self, s):
@@ -767,6 +777,8 @@ class sendrecvserver:
         
         except Exception as e:
             print("\t - Grottserver - exception in server thread - close connection :", e)   
+            print("\t\t ", s )  
+
             # try: 
             #     s.close()
             # except:     

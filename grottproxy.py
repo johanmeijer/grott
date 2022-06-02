@@ -1,7 +1,7 @@
 #Grott Growatt monitor :  Proxy 
 #       
-# Updated: 2022-05-17
-# Version 2.7.3
+# Updated: 2022-06-02
+# Version 2.7.4
 
 import socket
 import select
@@ -77,7 +77,9 @@ class Proxy:
                 try: 
                     self.data, self.addr = self.s.recvfrom(buffer_size)
                 except: 
-                    if conf.verbose : print("\t - Grott connection error")    
+                    if conf.verbose : print("\t - Grott connection error") 
+                    self.on_close(conf)   
+                    break
                 if len(self.data) == 0:
                     self.on_close(conf)
                     break
