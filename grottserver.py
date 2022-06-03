@@ -13,6 +13,7 @@ from io import BytesIO
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs, parse_qsl  
 from collections import defaultdict
+from grottproxy import Forward
 
 # grottserver.py emulates the server.growatt.com website and is initial developed for debugging and testing grott.
 # Updated: 2022-06-02
@@ -28,6 +29,10 @@ verbose = True
 firstping = False
 timezone = "Etc/UTC"
 sendseq = 1
+forwarddatarecords = [
+    ("47.91.67.66", 5279)
+]
+    
 
 
 # Formats multi-line data
@@ -663,6 +668,7 @@ class sendrecvserver:
 
         self.inputs = [self.server]
         self.outputs = []
+        self.forward_input = {}
         self.send_queuereg = send_queuereg
         
         print(f"\t - Grottserver - Ready to listen at: {host}:{port}")
@@ -745,6 +751,14 @@ class sendrecvserver:
             connection.setblocking(0)
             self.inputs.append(connection)
             self.outputs.append(connection)
+            self.forward_input[connection] = []
+            for key in forwarddatarecords:
+                forward = Forward().start(key[0], key[1])
+                if forward:
+                    if verbose: print("\t - " + "Grottserver - Forward started: ", key[0], key[1])
+                    self.forward_input[connection].append((forward, key[0], key[1]))
+                else:
+                    print("\t - " + "Grottserver - Forward failed: ", key[0], key[1])
             print(f"\t - Grottserver - Socket connection received from {client_address}")
             client_address, client_port = connection.getpeername()
             qname = client_address + "_" + str(client_port)
@@ -757,6 +771,13 @@ class sendrecvserver:
             print("\t - Grottserver - exception in server thread - handle_new_connection : ", e) 
             #self.close_connection(s)   
 
+    def forward_data(self, s, data):
+        for fsock, host, port in self.forward_input[s]:
+            try:
+                fsock.send(data)
+                print("\t - Grottserver - Forward data sent for {}:{}".format(host, port))
+            except Exception as e:
+                print("\t - Grottserver - exception in forward_data : {} for {}:{}".format(e, host, port))
 
     def close_connection(self, s):
         try: 
@@ -766,6 +787,9 @@ class sendrecvserver:
             if s in self.outputs:
                 self.outputs.remove(s)
             self.inputs.remove(s)
+            if s in self.forward_input:
+                for fsock, host, port in self.forward_input[s]:
+                    fsock.close()
             #client_address, client_port = s.getpeername() 
             qname = client_address + "_" + str(client_port)
             del send_queuereg[qname]
@@ -792,10 +816,9 @@ class sendrecvserver:
         
 
     def process_data(self, s, data):
-        
+
         # Prevent generic errors: 
         try: 
-        
             # process data and create response
             client_address, client_port = s.getpeername()
             qname = client_address + "_" + str(client_port)
@@ -829,12 +852,17 @@ class sendrecvserver:
                 if verbose:
                     print("\t - Grottserver - 16 - Ping response: ")
                     print(format_multi_line("\t\t ", response))
-            
+
+                # forward data for growatt
+                self.forward_data(s, data)            
 
             elif header[14:16] in ("03", "04", "50", "29", "1b", "20"):
                 # if datarecord send ack.
                 print("\t - Grottserver - " + header[12:16] + " data record received")
-                
+
+                # forward data for growatt
+                self.forward_data(s, data)
+
                 # create ack response
                 if header[6:8] == '02': 
                     # unencrypted ack
