@@ -781,7 +781,7 @@ class sendrecvserver:
 
     def close_connection(self, s):
         try: 
-            client_address, client_port = s.getpeername() 
+            #client_address, client_port = s.getpeername() 
             print("\t - Grottserver - Close connection : ", s)
             #print(client_address, client_port)
             if s in self.outputs:
@@ -790,7 +790,7 @@ class sendrecvserver:
             if s in self.forward_input:
                 for fsock, host, port in self.forward_input[s]:
                     fsock.close()
-            #client_address, client_port = s.getpeername() 
+            client_address, client_port = s.getpeername() 
             qname = client_address + "_" + str(client_port)
             del send_queuereg[qname]
             ### after this also clean the logger reg. To be implemented ? 
