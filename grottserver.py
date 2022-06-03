@@ -7,6 +7,7 @@ import threading
 import time
 import http.server
 import json, codecs 
+import pytz
 from itertools import cycle
 from io import BytesIO
 from datetime import datetime
@@ -25,6 +26,7 @@ httphost = "0.0.0.0"
 httpport = 5782
 verbose = True 
 firstping = False
+timezone = "Etc/UTC"
 sendseq = 1
 
 
@@ -67,6 +69,9 @@ def htmlsendresp(self, responserc, responseheader,  responsetxt) :
         self.wfile.write(responsetxt) 
         if verbose: print("\t - Grotthttpserver - http response send: ", responserc, responseheader, responsetxt)
 
+def getcurrenttime():
+    return datetime.now(pytz.timezone(timezone)).strftime("%Y-%m-%d %H:%M:%S")
+
 def createtimecommand(protocol,loggerid,sequenceno) : 
         protocol = protocol
         loggerid = loggerid 
@@ -77,7 +82,7 @@ def createtimecommand(protocol,loggerid,sequenceno) :
             body = body + "0000000000000000000000000000000000000000"
         register = 31
         body = body + "{:04x}".format(int(register))
-        currenttime = str(datetime.now().replace(microsecond=0))
+        currenttime = getcurrenttime()
         timex = currenttime.encode('utf-8').hex()
         timel = "{:04x}".format(int(len(timex)/2))
         body = body + timel + timex 
@@ -498,7 +503,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                             return
                         #prepare datetime 
                         register = 31
-                        value = str(datetime.now().replace(microsecond=0))   
+                        value = getcurrenttime()
 
                     else: 
                         # Start additional command processing here,  to be created: translate command to register (from list>)
