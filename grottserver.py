@@ -25,6 +25,8 @@ serverhost = "0.0.0.0"
 serverport = 5781
 httphost = "0.0.0.0"
 httpport = 5782
+registerreadtimeout = 7
+registerwritetimeout = 15
 verbose = True 
 firstping = False
 timezone = "Etc/UTC"
@@ -322,8 +324,8 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
 
                 
                 #wait for response
-                for x in range(7):
-                    if verbose: print("\t - Grotthttpserver - wait for GET response")
+                if verbose: print("\t - Grotthttpserver - wait for GET response")
+                for x in range(registerreadtimeout * 100):
                     try: 
                         comresp = commandresponse[sendcommand][regkey]
                         
@@ -339,8 +341,8 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                         return
 
                     except  : 
-                        #wait for second and try again
-                        time.sleep(1)
+                        #wait for 0.01 second and try again
+                        time.sleep(0.01)
                 try: 
                     if comresp != "" : 
                         responsetxt = json.dumps(comresp).encode('utf-8')
@@ -601,8 +603,8 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                     pass 
 
                 #wait for response
-                for x in range(15):
-                    if verbose: print("\t - Grotthttpserver - wait for PUT response")
+                if verbose: print("\t - Grotthttpserver - wait for PUT response")
+                for x in range(registerwritetimeout * 100):
                     try: 
                         #read response: be aware a 18 command give 19 response, 06 send command gives 06 response in differnt format! 
                         if sendcommand == "18" :
@@ -612,8 +614,8 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                         if verbose: print("\t - " + "Grotthttperver - Commandresponse ", responseno, register, commandresponse[sendcommand][regkey]) 
                         break
                     except: 
-                        #wait for second and try again
-                        time.sleep(1)
+                        #wait for 0.01 second and try again
+                        time.sleep(0.01)
                 try: 
                     if comresp != "" : 
                         responsetxt = b'OK'
