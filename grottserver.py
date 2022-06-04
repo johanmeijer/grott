@@ -156,7 +156,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                     f.close()
                     return
                 except IOError:
-                    responsetxt = b"<h2>Welcome to Grott the growatt inverter monitor</h2><br><h3>Made by Ledidobe, Johan Meijer</h3>"
+                    responsetxt = b"<h2>Welcome to Grott the growatt inverter monitor</h2><br><h3>Made by Ledidobe, Johan Meijer</h3>\r\n"
                     responserc = 200 
                     responseheader = "text/html"
                     htmlsendresp(self,responserc,responseheader,responsetxt)
@@ -173,9 +173,9 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                 #validcommand = False
                 if urlquery == {} : 
                     #no command entered return loggerreg info:
-                    responsetxt = json.dumps(loggerreg).encode('utf-8')
+                    responsetxt = json.dumps(loggerreg).encode('utf-8') + b"\r\n"
                     responserc = 200 
-                    responseheader = "text/html"
+                    responseheader = "application/json"
                     htmlsendresp(self,responserc,responseheader,responsetxt)
                     return
                 
@@ -189,15 +189,15 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                             if verbose: print("\t - " + "Grott: get command: ", command)     
                         else :
                             #no valid command entered
-                            responsetxt = b'no valid command entered'
+                            responsetxt = b'no valid command entered\r\n'
                             responserc = 400 
-                            responseheader = "text/html"
+                            responseheader = "text/plain"
                             htmlsendresp(self,responserc,responseheader,responsetxt)
                             return
                     except: 
-                        responsetxt = b'no command entered'
+                        responsetxt = b'no command entered\r\n'
                         responserc = 400 
-                        responseheader = "text/html"
+                        responseheader = "text/plain"
                         htmlsendresp(self,responserc,responseheader,responsetxt)
                         return
 
@@ -218,7 +218,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                                 inverterid_found = False
                         
                             if not inverterid_found : 
-                                responsetxt = b'no or no valid invertid specified'
+                                responsetxt = b'no or no valid invertid specified\r\n'
                                 responserc = 400 
                                 responseheader = "text/html"
                                 htmlsendresp(self,responserc,responseheader,responsetxt)
@@ -228,9 +228,9 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                                 # is format keyword specified? (dec, text, hex)
                                 formatval = urlquery["format"][0] 
                                 if formatval not in ("dec", "hex","text") :
-                                    responsetxt = b'invalid format specified'
+                                    responsetxt = b'invalid format specified\r\n'
                                     responserc = 400 
-                                    responseheader = "text/body"
+                                    responseheader = "text/plain"
                                     htmlsendresp(self,responserc,responseheader,responsetxt)
                                     return
                             except: 
@@ -246,16 +246,16 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                                 dataloggerid = urlquery["datalogger"][0] 
                                 test = loggerreg[dataloggerid]
                             except:     
-                                responsetxt = b'invalid datalogger id '
+                                responsetxt = b'invalid datalogger id\r\n'
                                 responserc = 400 
-                                responseheader = "text/body"
+                                responseheader = "text/plain"
                                 htmlsendresp(self,responserc,responseheader,responsetxt)
                                 return
                     except:     
                             # do not think we will come here 
-                            responsetxt = b'no datalogger or inverterid specified'
+                            responsetxt = b'no datalogger or inverterid specified\r\n'
                             responserc = 400 
-                            responseheader = "text/body"
+                            responseheader = "text/plain"
                             htmlsendresp(self,responserc,responseheader,responsetxt)
                             return
 
@@ -265,24 +265,24 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                         if int(urlquery["register"][0]) >= 0 and int(urlquery["register"][0]) < 1024 : 
                             register = urlquery["register"][0]
                         else: 
-                            responsetxt = b'invalid reg value specified'
+                            responsetxt = b'invalid reg value specified\r\n'
                             responserc = 400 
-                            responseheader = "text/body"
+                            responseheader = "text/plain"
                             htmlsendresp(self,responserc,responseheader,responsetxt)
                             return
                     elif command == "regall" :
                         comresp  = commandresponse[sendcommand]
-                        responsetxt = json.dumps(comresp).encode('utf-8')
+                        responsetxt = json.dumps(comresp).encode('utf-8') + b"\r\n"
                         responserc = 200 
-                        responseheader = "text/body"
+                        responseheader = "application/json"
                         htmlsendresp(self,responserc,responseheader,responsetxt)
                         return
                         
 
                     else: 
-                        responsetxt = b'command not defined or not available yet'
+                        responsetxt = b'command not defined or not available yet\r\n'
                         responserc = 400 
-                        responseheader = "text/body"
+                        responseheader = "text/plain"
                         htmlsendresp(self,responserc,responseheader,responsetxt)
                         return
                         
@@ -334,9 +334,9 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                                 comresp["value"] = int(comresp["value"],16)
                             elif formatval == "text" : 
                                 comresp["value"] = codecs.decode(comresp["value"], "hex").decode('utf-8')
-                        responsetxt = json.dumps(comresp).encode('utf-8')
+                        responsetxt = json.dumps(comresp).encode('utf-8') + b"\r\n"
                         responserc = 200 
-                        responseheader = "text/body"
+                        responseheader = "application/json"
                         htmlsendresp(self,responserc,responseheader,responsetxt)
                         return
 
@@ -345,31 +345,30 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                         time.sleep(0.01)
                 try: 
                     if comresp != "" : 
-                        responsetxt = json.dumps(comresp).encode('utf-8')
-
+                        responsetxt = json.dumps(comresp).encode('utf-8') + b"\r\n"
                         responserc = 200 
-                        responseheader = "text/body"
+                        responseheader = "application/json"
                         htmlsendresp(self,responserc,responseheader,responsetxt)
                         return
 
                 except : 
-                    responsetxt = b'no or invalid response received'
+                    responsetxt = b'no or invalid response received\r\n'
                     responserc = 400 
-                    responseheader = "text/body"
+                    responseheader = "text/plain"
                     htmlsendresp(self,responserc,responseheader,responsetxt)
                     return
                 
-                responsetxt = b'OK'
+                responsetxt = b'OK\r\n'
                 responserc = 200 
-                responseheader = "text/body"
+                responseheader = "text/plain"
                 if verbose: print("\t - " + "Grott: datalogger command response :", responserc, responsetxt, responseheader)     
                 htmlsendresp(self,responserc,responseheader,responsetxt)
                 return
 
             elif self.path == 'help':
                 responserc = 200 
-                responseheader = "text/body"
-                responsetxt = b'No help available yet'
+                responseheader = "text/plain"
+                responsetxt = b'No help available yet\r\n'
                 htmlsendresp(self,responserc,responseheader,responsetxt)
                 return
             else:
@@ -399,7 +398,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                 
                 if urlquery == "" : 
                     #no command entered return loggerreg info:
-                    responsetxt = b'empty put received'
+                    responsetxt = b'empty put received\r\n'
                     responserc = 400 
                     responseheader = "text/html"
                     htmlsendresp(self,responserc,responseheader,responsetxt)
@@ -413,15 +412,15 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                         if command in ("register", "datetime") :
                             if verbose: print("\t - Grotthttpserver - PUT command: ", command)     
                         else :
-                            responsetxt = b'no valid command entered'
+                            responsetxt = b'no valid command entered\r\n'
                             responserc = 400 
-                            responseheader = "text/html"
+                            responseheader = "text/plain"
                             htmlsendresp(self,responserc,responseheader,responsetxt)
                             return
                     except: 
-                        responsetxt = b'no command entered'
+                        responsetxt = b'no command entered\r\n'
                         responserc = 400 
-                        responseheader = "text/html"
+                        responseheader = "text/plain"
                         htmlsendresp(self,responserc,responseheader,responsetxt)
                         return
 
@@ -442,9 +441,9 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                                 inverterid_found = False
                         
                             if not inverterid_found : 
-                                responsetxt = b'no or invalid invertid specified'
+                                responsetxt = b'no or invalid invertid specified\r\n'
                                 responserc = 400 
-                                responseheader = "text/html"
+                                responseheader = "text/plain"
                                 htmlsendresp(self,responserc,responseheader,responsetxt)
                                 return   
                             
@@ -458,16 +457,16 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                                 test = loggerreg[dataloggerid]
 
                             except:     
-                                responsetxt = b'invalid datalogger id '
+                                responsetxt = b'invalid datalogger id\r\n'
                                 responserc = 400 
-                                responseheader = "text/body"
+                                responseheader = "text/plain"
                                 htmlsendresp(self,responserc,responseheader,responsetxt)
                                 return
                     except:     
                             # do not think we will come here 
-                            responsetxt = b'no datalogger or inverterid specified'
+                            responsetxt = b'no datalogger or inverterid specified\r\n'
                             responserc = 400 
-                            responseheader = "text/body"
+                            responseheader = "text/plain"
                             htmlsendresp(self,responserc,responseheader,responsetxt)
                             return
 
@@ -478,34 +477,34 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                         if int(urlquery["register"][0]) >= 0 and int(urlquery["register"][0]) < 1024 : 
                             register = urlquery["register"][0]
                         else: 
-                            responsetxt = b'invalid reg value specified'
+                            responsetxt = b'invalid reg value specified\r\n'
                             responserc = 400 
-                            responseheader = "text/body"
+                            responseheader = "text/plain"
                             htmlsendresp(self,responserc,responseheader,responsetxt)
                             return
                     
                         try: 
                             value = urlquery["value"][0]
                         except: 
-                            responsetxt = b'no value specified'
+                            responsetxt = b'no value specified\r\n'
                             responserc = 400 
-                            responseheader = "text/body"
+                            responseheader = "text/plain"
                             htmlsendresp(self,responserc,responseheader,responsetxt)
                             return
                     
                         if value == "" : 
-                            responsetxt = b'no value specified'
+                            responsetxt = b'no value specified\r\n'
                             responserc = 400 
-                            responseheader = "text/body"
+                            responseheader = "text/plain"
                             htmlsendresp(self,responserc,responseheader,responsetxt)
                             return
                     
                     elif command == "datetime" :
                         #process set datetime, only allowed for datalogger!!! 
                         if sendcommand == "06" :
-                            responsetxt = b'datetime command not allowed for inverter'
+                            responsetxt = b'datetime command not allowed for inverter\r\n'
                             responserc = 400 
-                            responseheader = "text/body"
+                            responseheader = "text/plain"
                             htmlsendresp(self,responserc,responseheader,responsetxt)
                             return
                         #prepare datetime 
@@ -514,9 +513,9 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
 
                     else: 
                         # Start additional command processing here,  to be created: translate command to register (from list>)
-                        responsetxt = b'command not defined or not available yet'
+                        responsetxt = b'command not defined or not available yet\r\n'
                         responserc = 400 
-                        responseheader = "text/body"
+                        responseheader = "text/plain"
                         htmlsendresp(self,responserc,responseheader,responsetxt)
                         return
                     
@@ -526,9 +525,9 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                             # is format keyword specified? (dec, text, hex)
                             formatval = urlquery["format"][0] 
                             if formatval not in ("dec", "hex","text") : 
-                                responsetxt = b'invalid format specified'
+                                responsetxt = b'invalid format specified\r\n'
                                 responserc = 400 
-                                responseheader = "text/body"
+                                responseheader = "text/plain"
                                 htmlsendresp(self,responserc,responseheader,responsetxt)
                                 return
                         except: 
@@ -547,9 +546,9 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                             value = int(value,16)
 
                         if value < 0 and value > 65535 : 
-                            responsetxt = b'invalid value specified'
+                            responsetxt = b'invalid value specified\r\n'
                             responserc = 400 
-                            responseheader = "text/body"
+                            responseheader = "text/plain"
                             htmlsendresp(self,responserc,responseheader,responsetxt)
                             return
         
@@ -618,23 +617,23 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                         time.sleep(0.01)
                 try: 
                     if comresp != "" : 
-                        responsetxt = b'OK'
+                        responsetxt = b'OK\r\n'
                         responserc = 200 
-                        responseheader = "text/body"
+                        responseheader = "text/plain"
                         htmlsendresp(self,responserc,responseheader,responsetxt)
                         return
 
                 except : 
-                    responsetxt = b'no or invalid response received'
+                    responsetxt = b'no or invalid response received\r\n'
                     responserc = 400 
-                    responseheader = "text/body"
+                    responseheader = "text/plain"
                     htmlsendresp(self,responserc,responseheader,responsetxt)
                     return
 
                 
-                responsetxt = b'OK'
+                responsetxt = b'OK\r\n'
                 responserc = 200 
-                responseheader = "text/body"
+                responseheader = "text/plain"
                 if verbose: print("\t - " + "Grott: datalogger command response :", responserc, responsetxt, responseheader)     
                 htmlsendresp(self,responserc,responseheader,responsetxt)
                 return
