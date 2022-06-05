@@ -839,6 +839,17 @@ class sendrecvserver:
                 print("\t - " + "Grottserver - Original Data:")
                 print(format_multi_line("\t\t ", data))
 
+            # get last two bytes for CRC16
+            crc16 = data[-2:]
+            # get crc16 of body
+            crc16_body = libscrc.modbus(data[0:-2])
+            # check if crc16 is correct
+            if crc16_body == int.from_bytes(crc16, "big"):
+                if verbose: print("\t - Grottserver - CRC16 OK")
+            else:
+                print("\t - Grottserver - CRC16 ERROR - received: ", crc16_body, " expected: ", int.from_bytes(crc16, "big"))
+                return
+
             # Create header
             header = "".join("{:02x}".format(n) for n in data[0:8])
             protocol = header[6:8]
