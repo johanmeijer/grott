@@ -31,9 +31,7 @@ verbose = True
 firstping = False
 timezone = "Etc/UTC"
 sendseq = 1
-forwarddatarecords = [
-    ("47.91.67.66", 5279)
-]
+forwarddata = ("47.91.67.66", 5279)
     
 
 
@@ -755,16 +753,16 @@ class sendrecvserver:
             connection.setblocking(0)
             self.inputs.append(connection)
             self.outputs.append(connection)
-            self.forward_input[connection] = []
+            self.forward_input[connection] = ()
             self.rw_mutex[connection] = threading.Lock()
-            for key in forwarddatarecords:
-                forward = Forward().start(key[0], key[1])
+            if forwarddata:
+                forward = Forward().start(*forwarddata)
                 if forward:
-                    if verbose: print("\t - " + "Grottserver - Forward started: ", key[0], key[1])
-                    self.forward_input[connection].append((forward, key[0], key[1]))
+                    if verbose: print("\t - " + "Grottserver - Forward started: ", *forwarddata)
+                    self.forward_input[connection] = (forward, *forwarddata)
                     self.rw_mutex[forward] = threading.Lock()
                 else:
-                    print("\t - " + "Grottserver - Forward failed: ", key[0], key[1])
+                    print("\t - " + "Grottserver - Forward failed: ", *forwarddata)
             print(f"\t - Grottserver - Socket connection received from {client_address}")
             client_address, client_port = connection.getpeername()
             qname = client_address + "_" + str(client_port)
@@ -777,14 +775,31 @@ class sendrecvserver:
             print("\t - Grottserver - exception in server thread - handle_new_connection : ", e) 
             #self.close_connection(s)   
 
-    def forward_data(self, s, data):
-        for fsock, host, port in self.forward_input[s]:
-            try:
-                with self.rw_mutex[fsock]:
-                    fsock.send(data)
-                print("\t - Grottserver - Forward data sent for {}:{}".format(host, port))
-            except Exception as e:
-                print("\t - Grottserver - exception in forward_data : {} for {}:{}".format(e, host, port))
+    def forward_data(self, s, data, attempts=0):
+        if not self.forward_input[s]:
+            return
+        fsock, host, port = self.forward_input[s]
+        try:
+            with self.rw_mutex[fsock]:
+                fsock.send(data)
+            print("\t - Grottserver - Forward data sent for {}:{}".format(host, port))
+        except Exception as e:
+            #print("\t - Grottserver - exception in forward_data : {} for {}:{}".format(e, host, port))
+            #try to reconnect if connection is closed
+            fsock.close()
+            del self.rw_mutex [fsock]
+            del self.forward_input[s]
+
+            forward = Forward().start(host, port)
+            if forward:
+                if verbose: print("\t - Grottserver - Forward started: ", host, port)
+                self.forward_input[s] = (forward, host, port)
+                self.rw_mutex[forward] = threading.Lock()
+                if attempts < 3:
+                    self.forward_data(s, data, attempts+1)
+                else:
+                    print("\t - Grottserver - Forward failed: ", host, port)
+
 
     def close_connection(self, s):
         try: 
@@ -795,9 +810,9 @@ class sendrecvserver:
                 self.outputs.remove(s)
             self.inputs.remove(s)
             if s in self.forward_input:
-                for fsock, host, port in self.forward_input[s]:
-                    fsock.close()
-                    del self.rw_mutex[fsock]
+                fsock, host, port = self.forward_input[s]
+                fsock.close()
+                del self.rw_mutex[fsock]
             if s in self.rw_mutex:
                 del self.rw_mutex[s]
             client_address, client_port = s.getpeername() 
