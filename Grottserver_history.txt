@@ -14,3 +14,5 @@ Version history
 - Improve error handling (stability)
 0.0.7
 - Improve error handling (stability)
+0.0.8
+- Improve error handling (stability)

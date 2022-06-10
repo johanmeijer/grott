@@ -16,7 +16,7 @@ from collections import defaultdict
 # grottserver.py emulates the server.growatt.com website and is initial developed for debugging and testing grott.
 # Updated: 2022-06-02
 # Version:
-verrel = "0.0.7"
+verrel = "0.0.8a"
 
 # Declare Variables (to be moved to config file later)
 serverhost = "0.0.0.0"
@@ -697,7 +697,7 @@ class sendrecvserver:
             
         except Exception as e:
             print("\t - Grottserver - exception in server thread - handle_readable_socket : ", e)
-            print("\t - socket: ",s)    
+            #print("\t - socket: ",s)    
 
 
     def handle_writable_socket(self, s):
@@ -707,9 +707,9 @@ class sendrecvserver:
                 client_address, client_port = s.getpeername()
             except: 
                 print("\t - Grottserver - socket closed :")
-                print("\t\t ", s )
-                s.close
-                return
+                #print("\t\t ", s )
+                #s.close
+                pass
 
             #with print statement no crash, without crash, does sleep solve this problem ? 
             time.sleep(0.1)
@@ -726,7 +726,7 @@ class sendrecvserver:
 
         except Exception as e:
             print("\t - Grottserver - exception in server thread - handle_writable_socket : ", e)
-            print("\t\t ", s)
+            #print("\t\t ", s)
             #self.close_connection(s)
             #print(s)
 
@@ -755,13 +755,13 @@ class sendrecvserver:
 
     def close_connection(self, s):
         try: 
-            client_address, client_port = s.getpeername() 
+            #client_address, client_port = s.getpeername() 
             print("\t - Grottserver - Close connection : ", s)
             #print(client_address, client_port)
             if s in self.outputs:
                 self.outputs.remove(s)
             self.inputs.remove(s)
-            #client_address, client_port = s.getpeername() 
+            client_address, client_port = s.getpeername() 
             qname = client_address + "_" + str(client_port)
             del send_queuereg[qname]
             ### after this also clean the logger reg. To be implemented ? 
@@ -777,7 +777,7 @@ class sendrecvserver:
         
         except Exception as e:
             print("\t - Grottserver - exception in server thread - close connection :", e)   
-            print("\t\t ", s )  
+            #print("\t\t ", s )  
 
             # try: 
             #     s.close()
@@ -926,6 +926,7 @@ class sendrecvserver:
 
 
 if __name__ == "__main__":
+
     print("\t - Grottserver - Version: " + verrel)
 
     send_queuereg = {} 
