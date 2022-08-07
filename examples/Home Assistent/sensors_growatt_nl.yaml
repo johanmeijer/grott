@@ -165,7 +165,7 @@
   value_template: "{{ value_json['values']['pvenergytotal'] | float / 10 }}" 
   unique_id: growatt_generated_energy_total
   device_class: energy
-  state_class: total
+  state_class: total_increasing
   unit_of_measurement: "kWh"
   name: Growatt - Opgewekte energie (Totaal)
   icon: mdi:solar-power
