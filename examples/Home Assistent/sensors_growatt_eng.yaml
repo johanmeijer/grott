@@ -81,7 +81,7 @@
 
 - platform: mqtt
   state_topic: energy/growatt
-  value_template: "{{ value_json['values']['pv1voltage'] | float / 10000 }}"
+  value_template: "{{ value_json['values']['pv1voltage'] | float / 10 }}"
   unique_id: growatt_string1_voltage
   device_class: voltage
   unit_of_measurement: "V"
