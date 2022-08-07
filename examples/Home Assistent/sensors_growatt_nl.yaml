@@ -58,11 +58,11 @@
 - platform: mqtt
   state_topic: energy/growatt
   value_template: >
-    {% if (value_json['values']['pvstatus'] | float == 0) %}
+    {% if (value_json['values']['pvstatus'] | int == 0) %}
       Wachtend
-    {% elif (value_json['values']['pvstatus'] | float == 1) %}
+    {% elif (value_json['values']['pvstatus'] | int == 1) %}
       Normaal
-    {% elif (value_json['values']['pvstatus'] | float == 2) %}
+    {% elif (value_json['values']['pvstatus'] | int == 2) %}
       Fout
     {% else %}
       Onbekend
