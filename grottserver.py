@@ -14,9 +14,9 @@ from urllib.parse import urlparse, parse_qs, parse_qsl
 from collections import defaultdict
 
 # grottserver.py emulates the server.growatt.com website and is initial developed for debugging and testing grott.
-# Updated: 2022-06-02
+# Updated: 2022-08-07
 # Version:
-verrel = "0.0.8a"
+verrel = "0.0.9"
 
 # Declare Variables (to be moved to config file later)
 serverhost = "0.0.0.0"
@@ -58,6 +58,35 @@ def decrypt(decdata):
 
     print("\t - " + "Grott - data decrypted V2")
     return result_string
+
+def validate_record(xdata): 
+    # validata data record on length and CRC (for "05" and "06" records)
+    
+    data = bytes.fromhex(xdata)
+    ldata = len(data)
+    len_orgpayload = int.from_bytes(data[4:6],"big")
+    header = "".join("{:02x}".format(n) for n in data[0:8])
+    protocol = header[6:8]
+
+    if protocol in ("05","06"):
+        lcrc = 4
+        crc = int.from_bytes(data[ldata-2:ldata],"big")
+    else: 
+        lcrc = 0
+
+    len_realpayload = (ldata*2 - 12 -lcrc) / 2
+
+    if protocol != "02" :
+                crc_calc = libscrc.modbus(data[0:ldata-2])
+
+    if len_realpayload == len_orgpayload :
+        returncc = 0
+        if protocol != "02" and crc != crc_calc:     
+            returncc = 8    
+    else : 
+        returncc = 8
+
+    return(returncc)
 
 def htmlsendresp(self, responserc, responseheader,  responsetxt) : 
         #send response
@@ -702,6 +731,9 @@ class sendrecvserver:
 
     def handle_writable_socket(self, s):
         try: 
+            if s.fileno() == -1 : 
+                print("\t - Grottserver - socket closed")
+                return
             try: 
                 #try for debug 007
                 client_address, client_port = s.getpeername()
@@ -712,7 +744,7 @@ class sendrecvserver:
                 pass
 
             #with print statement no crash, without crash, does sleep solve this problem ? 
-            time.sleep(0.1)
+            #time.sleep(0.1)
             try: 
                 qname = client_address + "_" + str(client_port)
                 next_msg = self.send_queuereg[qname].get_nowait()
@@ -800,6 +832,16 @@ class sendrecvserver:
             if verbose:
                 print("\t - " + "Grottserver - Original Data:")
                 print(format_multi_line("\t\t ", data))
+            
+            #validate data (Length + CRC for 05/06)
+            #join gebeurt nu meerdere keren! Stroomlijnen!!!! 
+            vdata = "".join("{:02x}".format(n) for n in data)
+            validatecc = validate_record(vdata)
+            if validatecc != 0 : 
+                print(f"\t - Grottserver - Invalid data record received, processing stopped for this record")
+                #Create response if needed? 
+                #self.send_queuereg[qname].put(response)
+                return  
 
             # Create header
             header = "".join("{:02x}".format(n) for n in data[0:8])
@@ -810,7 +852,7 @@ class sendrecvserver:
             if protocol in ("05","06") :
                 result_string = decrypt(data) 
             else :         
-                result_string = data   
+                result_string = "".join("{:02x}".format(n) for n in data)
             if verbose:
                 print("\t - Grottserver - Plain record: ")
                 print(format_multi_line("\t\t ", result_string))
@@ -832,17 +874,15 @@ class sendrecvserver:
                 
                 # create ack response
                 if header[6:8] == '02': 
-                    # unencrypted ack
-                    headerackx = bytes.fromhex(header[0:8] + '0003' + header[12:16] + '00')
+                    #protocol 02, unencrypted ack
+                    response = bytes.fromhex(header[0:8] + '0003' + header[12:16] + '00')
                 else: 
-                    # encrypted ack
+                    # protocol 05/06, encrypted ack
                     headerackx = bytes.fromhex(header[0:8] + '0003' + header[12:16] + '47')
-
-                # Create CRC 16 Modbus
-                crc16 = libscrc.modbus(headerackx)
-
-                # create response
-                response = headerackx + crc16.to_bytes(2, "big")
+                    # Create CRC 16 Modbus
+                    crc16 = libscrc.modbus(headerackx)
+                    # create response
+                    response = headerackx + crc16.to_bytes(2, "big")
                 if verbose:
                     print("\t - Grottserver - Response: ")
                     print(format_multi_line("\t\t", response))
@@ -871,8 +911,11 @@ class sendrecvserver:
                         
                     #add invertid
                     loggerreg[loggerid].update({inverterid : {"inverterno" : header[12:14], "power" : 0}} ) 
+                    #send response
                     self.send_queuereg[qname].put(response) 
+                    #wait some time before response is processed 
                     time.sleep(1)
+                    # Create time command en put on queue
                     response = createtimecommand(protocol,loggerid,"0001")
                     if verbose: print("\t - Grottserver 03 announce data record processed") 
 

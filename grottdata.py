@@ -1,6 +1,6 @@
 # grottdata.py processing data  functions
-# Version 2.7.1
-# Updated: 2022-02-06
+# Version 2.7.5
+# Updated: 2022-07-30
 
 #import time
 from datetime import datetime, timedelta
@@ -175,40 +175,43 @@ def procdata(conf,data):
                     #no include statement keyword should be process, set include to prevent except errors
                     include = True
                 #process only keyword needs to be included (default):     
-                if ((include) or (conf.includeall)): 
-                    try:
-                        #try if key type is specified  
-                        keytype = conf.recorddict[layout][keyword]["type"]           
-                    except: 
-                        #if not default is num
-                        keytype = "num"               
-                    if keytype == "text" :
-                        definedkey[keyword] = result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)]
-                        definedkey[keyword] = codecs.decode(definedkey[keyword], "hex").decode('utf-8')
-                        #print(definedkey[keyword])
-                    if keytype == "num" :
-                    #else:                    
-                        definedkey[keyword] = int(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)],16)                                     
-                    if keytype == "numx" :
-                        #process signed integer 
-                        keybytes = bytes.fromhex(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)])
-                        definedkey[keyword] = int.from_bytes(keybytes, byteorder='big', signed=True)
-                    if keytype == "log" :
-                        # Proces log fields
-                        definedkey[keyword] = logdict[conf.recorddict[layout][keyword]["pos"]-1]
-                    if keytype == "logpos" :
-                    #only display this field if positive    
-                        # Proces log fields
-                        if float(logdict[conf.recorddict[layout][keyword]["pos"]-1]) > 0 : 
+                try: 
+                    if ((include) or (conf.includeall)): 
+                        try:
+                            #try if key type is specified  
+                            keytype = conf.recorddict[layout][keyword]["type"]           
+                        except: 
+                            #if not default is num
+                            keytype = "num"               
+                        if keytype == "text" :
+                            definedkey[keyword] = result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)]
+                            definedkey[keyword] = codecs.decode(definedkey[keyword], "hex").decode('utf-8')
+                            #print(definedkey[keyword])
+                        if keytype == "num" :
+                        #else:                    
+                            definedkey[keyword] = int(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)],16)                                     
+                        if keytype == "numx" :
+                            #process signed integer 
+                            keybytes = bytes.fromhex(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)])
+                            definedkey[keyword] = int.from_bytes(keybytes, byteorder='big', signed=True)
+                        if keytype == "log" :
+                            # Proces log fields
                             definedkey[keyword] = logdict[conf.recorddict[layout][keyword]["pos"]-1]
-                        else : definedkey[keyword] = 0
-                    if keytype == "logneg" :
-                    #only display this field if negative    
-                        # Proces log fields
-                        if float(logdict[conf.recorddict[layout][keyword]["pos"]-1]) < 0 : 
-                            definedkey[keyword] = logdict[conf.recorddict[layout][keyword]["pos"]-1]    
-                        else : definedkey[keyword] = 0
-                      
+                        if keytype == "logpos" :
+                        #only display this field if positive    
+                            # Proces log fields
+                            if float(logdict[conf.recorddict[layout][keyword]["pos"]-1]) > 0 : 
+                                definedkey[keyword] = logdict[conf.recorddict[layout][keyword]["pos"]-1]
+                            else : definedkey[keyword] = 0
+                        if keytype == "logneg" :
+                        #only display this field if negative    
+                            # Proces log fields
+                            if float(logdict[conf.recorddict[layout][keyword]["pos"]-1]) < 0 : 
+                                definedkey[keyword] = logdict[conf.recorddict[layout][keyword]["pos"]-1]    
+                            else : definedkey[keyword] = 0
+                except: 
+                    if conf.verbose : print("\t - grottdata - error in keyword processing : ", keyword + " ,data processing stopped") 
+                    return(8) 
                                  
         # test if pvserial was defined, if not take inverterid from config.
         device_defined = False 
@@ -419,7 +422,7 @@ def procdata(conf,data):
             print("\t - " + "MQTT jsonmsg: ")        
             print(format_multi_line("\t\t\t ", jsonmsg))   
 
-        #do net invalid records (e.g. buffered records with time from server) or buffered records if sendbuf = False
+        #do not process invalid records (e.g. buffered records with time from server) or buffered records if sendbuf = False
         if (buffered == "yes") : 
             if (conf.sendbuf == False) or (timefromserver == True) :
                 if conf.verbose: print("\t - " + 'Buffered record not sent: sendbuf = False or invalid date/time format')  

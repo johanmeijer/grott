@@ -15,4 +15,7 @@ Version history
 0.0.7
 - Improve error handling (stability)
 0.0.8
-- Improve error handling (stability)
+- Improve error handling (stability)    
+0.0.9
+- Improve error handling (stability)    
+- Add record validation (length and CRC) to eliminate invalid records

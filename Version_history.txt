@@ -220,3 +220,9 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 2.7.4
 - improve error handling at disconnect of inverter (grottproxy)
 - added new version of grottserver (0.0.7) with additional error handling improvements (stability)
+2.7.5
+- Add record validation (length and CRC) to eliminate invalid records, 
+  be aware for full validation (including CRC) python libscrc libary needs to be installed (pip3 install libscrc)
+- new version of grottserver (0.0.9)
+  - Improve error handling (stability)    
+  - Add record validation (length and CRC) to eliminate invalid records
