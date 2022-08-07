@@ -16,7 +16,11 @@
 * Add parameter to disable sending energytoday to pvoutput (disable V1 input). This should show better avarages. Issue: #51  
   - .ini [PVOutput section] pvdisv1 = True
   - environmental gpvdisv1 = "True" (docker: -e gpvdisv1 = "True")  
-* Add support for  SPH5000 T05nnnnXSPH data record 
+* Add support for  SPH5000 T05nnnnXSPH data record
+* Add record validation to eliminate incomplete/corrupted records (for both Grott and Grottserver), see also issue #135
+  - To enable CRC checking for Grott an additional python library is needed (sudo pip3 install libscrc)
+  - Without libscrc only validation on length will be performed.
+  - No CRC checking is being done for older converter types (length validation is always performed). 
 
 ### planned in Version 2.7.x (not commited yet)
 * Auto detect for SPF, SPH, TL3 inverters
