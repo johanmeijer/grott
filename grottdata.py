@@ -374,8 +374,11 @@ def procdata(conf,data):
 
         if conf.nomqtt != True:
             try: 
-                publish.single(conf.mqtttopic, payload=jsonmsg, qos=0, retain=False, hostname=conf.mqttip,port=conf.mqttport, client_id=conf.inverterid, keepalive=60, auth=conf.pubauth)
-                if conf.verbose: print("\t - " + 'MQTT message message sent') 
+                mqtttopic = conf.mqtttopic
+                if (conf.mqttinverterintopic == True) :
+                    mqtttopic = "{0}/{1}".format(conf.mqtttopic, definedkey["pvserial"])
+                publish.single(mqtttopic, payload=jsonmsg, qos=0, retain=False, hostname=conf.mqttip,port=conf.mqttport, client_id=conf.inverterid, keepalive=60, auth=conf.pubauth)
+                if conf.verbose: print("\t - " + 'MQTT message message sent on topic:', mqtttopic) 
             except TimeoutError:     
                 if conf.verbose: print("\t - " + 'MQTT connection time out error') 
             except ConnectionRefusedError:     
