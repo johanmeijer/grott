@@ -42,6 +42,7 @@ class Conf :
         self.mqttip = "localhost"
         self.mqttport = 1883
         self.mqtttopic= "energy/growatt"
+        self.mqttinverterintopic = False
         self.nomqtt = False                                                                          #not in ini file, can only be changed via start parms
         self.mqttauth = False
         self.mqttuser = "grott"
@@ -213,6 +214,7 @@ class Conf :
         print("\tmqttip:      \t",self.mqttip)
         print("\tmqttport:    \t",self.mqttport)
         print("\tmqtttopic:   \t",self.mqtttopic)
+        print("\tmqttinverterintopic:   \t",self.mqttinverterintopic)
         print("\tmqtttauth:   \t",self.mqttauth)
         print("\tmqttuser:    \t",self.mqttuser)
         print("\tmqttpsw:     \t","**secret**")                       #scramble output if tested!
@@ -358,6 +360,7 @@ class Conf :
         if config.has_option("MQTT","ip"): self.mqttip = config.get("MQTT","ip")
         if config.has_option("MQTT","port"): self.mqttport = config.getint("MQTT","port")
         if config.has_option("MQTT","topic"): self.mqtttopic = config.get("MQTT","topic")
+        if config.has_option("MQTT","inverterintopic"): self.mqttinverterintopic = config.getboolean("MQTT","inverterintopic")
         if config.has_option("MQTT","auth"): self.mqttauth = config.getboolean("MQTT","auth")
         if config.has_option("MQTT","user"): self.mqttuser = config.get("MQTT","user")
         if config.has_option("MQTT","password"): self.mqttpsw = config.get("MQTT","password")
@@ -441,6 +444,7 @@ class Conf :
             if 0 <= int(os.getenv('gmqttport')) <= 65535  :  self.mqttport = int(self.getenv('gmqttport'))
             else : 
                 if self.verbose : print("\nGrott MQTT server Port address env invalid")
+        if os.getenv('gmqttinverterintopic') != None :  self.mqttinverterintopic = self.getenv('gmqttinverterintopic')
         if os.getenv('gmqttauth') != None :  self.mqttauth = self.getenv('gmqttauth')
         if os.getenv('gmqtttopic') != None :  self.mqtttopic = self.getenv('gmqtttopic')
         if os.getenv('gmqttuser') != None :  self.mqttuser = self.getenv('gmqttuser')
