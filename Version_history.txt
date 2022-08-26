@@ -180,3 +180,5 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - bugfix for spf3000 fields pvenergytoday, pvenergytotal (and add duplicate fields as called in growatt xls/csv reports epvToday, epvTotal)
 2.6.1g
 - add support for TL3-X inverters. Please specify invtype=tl3 in the [Generic] section of the .ini file (or env variable : -e ginvtype=tl3 for docker run)
+2.6.1h
+- Add inverter serial to MQTT topic (thanks to @ebosveld) 
