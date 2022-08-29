@@ -19,3 +19,5 @@ Version history
 0.0.9
 - Improve error handling (stability)    
 - Add record validation (length and CRC) to eliminate invalid records
+0.0.10
+- Improve error handling (stability) for grottserver (0.0.10) (thanks to tabascoz)

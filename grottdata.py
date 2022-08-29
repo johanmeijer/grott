@@ -1,6 +1,6 @@
 # grottdata.py processing data  functions
-# Version 2.7.5
-# Updated: 2022-07-30
+# Version 2.7.6
+# Updated: 2022-08-27
 
 #import time
 from datetime import datetime, timedelta
@@ -381,29 +381,21 @@ def procdata(conf,data):
         #compatibility with prev releases for "20" smart monitor record!
         #if device is not specified in layout record datalogserial is used as device (to distinguish record from inverter record)
 
-        if device_defined == True: 
-            jsonobj = {
-                        "device" : definedkey["device"],
+        if device_defined == True:         
+            deviceid = definedkey["device"]
+
+        else : 
+            if header[14:16] not in ("20","1b") :
+                deviceid = definedkey["pvserial"]           
+            else : 
+                deviceid = definedkey["datalogserial"]
+            
+        jsonobj = {
+                        "device" : deviceid,
                         "time" : jsondate, 
                         "buffered" : buffered,
                         "values" : {}
                     }
-        else : 
-
-            if header[14:16] not in ("20","1b") :
-                jsonobj = {
-                            "device" : definedkey["pvserial"],
-                            "time" : jsondate, 
-                            "buffered" : buffered,
-                            "values" : {}
-                        }
-            else : 
-                    jsonobj = {
-                            "device" : definedkey["datalogserial"],
-                            "time" : jsondate, 
-                            "buffered" : buffered,
-                            "values" : {}
-                        }            
 
         for key in definedkey : 
 
@@ -432,7 +424,11 @@ def procdata(conf,data):
             #if meter data use mqtttopicname topic
             if (header[14:16] in ("20","1b")) and (conf.mqttmtopic == True) :
                 mqtttopic = conf.mqttmtopicname 
-            else : mqtttopic = conf.mqtttopic    
+            else : 
+                #test if invertid needs to be added to topic
+                if conf.mqttinverterintopic : 
+                    mqtttopic = conf.mqtttopic + "/" + deviceid    
+                else: mqtttopic = conf.mqtttopic    
             print("\t - " + 'Grott MQTT topic used : ' + mqtttopic)   
             
             if conf.mqttretain:

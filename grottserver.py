@@ -14,9 +14,9 @@ from urllib.parse import urlparse, parse_qs, parse_qsl
 from collections import defaultdict
 
 # grottserver.py emulates the server.growatt.com website and is initial developed for debugging and testing grott.
-# Updated: 2022-08-07
+# Updated: 2022-08-26
 # Version:
-verrel = "0.0.9"
+verrel = "0.0.10"
 
 # Declare Variables (to be moved to config file later)
 serverhost = "0.0.0.0"
@@ -731,6 +731,9 @@ class sendrecvserver:
 
     def handle_writable_socket(self, s):
         try: 
+            #with print statement no crash, without crash, does sleep solve this problem ? 
+            time.sleep(0.1)
+            
             if s.fileno() == -1 : 
                 print("\t - Grottserver - socket closed")
                 return
@@ -743,8 +746,6 @@ class sendrecvserver:
                 #s.close
                 pass
 
-            #with print statement no crash, without crash, does sleep solve this problem ? 
-            #time.sleep(0.1)
             try: 
                 qname = client_address + "_" + str(client_port)
                 next_msg = self.send_queuereg[qname].get_nowait()

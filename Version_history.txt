@@ -226,3 +226,7 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - new version of grottserver (0.0.9)
   - Improve error handling (stability)    
   - Add record validation (length and CRC) to eliminate invalid records
+2.7.6
+- Improve error handling (stability) for grottserver (0.0.10) (thanks to tabascoz)
+- Option to add inverter serial to MQTT topic (thanks to @ebosveld) 
+  Add  self.mqttinverterintopic = True to MQTT section of grott.ini or use  qmqttinverterintopic = "False" environmental (e.g. docker). 
