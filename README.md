@@ -20,7 +20,9 @@
 * Add record validation to eliminate incomplete/corrupted records (for both Grott and Grottserver), see also issue #135
   - To enable CRC checking for Grott an additional python library is needed (sudo pip3 install libscrc)
   - Without libscrc only validation on length will be performed.
-  - No CRC checking is being done for older converter types (length validation is always performed). 
+  - No CRC checking is being done for older converter types (length validation is always performed).
+* Added optionto add inverter serial to MQTT topic (thanks to @ebosveld)
+  - Add self.mqttinverterintopic = True to MQTT section of grott.ini or use  qmqttinverterintopic = "False" environmental (e.g. docker).
 
 ### planned in Version 2.7.x (not commited yet)
 * Auto detect for SPF, SPH, TL3 inverters
