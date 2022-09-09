@@ -21,6 +21,7 @@ class Conf :
         self.decrypt = True
         self.compat = False
         self.invtype = "default"                                                                    #specify sepcial invertype default (spf, sph)
+        self.invtypemap = {}
         self.includeall = False                                                                      #Include all defined keys from layout (also incl = no)
         self.blockcmd = False                                                                       #Block Inverter and Shine configure commands                
         self.noipf = False                                                                          #Allow IP change if needed
@@ -200,6 +201,7 @@ class Conf :
         print("\tdecrypt:             \t",self.decrypt)
         print("\tcompat:              \t",self.compat)
         print("\tinvtype:             \t",self.invtype)
+        print("\tinvtypemap:          \t",self.invtypemap)
         print("\tinclude_all:         \t",self.includeall)
         print("\tblockcmd:            \t",self.blockcmd)
         print("\tnoipf:               \t",self.noipf)
@@ -360,6 +362,7 @@ class Conf :
         if config.has_option("Generic","compat"): self.compat = config.getboolean("Generic","compat")
         if config.has_option("Generic","includeall"): self.includeall = config.getboolean("Generic","includeall")
         if config.has_option("Generic","invtype"): self.invtype = config.get("Generic","invtype")
+        if config.has_option("Generic","invtypemap"): self.invtypemap = eval(config.get("Generic","invtypemap"))
         if config.has_option("Generic","inverterid"): self.inverterid = config.get("Generic","inverterid")
         if config.has_option("Generic","blockcmd"): self.blockcmd = config.get("Generic","blockcmd")
         if config.has_option("Generic","noipf"): self.noipf = config.get("Generic","noipf")
@@ -427,6 +430,7 @@ class Conf :
         if os.getenv('gcompat') != None :  self.compat = self.getenv('gcompat')
         if os.getenv('gincludeall') != None :  self.includeall = self.getenv('gincludeall')
         if os.getenv('ginvtype') != None :  self.invtype = self.getenv('ginvtype')
+        if os.getenv('ginvtypemap') != None :  self.invtypemap = eval(self.getenv('ginvtypemap'))
         if os.getenv('gblockcmd') != None : self.blockcmd = self.getenv('gblockcmd')
         if os.getenv('gnoipf') != None : self.noipf = self.getenv('gnoipf')
         if os.getenv('gtime') in ("auto", "server") : self.gtime = self.getenv('gtime')
