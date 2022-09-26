@@ -13,7 +13,7 @@
 * Add parameter to enable sent inverter temperature as temperature value to pvoutput (not advised PVOutemp should be outside temperature) Issue #60
   - .ini [PVOutput section] pvtemp = True
   - environmental gpvtemp = "True" (docker: -e gpvtemp = "True")
-* Add parameter to disable sending energytoday to pvoutput (disable V1 input). This should show better avarages. Issue: #51  
+* Add parameter to disable sending energytoday to pvoutput (disable V1 input). This should show better avarages. Issue: #52  
   - .ini [PVOutput section] pvdisv1 = True
   - environmental gpvdisv1 = "True" (docker: -e gpvdisv1 = "True")  
 * Add support for  SPH5000 T05nnnnXSPH data record
