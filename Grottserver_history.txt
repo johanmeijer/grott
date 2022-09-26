@@ -21,3 +21,5 @@ Version history
 - Add record validation (length and CRC) to eliminate invalid records
 0.0.10
 - Improve error handling (stability) for grottserver (0.0.10) (thanks to tabascoz)
+0.0.11
+- Fix bug with "05" protocol (thanks to ehoutsma)
