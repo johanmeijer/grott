@@ -14,9 +14,9 @@ from urllib.parse import urlparse, parse_qs, parse_qsl
 from collections import defaultdict
 
 # grottserver.py emulates the server.growatt.com website and is initial developed for debugging and testing grott.
-# Updated: 2022-09-26
+# Updated: 2022-09-27
 # Version:
-verrel = "0.0.11"
+verrel = "0.0.11a"
 
 # Declare Variables (to be moved to config file later)
 serverhost = "0.0.0.0"
@@ -203,7 +203,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                         command = urlquery["command"][0] 
                         #print(command)
                         if command in ("register", "regall") :
-                            if verbose: print("\t - " + "Grott: get command: ", command)     
+                            if verbose: print("\t - " + "Grotthttpserver: get command: ", command)     
                         else :
                             #no valid command entered
                             responsetxt = b'no valid command entered'
@@ -314,7 +314,14 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                 #calculate length of payload = body/2 (str => bytes) + 2 bytes invertid + command. 
                 bodylen = int(len(body)/2+2)
                 
-                header = "{:04x}".format(sendseq) + "00" + loggerreg[dataloggerid]["protocol"] + "{:04x}".format(bodylen) + "01" + sendcommand
+                #device id for datalogger is by default "01" for inverter deviceid is inverterid!
+                deviceid = "01"
+                # test if it is inverter command and set 
+                if sendcommand == "05":
+                    deviceid = (loggerreg[dataloggerid][inverterid]["inverterno"])
+                    print("\t - Grotthttpserver: selected deviceid :", deviceid)
+
+                header = "{:04x}".format(sendseq) + "00" + loggerreg[dataloggerid]["protocol"] + "{:04x}".format(bodylen) + deviceid + sendcommand
                 body = header + body 
                 body = bytes.fromhex(body)
 
