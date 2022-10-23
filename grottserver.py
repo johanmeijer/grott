@@ -279,7 +279,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                     # test if register is specified and set reg value. 
                     if command == "register":
                         #test if valid reg is applied
-                        if int(urlquery["register"][0]) >= 0 and int(urlquery["register"][0]) < 1024 : 
+                        if int(urlquery["register"][0]) >= 0 and int(urlquery["register"][0]) < 1125 : 
                             register = urlquery["register"][0]
                         else: 
                             responsetxt = b'invalid reg value specified'
@@ -419,6 +419,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                     sendcommand = "18"
                 else:
                     if verbose: print("\t - Grotthttpserver - inverter PUT received : ", urlquery)     
+                    # Must be an inverter. Use 06 for now. May change to 10 later.
                     sendcommand = "06"        
                 
                 if urlquery == "" : 
@@ -434,7 +435,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                     try: 
                         #is valid command specified? 
                         command = urlquery["command"][0] 
-                        if command in ("register", "datetime") :
+                        if command in ("register", "multiregister", "datetime") :
                             if verbose: print("\t - Grotthttpserver - PUT command: ", command)     
                         else :
                             responsetxt = b'no valid command entered'
@@ -524,6 +525,50 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                             htmlsendresp(self,responserc,responseheader,responsetxt)
                             return
                     
+                    elif command == "multiregister" :
+                        # Switch to multiregister command
+                        sendcommand = "10"
+
+                        # TODO: Too much copy/paste here. Refactor into methods.
+
+                        # Check for valid start register
+                        if int(urlquery["startregister"][0]) >= 0 and int(urlquery["startregister"][0]) < 1125 :
+                            startregister = urlquery["startregister"][0]
+                        else:
+                            responsetxt = b'invalid start register value specified'
+                            responserc = 400
+                            responseheader = "text/body"
+                            htmlsendresp(self,responserc,responseheader,responsetxt)
+                            return
+
+                        # Check for valid end register
+                        if int(urlquery["endregister"][0]) >= 0 and int(urlquery["endregister"][0]) < 1125 :
+                            endregister = urlquery["endregister"][0]
+                        else:
+                            responsetxt = b'invalid end register value specified'
+                            responserc = 400
+                            responseheader = "text/body"
+                            htmlsendresp(self,responserc,responseheader,responsetxt)
+                            return
+
+                        try:
+                            value = urlquery["value"][0]
+                        except:
+                            responsetxt = b'no value specified'
+                            responserc = 400
+                            responseheader = "text/body"
+                            htmlsendresp(self,responserc,responseheader,responsetxt)
+                            return
+
+                        if value == "" :
+                            responsetxt = b'no value specified'
+                            responserc = 400
+                            responseheader = "text/body"
+                            htmlsendresp(self,responserc,responseheader,responsetxt)
+                            return
+
+                        # TODO: Check the value is the right length for the given start/end registers
+
                     elif command == "datetime" :
                         #process set datetime, only allowed for datalogger!!! 
                         if sendcommand == "06" :
@@ -589,12 +634,22 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                 if sendcommand == "06" : 
                     value = "{:04x}".format(value)
                     valuelen = ""
+
+                elif sendcommand == "10" :
+                    # Value is already in hex format
+                    pass
+
                 else:   
                     value = value.encode('utf-8').hex()
                     valuelen = int(len(value)/2)
                     valuelen = "{:04x}".format(valuelen) 
 
-                body = body + "{:04x}".format(int(register)) + valuelen + value
+                if sendcommand == "10" :
+                    body = body + "{:04x}".format(int(startregister)) + "{:04x}".format(int(endregister)) + value
+
+                else :
+                    body = body + "{:04x}".format(int(register)) + valuelen + value
+
                 bodylen = int(len(body)/2+2)          
 
                 #create header
@@ -616,7 +671,11 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                 qname = loggerreg[dataloggerid]["ip"] + "_" + str(loggerreg[dataloggerid]["port"])
                 self.send_queuereg[qname].put(body)
                 responseno = "{:04x}".format(sendseq)
-                regkey = "{:04x}".format(int(register))
+                if sendcommand == "10":
+                    regkey = "{:04x}".format(int(startregister)) + "{:04x}".format(int(endregister))
+                else :
+                    regkey = "{:04x}".format(int(register))
+
                 try: 
                     #delete response: be aware a 18 command give 19 response, 06 send command gives 06 response in differnt format! 
                     if sendcommand == "18" :
@@ -959,6 +1018,18 @@ class sendrecvserver:
                 else : 
                     #command 05 or 19 
                     commandresponse[command][regkey] = {"value" : value} 
+
+                response = None
+
+            elif header[14:16] in ("10") :
+                if verbose: print("\t - Grottserver - " + header[12:16] + " record received, no response needed")
+
+                startregister = int(result_string[76:80],16)
+                endregister = int(result_string[80:84],16)
+                value = result_string[84:86]
+                
+                regkey = "{:04x}".format(startregister) + "{:04x}".format(endregister)
+                commandresponse[command][regkey] = {"value" : value} 
 
                 response = None
 
