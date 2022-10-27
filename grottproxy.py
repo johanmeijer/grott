@@ -20,15 +20,7 @@ from grottdata import procdata, decrypt, format_multi_line
 #import mqtt                       
 import paho.mqtt.publish as publish
 
-#import libscrc for additional crc checking                        
-# for compat reason (generate a message in the log) also done in proxy _init_
-try:     
-    import libscrc
-except:
-    print("\t **********************************************************************************")
-    print("\t - Grott - libscrc not installed, no CRC checking only record validation on length!") 
-    print("\t **********************************************************************************")
-
+from crc import modbus_crc
 
 # Changing the buffer_size and delay, you can improve the speed and bandwidth.
 # But when buffer get to high or delay go too down, you can broke things
@@ -56,10 +48,8 @@ def validate_record(xdata):
     if protocol != "02" :
                 
         try: 
-            crc_calc = libscrc.modbus(data[0:ldata-2])
+            crc_calc = modbus_crc(data[0:ldata-2])
         except: 
-            #liscrc is not installed yet
-            #print("\t - Grott - Validate datarecord - libscrc not installed, only validation on record length")  
             crc_calc = crc = 0 
 
     if len_realpayload == len_orgpayload :
@@ -91,15 +81,6 @@ class Proxy:
 
     def __init__(self, conf):
         print("\nGrott proxy mode started")
-
-        # for compatibility reasons test if libscrc is installed and send error message
-        # if not installed processing wil continue but records will only be validated on length and not on crc. 
-        try:     
-            import libscrc
-        except:
-            print("\t **********************************************************************************")
-            print("\t - Grott - libscrc not installed, no CRC checking only record validation on length!") 
-            print("\t **********************************************************************************")
 
         ## to resolve errno 32: broken pipe issue (Linux only)
         if sys.platform != 'win32':

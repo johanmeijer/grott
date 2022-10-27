@@ -2,7 +2,7 @@ import select
 import socket
 import queue
 import textwrap
-import libscrc
+from crc import modbus_crc
 import threading
 import time
 import http.server
@@ -77,7 +77,7 @@ def validate_record(xdata):
     len_realpayload = (ldata*2 - 12 -lcrc) / 2
 
     if protocol != "02" :
-                crc_calc = libscrc.modbus(data[0:ldata-2])
+                crc_calc = modbus_crc(data[0:ldata-2])
 
     if len_realpayload == len_orgpayload :
         returncc = 0
@@ -125,7 +125,7 @@ def createtimecommand(protocol,loggerid,sequenceno) :
         if protocol != "02" :
             #encrypt message 
             body = decrypt(body) 
-            crc16 = libscrc.modbus(bytes.fromhex(body))
+            crc16 = modbus_crc(bytes.fromhex(body))
             body = bytes.fromhex(body) + crc16.to_bytes(2, "big")
         
         if verbose:
@@ -328,7 +328,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                 if loggerreg[dataloggerid]["protocol"] != "02" :
                     #encrypt message 
                     body = decrypt(body) 
-                    crc16 = libscrc.modbus(bytes.fromhex(body))
+                    crc16 = modbus_crc(bytes.fromhex(body))
                     body = bytes.fromhex(body) + crc16.to_bytes(2, "big")
 
                 # add header
@@ -609,7 +609,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                 if loggerreg[dataloggerid]["protocol"] != "02" :
                     #encrypt message 
                     body = decrypt(body) 
-                    crc16 = libscrc.modbus(bytes.fromhex(body))
+                    crc16 = modbus_crc(bytes.fromhex(body))
                     body = bytes.fromhex(body) + crc16.to_bytes(2, "big")
 
                 # queue command 
@@ -888,7 +888,7 @@ class sendrecvserver:
                     # protocol 05/06, encrypted ack
                     headerackx = bytes.fromhex(header[0:8] + '0003' + header[12:16] + '47')
                     # Create CRC 16 Modbus
-                    crc16 = libscrc.modbus(headerackx)
+                    crc16 = modbus_crc(headerackx)
                     # create response
                     response = headerackx + crc16.to_bytes(2, "big")
                 if verbose:
