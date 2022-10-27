@@ -1,4 +1,4 @@
-FROM python:3.7-slim
+FROM python:3.7-slim as base
 
 ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
@@ -14,9 +14,14 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install -r /app/requirements.txt
 
 
-COPY grott.py grottconf.py grottdata.py grottproxy.py grottsniffer.py crc.py /app/
+COPY grott.py grottconf.py grottdata.py grottproxy.py grottsniffer.py grottserver.py crc.py /app/
 RUN touch /app/grott.ini
 
 WORKDIR /app
-CMD ["python", "-u", "grott.py", "-v"]
 EXPOSE 5279/tcp
+
+FROM base as grott
+CMD ["python", "-u", "grott.py", "-v"]
+
+FROM base as grottserver
+CMD ["python", "-u", "grottserver.py", "-v"]

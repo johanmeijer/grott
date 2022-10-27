@@ -33,7 +33,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build and push
+        name: Build and push - grott
         uses: docker/build-push-action@v3
         with:
           context: .
@@ -41,6 +41,18 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm
           push: true
           tags: egguy/grott:latest
+          target: grott
           cache-from: type=registry,ref=egguy/grott:buildcache
           cache-to: type=registry,ref=egguy/grott:buildcache,mode=max
-
+      -
+        name: Build and push - grottserver
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/arm
+          push: true
+          tags: egguy/grottserver:latest
+          target: grottserver
+          cache-from: type=registry,ref=egguy/grott:buildcache
+          cache-to: type=registry,ref=egguy/grott:buildcache,mode=max
