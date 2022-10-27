@@ -41,4 +41,6 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm
           push: true
           tags: egguy/grott:latest
+          cache-from: type=registry,ref=egguy/grott:buildcache
+          cache-to: type=registry,ref=egguy/grott:buildcache,mode=max
 
