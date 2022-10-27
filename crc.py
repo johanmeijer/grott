@@ -71,6 +71,7 @@ if __name__ == "__main__":
     test2 = b'\xff\xff\xff\xff'
     test3 = b'\xAA\xAA\xAA\xAA'
     test4 = b'\x55\x55\x55\x55'
+    test5 = b'\xDE\xAD\xBE\xEF'
 
     tests = [test1, test2, test3, test4]
 
@@ -78,3 +79,4 @@ if __name__ == "__main__":
         crc_calc = libscrc.modbus(t)
         py_crc_calc = modbus_crc(t)
         assert crc_calc == py_crc_calc
+    print("Check passed")
