@@ -14,7 +14,7 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install -r /app/requirements.txt
 
 
-COPY grott.py grottconf.py grottdata.py grottproxy.py grottsniffer.py /app/
+COPY grott.py grottconf.py grottdata.py grottproxy.py grottsniffer.py crc.py /app/
 RUN touch /app/grott.ini
 
 WORKDIR /app
