@@ -55,12 +55,18 @@ def calcString( st, crc):
         crc = (crc >> 8) ^ table[(crc ^ ord(ch)) & 0xFF]
     return crc
 
-def modbus_crc(data: bytes):
+def modbus_crc_python(data: bytes) -> int:
     crc = INITIAL_MODBUS
     for ch in data:
         crc = calcByte( ch, crc)
     return crc
 
+
+try:
+    import libscrc
+    modbus_crc = libscrc.modbus
+except ImportError:
+    modbus_crc = modbus_crc_python
 
 
 if __name__ == "__main__":
@@ -77,6 +83,6 @@ if __name__ == "__main__":
 
     for t in tests:
         crc_calc = libscrc.modbus(t)
-        py_crc_calc = modbus_crc(t)
+        py_crc_calc = modbus_crc_python(t)
         assert crc_calc == py_crc_calc
     print("Check passed")
