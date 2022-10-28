@@ -1,11 +1,17 @@
 name: Docker Image CI
 
+
 on:
-  push:
+  workflow_run:
+    workflows: ["Python package"]
+    # branches: [master, dev]
+    types:
+      - completed
 
 jobs:
   buildx:
     runs-on: ubuntu-latest
+
     steps:
       - 
         name: Checkout
