@@ -4,18 +4,17 @@
 
 #import time
 from datetime import datetime, timedelta
-from os import times_result
 #import pytz
 import time
-import sys
-import struct
 import textwrap
-from itertools import cycle # to support "cycling" the iterator
-import json, codecs 
+import json, codecs
 # requests
 
 #import mqtt                       
 import paho.mqtt.publish as publish
+
+from utils import decrypt, str2bool
+
 
 # Formats multi-line data
 def format_multi_line(prefix, string, size=80):
@@ -26,35 +25,8 @@ def format_multi_line(prefix, string, size=80):
             size -= 1
     return '\n'.join([prefix + line for line in textwrap.wrap(string, size)])
 
-#decrypt data. 
-def decrypt(decdata) :   
 
-    ndecdata = len(decdata)
-
-    # Create mask and convert to hexadecimal
-    mask = "Growatt"
-    hex_mask = ['{:02x}'.format(ord(x)) for x in mask]    
-    nmask = len(hex_mask)
-
-    #start decrypt routine 
-    unscrambled = list(decdata[0:8])                                            #take unscramble header
-    
-    for i,j in zip(range(0,ndecdata-8),cycle(range(0,nmask))): 
-        unscrambled = unscrambled + [decdata[i+8] ^ int(hex_mask[j],16)]
-    
-    result_string = "".join("{:02x}".format(n) for n in unscrambled)
-    
-    print("\t - " + "Growatt data decrypted V2")   
-    return result_string        
-
-def str2bool(defstr):
-    if defstr in ("True", "true", "TRUE", "y", "Y", "yes", "YES", 1, "1") : defret = True 
-    if defstr in ("False", "false", "FALSE", "n", "N", "no", "NO", 0, "0") : defret = False 
-    if 'defret' in locals():
-        return(defret)
-    else : return()
-
-def procdata(conf,data):    
+def procdata(conf,data):
     if conf.verbose: 
         print("\t - " + "Growatt original Data:") 
         print(format_multi_line("\t\t ", data))
