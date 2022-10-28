@@ -795,9 +795,9 @@ class sendrecvserver:
             
             #validate data (Length + CRC for 05/06)
             #join gebeurt nu meerdere keren! Stroomlijnen!!!! 
-            vdata = "".join("{:02x}".format(n) for n in data)
-            validatecc = validate_record(vdata)
-            if validatecc != 0 : 
+            # vdata = "".join("{:02x}".format(n) for n in data)
+            validatecc = validate_record(data)
+            if not validatecc:
                 print(f"\t - Grottserver - Invalid data record received, processing stopped for this record")
                 #Create response if needed? 
                 #self.send_queuereg[qname].put(response)

@@ -128,10 +128,9 @@ class Proxy:
         print("\t - " + "Growatt packet received:") 
         print("\t\t ", self.channel[self.s])
         
-        #test if record is not corrupted
-        vdata = "".join("{:02x}".format(n) for n in data)
-        validatecc = validate_record(vdata)
-        if validatecc != 0 : 
+        # test if record is not corrupted
+        validatecc = validate_record(data)
+        if not validatecc:
             print(f"\t - Grott - grottproxy - Invalid data record received, processing stopped for this record")
             #Create response if needed? 
             #self.send_queuereg[qname].put(response)

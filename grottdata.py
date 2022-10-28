@@ -26,7 +26,7 @@ def format_multi_line(prefix, string, size=80):
     return '\n'.join([prefix + line for line in textwrap.wrap(string, size)])
 
 
-def procdata(conf,data):
+def procdata(conf, data):
     if conf.verbose: 
         print("\t - " + "Growatt original Data:") 
         print(format_multi_line("\t\t ", data))
@@ -34,7 +34,8 @@ def procdata(conf,data):
     header = "".join("{:02x}".format(n) for n in data[0:8])
     ndata = len(data)
     buffered = "nodetect"                                               # set buffer detection to nodetect (for compat mode), wil in auto detection changed to no or yes        
-   
+    jsonobj = {}
+
     # automatic detect protocol (decryption and protocol) only if compat = False!
     novalidrec = False
     if conf.compat is False : 
@@ -380,7 +381,7 @@ def procdata(conf,data):
                 #    jsonobj["values"][key] = definedkey[key]
             jsonobj["values"][key] = definedkey[key]
                      
-        jsonmsg = json.dumps(jsonobj) 
+        jsonmsg = json.dumps(jsonobj)
         
         if conf.verbose:
             print("\t - " + "MQTT jsonmsg: ")        
@@ -604,4 +605,5 @@ def procdata(conf,data):
             ##print("\t -", ext_result)
     else: 
             if conf.verbose : print("\t - " + "Grott extension processing disabled ")      
-            
+
+    return jsonobj

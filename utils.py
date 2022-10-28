@@ -7,6 +7,8 @@ from crc import modbus_crc
 
 logger = logging.getLogger(__name__)
 
+def to_hex(data):
+    return "".join("\\x{:02x}".format(n) for n in data)
 
 # encrypt / decrypt data.
 def decrypt(decdata):
@@ -29,34 +31,50 @@ def decrypt(decdata):
     return result_string
 
 
-def validate_record(xdata):
+def validate_record(data: bytes) -> bool:
     # validata data record on length and CRC (for "05" and "06" records)
+    # The CRC is a modbus CRC
+    #
+    # the packet start with \x00\x0d\x00
+    # Protocol byte is the fourth, ex: \x05 \x06
+    # Length is the next to 2 bytes in big endian format
+    # Next is data
+    # The last 2 bytes if the protocol is not 2 is the CRC
 
-    data = bytes.fromhex(xdata)
+    # Length of the data in bytes
     ldata = len(data)
-    len_orgpayload = int.from_bytes(data[4:6], "big")
-    header = "".join("{:02x}".format(n) for n in data[0:8])
-    protocol = header[6:8]
 
-    if protocol in ("05", "06"):
-        lcrc = 4
-        crc = int.from_bytes(data[ldata - 2:ldata], "big")
+    protocol = data[3]
+    len_orgpayload = int.from_bytes(data[4:6], "big")
+    print("header: {} - Data size: {}".format(to_hex(data[0:6]), ldata))
+    print("\t- Protocol is: {}".format(protocol))
+    print("\t- Length is: {} bytes".format(len_orgpayload))
+
+    has_crc = False
+    if protocol in (0x05, 0x06):
+        has_crc = True
+        # CRC is the last 2 bytes
+        lcrc = 2
+        crc = int.from_bytes(data[-lcrc:], "big")
     else:
         lcrc = 0
 
-    len_realpayload = (ldata * 2 - 12 - lcrc) / 2
+    # ldata - 6 bytes of header - crc length
+    len_realpayload = (ldata - 6 - lcrc)
 
-    if protocol != "02":
+    if protocol != 0x02:
         crc_calc = modbus_crc(data[0:ldata - 2])
+        print("Calculated CRC: {}".format(crc_calc))
 
     if len_realpayload == len_orgpayload:
-        returncc = 0
-        if protocol != "02" and crc != crc_calc:
-            returncc = 8
+        returncc = True
+        print("Data CRC: {} - Calculated: {}".format(crc, crc_calc))
+        if protocol != 0x02 and crc != crc_calc:
+            return False
     else:
-        returncc = 8
+        returncc = False
 
-    return (returncc)
+    return returncc
 
 
 def str2bool(defstr):
