@@ -6,7 +6,6 @@
 import configparser, sys, argparse, os, json, io
 import ipaddress
 from os import walk
-from grottdata import format_multi_line
 from utils import str2bool
 
 class Conf :

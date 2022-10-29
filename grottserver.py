@@ -13,7 +13,7 @@ from datetime import datetime
 from urllib.parse import urlparse, parse_qs, parse_qsl  
 from collections import defaultdict
 
-from utils import validate_record, decrypt
+from utils import validate_record, decrypt, format_multi_line
 
 # grottserver.py emulates the server.growatt.com website and is initial developed for debugging and testing grott.
 # Updated: 2022-09-27
@@ -28,16 +28,6 @@ httpport = 5782
 verbose = True 
 firstping = False
 sendseq = 1
-
-
-# Formats multi-line data
-def format_multi_line(prefix, string, size=80):
-    size -= len(prefix)
-    if isinstance(string, bytes):
-        string = ''.join(r'\x{:02x}'.format(byte) for byte in string)
-        if size % 2:
-            size -= 1
-    return '\n'.join([prefix + line for line in textwrap.wrap(string, size)])
 
 
 def htmlsendresp(self, responserc, responseheader,  responsetxt) : 

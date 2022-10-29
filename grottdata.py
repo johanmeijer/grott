@@ -6,34 +6,25 @@
 from datetime import datetime, timedelta
 #import pytz
 import time
-import textwrap
 import json, codecs
 # requests
 
 #import mqtt                       
 import paho.mqtt.publish as publish
 
-from utils import decrypt, str2bool
-
-
-# Formats multi-line data
-def format_multi_line(prefix, string, size=80):
-    size -= len(prefix)
-    if isinstance(string, bytes):
-        string = ''.join(r'\x{:02x}'.format(byte) for byte in string)
-        if size % 2:
-            size -= 1
-    return '\n'.join([prefix + line for line in textwrap.wrap(string, size)])
+from utils import decrypt, str2bool, format_multi_line
 
 
 def procdata(conf, data):
+    "Process data and decode"
     if conf.verbose: 
         print("\t - " + "Growatt original Data:") 
         print(format_multi_line("\t\t ", data))
 
     header = "".join("{:02x}".format(n) for n in data[0:8])
     ndata = len(data)
-    buffered = "nodetect"                                               # set buffer detection to nodetect (for compat mode), wil in auto detection changed to no or yes        
+    # set buffer detection to nodetect (for compat mode), wil in auto detection changed to no or yes
+    buffered = "nodetect"
     jsonobj = {}
 
     # automatic detect protocol (decryption and protocol) only if compat = False!

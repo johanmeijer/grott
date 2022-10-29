@@ -1,14 +1,17 @@
 # coding=utf-8
 
 import logging
+import textwrap
 from itertools import cycle
 
 from crc import modbus_crc
 
 logger = logging.getLogger(__name__)
 
+
 def to_hex(data):
     return "".join("\\x{:02x}".format(n) for n in data)
+
 
 # encrypt / decrypt data.
 def decrypt(decdata):
@@ -16,7 +19,7 @@ def decrypt(decdata):
 
     # Create mask and convert to hexadecimal
     mask = "Growatt"
-    hex_mask = ['{:02x}'.format(ord(x)) for x in mask]
+    hex_mask = ["{:02x}".format(ord(x)) for x in mask]
     nmask = len(hex_mask)
 
     # start decrypt routine
@@ -47,8 +50,8 @@ def validate_record(data: bytes) -> bool:
     protocol = data[3]
     len_orgpayload = int.from_bytes(data[4:6], "big")
     print("header: {} - Data size: {}".format(to_hex(data[0:6]), ldata))
-    print("\t- Protocol is: {}".format(protocol))
-    print("\t- Length is: {} bytes".format(len_orgpayload))
+    print("\t\t- Protocol is: {}".format(protocol))
+    print("\t\t- Length is: {} bytes".format(len_orgpayload))
 
     has_crc = False
     if protocol in (0x05, 0x06):
@@ -60,10 +63,10 @@ def validate_record(data: bytes) -> bool:
         lcrc = 0
 
     # ldata - 6 bytes of header - crc length
-    len_realpayload = (ldata - 6 - lcrc)
+    len_realpayload = ldata - 6 - lcrc
 
     if protocol != 0x02:
-        crc_calc = modbus_crc(data[0:ldata - 2])
+        crc_calc = modbus_crc(data[: ldata - 2])
         print("Calculated CRC: {}".format(crc_calc))
 
     if len_realpayload == len_orgpayload:
@@ -78,8 +81,21 @@ def validate_record(data: bytes) -> bool:
 
 
 def str2bool(defstr):
-    if defstr in ("True", "true", "TRUE", "y", "Y", "yes", "YES", 1, "1") : defret = True
-    if defstr in ("False", "false", "FALSE", "n", "N", "no", "NO", 0, "0") : defret = False
-    if 'defret' in locals():
-        return(defret)
-    else : return()
+    if defstr in ("True", "true", "TRUE", "y", "Y", "yes", "YES", 1, "1"):
+        defret = True
+    if defstr in ("False", "false", "FALSE", "n", "N", "no", "NO", 0, "0"):
+        defret = False
+    if "defret" in locals():
+        return defret
+    else:
+        return ()
+
+
+# Formats multi-line data
+def format_multi_line(prefix, string, size=80):
+    size -= len(prefix)
+    if isinstance(string, bytes):
+        string = "".join(r"\x{:02x}".format(byte) for byte in string)
+        if size % 2:
+            size -= 1
+    return "\n".join([prefix + line for line in textwrap.wrap(string, size)])

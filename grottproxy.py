@@ -14,7 +14,8 @@ from utils import validate_record
 if sys.platform != 'win32' :
    from signal import signal, SIGPIPE, SIG_DFL
 
-from grottdata import procdata, decrypt, format_multi_line
+from grottdata import procdata, decrypt
+from utils import format_multi_line
 
 #import mqtt
 
