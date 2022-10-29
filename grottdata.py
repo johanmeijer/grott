@@ -28,7 +28,7 @@ def detect_layout(data: bytes, inverter_type="default") -> str:
 
     return layout
 
-def find_record(layout:str, available_layouts: list[str]):
+def find_record(layout:str, available_layouts: list):
     if layout in available_layouts:
         print("DETECTED")
         return layout
