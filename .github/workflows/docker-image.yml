@@ -1,12 +1,12 @@
 name: Docker Image CI
 
 
-on:
-  workflow_run:
-    workflows: ["Python package"]
-    # branches: [master, dev]
-    types:
-      - completed
+on: [push]
+#  workflow_run:
+#    workflows: ["Python package"]
+#    # branches: [master, dev]
+#    types:
+#      - completed
 
 jobs:
   buildx:
