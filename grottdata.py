@@ -15,6 +15,19 @@ import paho.mqtt.publish as publish
 from utils import decrypt, str2bool, format_multi_line
 
 
+def detect_layout(data: bytes, inverter_type="default") -> str:
+    "Detect the layout to allow find the mapping"
+    layout = "T{:02x}{:02x}{:02x}".format(data[3], data[6], data[7])
+    # shine X box ?
+    if len(data) > 375 and (data[7] not in (0x20, 0x1b)):
+        layout += "X"
+
+    # v270 no invtype added to layout for smart monitor records
+    if (inverter_type != "default") and (data[7] not in (0x20, 0x1b)):
+        layout += inverter_type.upper()
+
+    return layout
+
 def procdata(conf, data):
     "Process data and decode"
     if conf.verbose: 
@@ -34,16 +47,13 @@ def procdata(conf, data):
             print("\t - " + "Grott automatic protocol detection")  
             print("\t - " + "Grott data record length", ndata)
         #print(header)
-        layout = "T" + header[6:8] + header[12:14] + header[14:16]
-        #v270 add X for extended except for smart monitor records
-        if ((ndata > 375) and (header[14:16] not in ("20","1b"))) :  layout = layout + "X"
+        layout = detect_layout(data, conf.invtype)
 
-        #v270 no invtype added to layout for smart monitor records
-        if (conf.invtype != "default") and (header[14:16] not in ("20","1b")) :
-                layout = layout + conf.invtype.upper()
 
-        if header[14:16] == "50" : buffered = "yes"
-        else: buffered = "no" 
+        if data[7] == 0x50:
+            buffered = True
+        else:
+            buffered = False
 
         if conf.verbose : print("\t - " + "layout   : ", layout)
         try:            
@@ -200,7 +210,7 @@ def procdata(conf, data):
             dateoffset = 0        
 
         #proces date value if specifed 
-        if dateoffset > 0 and (conf.gtime != "server" or buffered == "yes"):
+        if dateoffset > 0 and (conf.gtime != "server" or buffered):
             if conf.verbose: print("\t - " + 'Grott data record date/time processing started')
             #date
             pvyearI =  int(result_string[dateoffset:dateoffset+2],16)
@@ -379,7 +389,7 @@ def procdata(conf, data):
             print(format_multi_line("\t\t\t ", jsonmsg))   
 
         #do not process invalid records (e.g. buffered records with time from server) or buffered records if sendbuf = False
-        if (buffered == "yes") : 
+        if (buffered) :
             if (conf.sendbuf == False) or (timefromserver == True) :
                 if conf.verbose: print("\t - " + 'Buffered record not sent: sendbuf = False or invalid date/time format')  
                 return
