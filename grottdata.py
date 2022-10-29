@@ -28,6 +28,31 @@ def detect_layout(data: bytes, inverter_type="default") -> str:
 
     return layout
 
+def find_record(layout:str, available_layouts: list[str]):
+    if layout in available_layouts:
+        print("DETECTED")
+        return layout
+        # conf.layout = layout
+    elif layout[5:7] in ("04", "50"):
+        print("Need rename")
+        layout = layout[0:3] + "NNNN" + layout[7:]
+        print(f"\t - Renamed layout: {layout}")
+        if layout in available_layouts:
+            # conf.layout = layout
+            return layout
+        else:
+            return None
+    return None
+
+    # if conf.verbose: print("\t - " + "Record layout used : ", layout)
+    # - layout: T060104XSPH
+    # - Renamed
+    # layout: TNNNN04XSPH
+    # - Record
+    # layout
+    # used: TNNNN04XSPH
+
+
 def procdata(conf, data):
     "Process data and decode"
     if conf.verbose: 
@@ -56,26 +81,15 @@ def procdata(conf, data):
             buffered = False
 
         if conf.verbose : print("\t - " + "layout   : ", layout)
-        try:            
-            # does record layout record exists? 
-            test = conf.recorddict[layout]
-        except:
-            #try generic if generic record exist
-            if conf.verbose : print("\t - " + "no matching record layout found, try generic")
-            if header[14:16] in ("04","50") :
-                layout = layout.replace(header[12:16], "NNNN")
-                try:
-                    # does generic record layout record exists? 
-                    test = conf.recorddict[layout]
-                except:
-                    #no valid record fall back on old processing? 
-                    if conf.verbose : print("\t - " + "no matching record layout found, standard processing performed")
-                    layout = "none"
-                    novalidrec = True  
-            else:         
-                novalidrec = True     
-    
-        conf.layout = layout
+
+        layout = find_record(layout, conf.recorddict)
+        if layout is not None:
+            conf.layout = layout
+            novalidrec = False
+        else:
+            conf.layout = "none"
+            novalidrec = True
+
         if conf.verbose : print("\t - " + "Record layout used : ", layout)
     
     #Decrypt 

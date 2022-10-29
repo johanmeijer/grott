@@ -7,7 +7,7 @@ from builtins import *
 import logging
 
 from grottconf import Conf
-from grottdata import procdata, detect_layout
+from grottdata import procdata, detect_layout, find_record
 from utils import validate_record
 
 logger = logging.getLogger(__name__)
@@ -104,6 +104,20 @@ e57434f4134343030380000000000000000000000000000000000000000160a1c003838030000\
         # Test SPH inverter
         layout = detect_layout(self.raw_data, "SPH")
         assert layout == "T060104XSPH"
+
+    def test_layout_search(self):
+        conf = Conf("2.7.6")
+        detected = "T060120"
+        undetected = "T060103XSPH"
+        renamed = "T060104XSPH"
+
+        assert find_record(detected, conf.recorddict) == detected
+
+        layout = find_record(undetected, conf.recorddict)
+        assert layout is None
+
+        layout = find_record(renamed, conf.recorddict)
+        assert layout == "T06NNNNXSPH"
 
     def test_decryption(self):
         # Disabled ATM
