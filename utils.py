@@ -91,11 +91,26 @@ def str2bool(defstr):
         return ()
 
 
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i : i + n]
+
+
+def format_bytes(bytes_data):
+    width = 16 * 3 + 3  # 3 char for HEX + space
+    data = " ".join(r"{:02x}".format(byte) for byte in bytes_data)
+    data = data.ljust(width)
+    data += "".join([chr(x) if 32 <= x < 127 else "." for x in bytes_data])
+    return data
+
+
 # Formats multi-line data
 def format_multi_line(prefix, string, size=80):
     size -= len(prefix)
     if isinstance(string, bytes):
-        string = "".join(r"\x{:02x}".format(byte) for byte in string)
-        if size % 2:
-            size -= 1
+        bytes_chuncks = chunks(string, 16)
+        return "\n".join(
+            [prefix + format_bytes(byte_chunk) for byte_chunk in bytes_chuncks]
+        )
     return "\n".join([prefix + line for line in textwrap.wrap(string, size)])

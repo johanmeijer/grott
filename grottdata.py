@@ -30,11 +30,8 @@ def detect_layout(data: bytes, inverter_type="default") -> str:
 
 def find_record(layout:str, available_layouts: list):
     if layout in available_layouts:
-        print("DETECTED")
         return layout
-        # conf.layout = layout
     elif layout[5:7] in ("04", "50"):
-        print("Need rename")
         layout = layout[0:3] + "NNNN" + layout[7:]
         print(f"\t - Renamed layout: {layout}")
         if layout in available_layouts:
@@ -110,7 +107,7 @@ def procdata(conf, data):
                                                         
     if conf.verbose: 
         print("\t - " + 'Growatt plain data:')
-        print(format_multi_line("\t\t ", result_string))
+        print(format_multi_line("\t\t ", bytes.fromhex(result_string)))
         #debug only: print(result_string)
 
     # test position : 
