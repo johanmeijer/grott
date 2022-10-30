@@ -11,10 +11,35 @@ import struct
 import textwrap
 from itertools import cycle # to support "cycling" the iterator
 import json, codecs 
+from typing import Dict
 # requests
 
 #import mqtt                       
 import paho.mqtt.publish as publish
+
+
+class GrottPvOutLimit:
+
+    def __init__(self):
+        self.register: Dict[str, int] = {}
+    
+    def ok_send(self, pvserial: str, conf) -> bool:
+        now = time.time()
+        ok = False
+        if self.register.get(pvserial):
+            ok = True if self.register.get(pvserial) + conf.pvuplimit * 60 < now else False
+            if ok is True:
+                self.register[pvserial] = int(now)
+            else:
+                if conf.verbose: print(f'PVOut: Update refused for {pvserial} due to time limitation')
+        else:
+            self.register.update({pvserial: int(now)})
+            ok = True
+        return ok
+
+
+pvout_limit = GrottPvOutLimit()
+# TODO: Integrate this 
 
 # Formats multi-line data
 def format_multi_line(prefix, string, size=80):
