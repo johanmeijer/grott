@@ -144,7 +144,11 @@ class Proxy:
         self.poller.unregister(unreg.client.fileno())
         self.poller.unregister(unreg.server.fileno())
         try:
-            peer.send(b'')  # Send empty packet to the peer and close both connections.
+            # Send an empty packet to the other end of the connection and close both sockets.
+            if peer == unreg.server:
+                unreg.client.send(b'')
+            else:
+                unreg.server.send(b'')
         except:
             pass
         unreg.client.close()
