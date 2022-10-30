@@ -32,7 +32,7 @@ if conf.verbose: conf.print()
 if conf.mode == 'proxy':
         proxy = Proxy(conf)
         try:
-            proxy.main(conf)
+            proxy.main()
         except KeyboardInterrupt:
             print("Ctrl C - Stopping server")
             try: 
