@@ -31,7 +31,7 @@ class GrottPvOutLimit:
             if ok is True:
                 self.register[pvserial] = int(now)
             else:
-                if conf.verbose: print(f'PVOut: Update refused for {pvserial} due to time limitation')
+                if conf.verbose: print(f'\t - PVOut: Update refused for {pvserial} due to time limitation')
         else:
             self.register.update({pvserial: int(now)})
             ok = True
@@ -39,7 +39,7 @@ class GrottPvOutLimit:
 
 
 pvout_limit = GrottPvOutLimit()
-# TODO: Integrate this 
+
 
 # Formats multi-line data
 def format_multi_line(prefix, string, size=80):
@@ -430,7 +430,10 @@ def procdata(conf,data):
  
             if not pvidfound:
                 if conf.verbose : print("\t - " + "pvsystemid not found for inverter : ", definedkey["pvserial"])   
-                return                       
+                return
+            if not pvout_limit.ok_send(definedkey["pvserial"], conf):
+                # Will print a line for the refusal in verbose mode (see GrottPvOutLimit at the top)
+                return             
             if conf.verbose : print("\t - " + "Grott send data to PVOutput systemid: ", pvssid, "for inverter: ", definedkey["pvserial"]) 
             pvheader = { 
                 "X-Pvoutput-Apikey"     : conf.pvapikey,
