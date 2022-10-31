@@ -400,7 +400,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                 self.send_error(400, "Bad request")
         
         except Exception as e:
-            print("\t - Grottserver - exception in htppserver thread - get occured : ", e)    
+            print("\t - Grottserver - exception in httpserver thread - get occured : ", e)    
 
     def do_PUT(self):
         try: 
@@ -664,7 +664,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                 return
 
         except Exception as e:
-            print("\t - Grottserver - exception in htppserver thread - put occured : ", e)    
+            print("\t - Grottserver - exception in httpserver thread - put occured : ", e)    
         
 
 class GrottHttpServer:
