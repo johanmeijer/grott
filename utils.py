@@ -9,10 +9,11 @@ from crc import modbus_crc
 logger = logging.getLogger(__name__)
 
 
-def to_hex(data):
+def to_hexstring(data):
     return "".join("\\x{:02x}".format(n) for n in data)
 
 
+# Kept as reference implementation
 # encrypt / decrypt data.
 def decrypt(decdata):
     ndecdata = len(decdata)
@@ -34,12 +35,40 @@ def decrypt(decdata):
     return result_string
 
 
+# encrypt / decrypt data.
+def byte_decrypt(decdata: bytes):
+    """
+    Decrypt the encrypted growatt data,
+    made at byte level for more efficient and simple code
+    """
+    # The xor key is always Growatt
+    mask = b"Growatt"
+    mask_len = len(mask)
+
+    length_data = len(decdata)
+    # The first 8 bytes are always not encrypted
+    header_skip = 8
+
+    # Create a bytearray to allow to modify the bytes without copy
+    decrypted = bytearray(decdata)
+
+    # Apply the xor until the end of the buffer, skipping the unecrypted header
+    for idx in range(header_skip, length_data):
+        # modulo allow to cycle in the XOR mask
+        decrypted[idx] ^= mask[(idx - header_skip) % mask_len]
+
+    # cast it to bytes
+    decrypted = bytes(decrypted)
+
+    return decrypted
+
+
 def validate_record(data: bytes) -> bool:
     # validata data record on length and CRC (for "05" and "06" records)
     # The CRC is a modbus CRC
     #
     # the packet start with \x00\x0d\x00
-    # Protocol byte is the fourth, ex: \x05 \x06
+    # Protocol byte is the fourth, ex: \x05 \x06 \x02
     # Length is the next to 2 bytes in big endian format
     # Next is data
     # The last 2 bytes if the protocol is not 2 is the CRC
@@ -49,7 +78,7 @@ def validate_record(data: bytes) -> bool:
 
     protocol = data[3]
     len_orgpayload = int.from_bytes(data[4:6], "big")
-    print("header: {} - Data size: {}".format(to_hex(data[0:6]), ldata))
+    print("header: {} - Data size: {}".format(to_hexstring(data[0:6]), ldata))
     print("\t\t- Protocol is: {}".format(protocol))
     print("\t\t- Length is: {} bytes".format(len_orgpayload))
 

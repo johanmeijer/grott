@@ -12,7 +12,7 @@ import json, codecs
 #import mqtt                       
 import paho.mqtt.publish as publish
 
-from utils import decrypt, str2bool, format_multi_line
+from utils import decrypt, str2bool, format_multi_line, byte_decrypt, to_hexstring
 
 
 def detect_layout(data: bytes, inverter_type="default") -> str:
@@ -52,7 +52,7 @@ def find_record(layout:str, available_layouts: list):
 
 def procdata(conf, data):
     "Process data and decode"
-    if conf.verbose: 
+    if conf.verbose:
         print("\t - " + "Growatt original Data:") 
         print(format_multi_line("\t\t ", data))
 
@@ -89,22 +89,21 @@ def procdata(conf, data):
 
         if conf.verbose : print("\t - " + "Record layout used : ", layout)
     
-    #Decrypt 
-    try: 
-        #see if decrypt keyword is defined
-        conf.decrypt =  str2bool(conf.recorddict[layout]["decrypt"]["value"])
-    except:   
-        #if decrypt not defined, default is decypt
-        conf.decrypt = True  
-    
+    #Decrypt
+    # if protocol 05 or 06 the content is encrypted
+    if data[3] in (0x05, 0x06):
+        conf.decrypt = True
+    else:
+        conf.decrypt = False
+
     if conf.decrypt: 
-        result_string = decrypt(data) 
+        result_string = byte_decrypt(data).hex()
         if conf.verbose : print("\t - " + "Grott Growatt data decrypted")        
     else: 
         #do not decrypt 
         result_string = data.hex()
-        if conf.verbose: print("\t - " + "Grott Growatt unencrypted data used")                                      
-                                                        
+        if conf.verbose: print("\t - " + "Grott Growatt unencrypted data used")
+
     if conf.verbose: 
         print("\t - " + 'Growatt plain data:')
         print(format_multi_line("\t\t ", bytes.fromhex(result_string)))
