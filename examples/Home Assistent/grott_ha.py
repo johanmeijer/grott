@@ -27,16 +27,9 @@ state_topic = "homeassistant/grott/{device}/state"
 
 mapping = {
     "datalogserial": {
-        "name": "{device} Serial",
+        "name": "{device} Datalogger serial",
     },
     "pvserial": {"name": "{device} Serial"},
-    "vbat": {
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "name": "{device} Batteries voltage",
-        "unit_of_measurement": "V",
-        "value_template": "{{value_json.vbat| float / 10 }}",
-    },
     "pv1watt": {
         "state_class": "measurement",
         "device_class": "power",
@@ -208,7 +201,7 @@ mapping = {
     },
     "pvstatus": {
         "name": "{device} State",
-        "value_template": "{% if value_json.pvstatus == '0' %}Waiting{% elif value_json.pvstatus == '1' %}Normal{% elif value_json.pvstatus == '2' %}Fault{% else %}Unknown{% endif %}",
+        "value_template": "{% if value_json.pvstatus == 0 %}Standby{% elif value_json.pvstatus == 1 %}Normal{% elif value_json.pvstatus == 2 %}Fault{% else %}Unknown{% endif %}",
         "icon": "mdi:power-settings",
     },
     "totworktime": {
@@ -249,7 +242,7 @@ mapping = {
         "name": "{device} Energy to grid (Today)",
         "unit_of_measurement": "kWh",
         "value_template": "{{value_json.etogrid_tod| float / 10 }}",
-        "icon": "mdi:solar-power",
+        "icon": "mdi:transmission-tower-import",
         "state_class": "total",
     },
     "etogrid_tot": {
@@ -257,12 +250,12 @@ mapping = {
         "name": "{device} Energy to grid (Total)",
         "unit_of_measurement": "kWh",
         "value_template": "{{value_json.etogrid_tot| float / 10 }}",
-        "icon": "mdi:solar-power",
+        "icon": "mdi:transmission-tower-import",
         "state_class": "total_increasing",
     },
     "etouser_tod": {
         "device_class": "energy",
-        "name": "{device} Energy to user (Today)",
+        "name": "{device} Import from grid (Today)",
         "unit_of_measurement": "kWh",
         "value_template": "{{value_json.etouser_tod| float / 10 }}",
         "icon": "mdi:solar-power",
@@ -270,12 +263,26 @@ mapping = {
     },
     "etouser_tot": {
         "device_class": "energy",
-        "name": "{device} Energy to user (Total)",
+        "name": "{device} Import from grid (Total)",
         "unit_of_measurement": "kWh",
         "value_template": "{{value_json.etouser_tot| float / 10 }}",
-        "icon": "mdi:solar-power",
+        "icon": "mdi:transmission-tower-export",
         "state_class": "total_increasing",
     },
+    "pactouserr": {
+        "name": "{device} Import from grid current",
+        "device_class": "power",
+        "unit_of_measurement": "kW",
+        "value_template": "{{value_json.pactouserr| float / 10 }}",
+        "icon": "mdi:transmission-tower-export",
+    },
+    # Register 1015 # TODO: investiagate
+    # "pactousertot": {
+    #     "name": "{device} Power consumption total",
+    #     "device_class": "power",
+    #     "unit_of_measurement": "kW",
+    #     "icon": "mdi:transmission-tower-export",
+    # },
     "elocalload_tod": {
         "device_class": "energy",
         "name": "{device} Load consumption (Today)",
@@ -291,6 +298,13 @@ mapping = {
         "value_template": "{{value_json.elocalload_tot| float / 10 }}",
         "icon": "mdi:solar-power",
         "state_class": "total_increasing",
+    },
+    "plocaloadr": {
+        "name": "{device} Local load consumption",
+        "device_class": "power",
+        "unit_of_measurement": "kW",
+        "value_template": "{{value_json.plocaloadr| float / 10 }}",
+        "icon": "mdi:transmission-tower-export",
     },
     "epv1today": {
         "device_class": "energy",
@@ -332,6 +346,104 @@ mapping = {
     "grott_last_measure": {
         "device_class": "timestamp",
         "name": "{device} Last measure",
+    },
+    # batteries
+    "eacharge_today": {
+        "device_class": "energy",
+        "name": "{device} Battery charge from AC (Today)",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:battery-arrow-up",
+        "state_class": "total",
+    },
+    "eacharge_total": {
+        "device_class": "energy",
+        "name": "{device} Battery charge from AC (Today)",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:solar-power",
+        "state_class": "total_increasing",
+    },
+    "vbat": {
+        "state_class": "measurement",
+        "device_class": "voltage",
+        "name": "{device} Battery voltage",
+        "unit_of_measurement": "V",
+    },
+    "SOC": {
+        "name": "{device} Battery charge",
+        "device_class": "battery",
+        "state_class": "measurement",
+        "unit_of_measurement": "%",
+        "icon": "mdi:battery-charging-60",
+    },
+    # taken from register 1048 of RTU manual v1.20
+    "batterytype": {
+        "name": "{device} Batteries type",
+        "value_template": "{% if value_json.batterytype == 0 %}Lithium{% elif value_json.batterytype == '1' %}Lead-acid{% elif value_json.batterytype == '2' %}Other{% else %}Unknown{% endif %}",
+        "icon": "mdi:power-settings",
+    },
+    "p1charge1": {
+        "name": "{device} Battery charge",
+        "device_class": "power",
+        "unit_of_measurement": "kW",
+        "icon": "mdi:battery-arrow-up",
+    },
+    "eharge1_tod": {
+        "name": "{device} Battery charge (Today)",
+        "device_class": "energy",
+        "state_class": "total",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:battery-arrow-up",
+    },
+    "eharge1_tot": {
+        "name": "{device} Battery charge (Total)",
+        "device_class": "energy",
+        "state_class": "total_increasing",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:battery-arrow-up",
+    },
+    "edischarge1_tod": {
+        "name": "{device} Battery discharge (Today)",
+        "device_class": "energy",
+        "state_class": "total",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:battery-arrow-down",
+    },
+    "edischarge1_tot": {
+        "name": "{device} Battery discharge (Total)",
+        "device_class": "energy",
+        "state_class": "total_increasing",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:battery-arrow-down",
+    },
+    "battemp": {
+        "name": "{device} Battery temperature",
+        "device_class": "temperature",
+        "unit_of_measurement": "°C",
+        "icon": "mdi:thermometer",
+    },
+    "spbusvolt": {
+        "state_class": "measurement",
+        "device_class": "voltage",
+        "name": "{device} BP bus voltage",
+        "unit_of_measurement": "V",
+    },
+    "systemfaultword3": {
+        "name": "{device} System faultregister",
+        "value_template": """
+            {% if value_json.systemfaultword3 == 0%}
+                OK
+            {% else %}
+                {% if value_json.systemfaultword3|int|bitwise_and(1) > 0 %}
+                    Battery reverse
+                {% endif %}
+                {% if value_json.systemfaultword3|int|bitwise_and(2) > 0 %}
+                    BMS Battery Open
+                {% endif %}
+                {% if value_json.systemfaultword3|int|bitwise_and(4) > 0 %}
+                    Battery Voltage Low
+                {% endif %}
+            {% endif %}
+        """,
     },
 }
 
