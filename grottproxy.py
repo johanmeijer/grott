@@ -94,17 +94,29 @@ class Proxy:
                     continue
                 elif self.__clients.get(f_no):
                     """ Read from client/datalogger socket"""
-                    data, flags = self.__clients[f_no].client.recvfrom(buffer_size)
+                    try:
+                        data, flags = self.__clients[f_no].client.recvfrom(buffer_size)
+                    except ConnectionResetError:
+                        data = b''
+                    except Exception as e:
+                        if self.conf.verbose: print(f'Connection closed unexpectedly by the client: {e}')
+                        data = b''
                     if len(data) == 0 and self.conf.verbose:
                         print('Connection closed from client/datalogger')
                 elif self.__forwarders.get(f_no):
                     """ Read from server.growatt 
                         Block command logic can be hooked directly here
                     """
-                    data, flags = self.__forwarders[f_no].server.recvfrom(buffer_size)
+                    try:
+                        data, flags = self.__forwarders[f_no].server.recvfrom(buffer_size)
+                    except ConnectionResetError:
+                        data = b''
+                    except Exception as e:
+                        if self.conf.verbose: print(f'Connection closed unexpectedly by the server: {e}')
+                        data = b''
                     if len(data) == 0 and self.conf.verbose:
                         print('Connection closed from server.growatt')
-   
+
                 if len(data) == 0:
                     self.on_close(f_no)
                     continue
@@ -201,7 +213,7 @@ class Proxy:
                 return
 
         # send data to destination
-        """ Forward to the other end of the pair (selected at the entryoint)
+        """ Forward to the other end of the pair (selected at the entrypoint)
         and process the data if meets the requirements
         """
         channel.send(data)
