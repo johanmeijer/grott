@@ -1,3 +1,13 @@
+
+## The Growatt Inverter Monitor 
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=RQFS46F9JTESQ&item_name=Grott+&currency_code=EUR)
+
+Growatt inverters can send performance and status metrics (log data) to the Growatt company servers. The inverters rely on either a ShineWIFI module or a ShineLAN box to relay the data to Growatt. The metrics stored on the Growatt servers then can be viewed on the Growatt website or using the ShinePhone mobile app. 
+
+The purpose of Grott is to read, parse and forward the *raw metrics as they are sent* to Growatt servers. This means other applications can consume the raw Growatt metrics without relying on the Growatt API and servers and without delay. 
+
+### Please see: https://github.com/johanmeijer/grott/wiki/@Statement-of-use-and-limitations before using Grott.
+
 ### New in Version 2.7  (Beta)
 * Added first beta of grottserver to act as destination for inverter/datalogger data (remove need to cummunicate with internet).
   - grottserver version 0.0.5 is able to sent read/write register commands to inverter and datalogger.
@@ -30,14 +40,6 @@
 * MQTT Retain message support      
 * Enhanced record layout for SPH 
 * tbd
-
-## The Growatt Inverter Monitor 
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=RQFS46F9JTESQ&item_name=Grott+&currency_code=EUR)
-
-Growatt inverters can send performance and status metrics (log data) to the Growatt company servers. The inverters rely on either a ShineWIFI module or a ShineLAN box to relay the data to Growatt. The metrics stored on the Growatt servers then can be viewed on the Growatt website or using the ShinePhone mobile app. 
-
-The purpose of Grott is to read, parse and forward the *raw metrics as they are sent* to Growatt servers. This means other applications can consume the raw Growatt metrics without relying on the Growatt API and servers and without delay. 
-
 
 ### Two modes of metric data retrieval
 Grott can intercept the inverter metrics in two distinct modes:
