@@ -621,8 +621,9 @@ def procdata(conf,data):
                 print("\t - " + "Grott extension processing ended : ", ext_result)
         except Exception as e:
             print("\t - " + "Grott extension processing error:", repr(e))
-            import traceback
-            traceback.format_exc()
+            if conf.verbose:
+                import traceback
+                print("\t - " + traceback.format_exc())
             #print("\t - " + "Grott extension processing error ")
             #print(e) 
             #return
