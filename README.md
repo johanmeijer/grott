@@ -9,6 +9,7 @@ Growatt inverters can send performance and status metrics (log data) to the Grow
 
 The purpose of Grott is to read, parse and forward the *raw metrics as they are sent* to Growatt servers. This means other applications can consume the raw Growatt metrics without relying on the Growatt API and servers and without delay. 
 
+### Please see: https://github.com/johanmeijer/grott/wiki/@Statement-of-use-and-limitations before using Grott. 
 
 ### Two modes of metric data retrieval
 Grott can intercept the inverter metrics in two distinct modes:
