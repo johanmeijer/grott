@@ -230,3 +230,15 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - Improve error handling (stability) for grottserver (0.0.10) (thanks to tabascoz)
 - Option to add inverter serial to MQTT topic (thanks to @ebosveld) 
   Add  self.mqttinverterintopic = True to MQTT section of grott.ini or use  qmqttinverterintopic = "False" environmental (e.g. docker). 
+2.7.7 (not fully validated/tested and documented yet!)
+- Fixed some message typo's  (thanks to @markt-asf, see PR #190)
+- Add support for setting multiple register (thanks to @markt-asf, see PR #191), 
+- Add an inverter serial <-> inverter type map thanks to @markt-asf, see PR #169)
+  Be aware should only be used if no Energy Meter is used and only with new (updated) inverter/datalogger types! Will be available for everbody in a next release!
+- Add Extension plugin for HA native integration (thanks to @egguy, see PR #203)
+- Do not run the Grott service as root (thanks to phavekes, see PR #195)
+  Needs some additional documentation !!!!!!
+
+2.7.8 (To be investigated). 
+to be commited to beta (2.7), now only available in Matser (2.6)
+- Add PvOutput limit to limit Configurable (via grott.ini) PvOut upload limit (in minutes) (thanks to @githubDante, see PR 203)
