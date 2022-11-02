@@ -391,6 +391,7 @@ class Conf :
         if config.has_option("PVOutput","pvdisv1"): self.pvdisv1 = config.get("PVOutput","pvdisv1")
         if config.has_option("PVOutput","pvinverters"): self.pvinverters = config.getint("PVOutput","pvinverters")
         if config.has_option("PVOutput","apikey"): self.pvapikey = config.get("PVOutput","apikey")
+        if config.has_option("PVOutput", "pvuplimit"): self.pvuplimit = config.getint("PVOutput", "pvuplimit")
         # if more inverter are installed at the same interface (shinelink) get systemids
         #if self.pvinverters > 1 : 
         for x in range(self.pvinverters+1) : 
