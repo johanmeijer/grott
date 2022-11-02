@@ -63,6 +63,7 @@ class Conf :
         self.pvinverterid[1] = "inverter1"
         self.pvdisv1 = False
         self.pvtemp = False
+        self.pvuplimit = 5
         
         #influxdb default 
         self.influx = False
