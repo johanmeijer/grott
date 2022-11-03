@@ -498,7 +498,7 @@ class MqttStateHandler:
         if cls.__mqtt_conn:
             return cls.__mqtt_conn
 
-        cls.__mqtt_conn = Client()
+        cls.__mqtt_conn = Client("grott - ha")
         if "ha_mqtt_user" in conf.extvar:
             cls.__mqtt_conn.username_pw_set(
                 conf.extvar["ha_mqtt_user"], conf.extvar["ha_mqtt_password"]
@@ -526,7 +526,7 @@ class MqttStateHandler:
         cls.__pv_config = {}
 
 
-def grottext(conf: Conf, data: str, jsonmsg: dict):
+def grottext(conf: Conf, data: str, jsonmsg: str):
     """Allow to push to HA MQTT bus, with auto discovery"""
 
     required_params = [
@@ -601,10 +601,10 @@ def grottext(conf: Conf, data: str, jsonmsg: dict):
     # Push the vales to the topics
     try:
         conn.publish(
-            state_topic.format(device=device_serial, attribut=key), json.dumps(values)
+            state_topic.format(device=device_serial), json.dumps(values)
         )
-
-    except:
+    except Exception as e:
+        print("[HA ext] - Exception while publishing - {}".format(e))
         # Reset connection state in case of problem
         MqttStateHandler.reset()
         return 2
