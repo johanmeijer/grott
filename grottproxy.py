@@ -119,6 +119,12 @@ class Proxy:
             print("IP and port information not available") 
 
         self.server.listen(200)
+        try:
+            conf.growattip = socket.gethostbyname(conf.growattip)
+            if conf.verbose:
+                print(f"Resolved server ip: {conf.growattip}")
+        except socket.gaierror:
+            print("Error while resolving growatt server address")
         self.forward_to = (conf.growattip, conf.growattport)
         
     def main(self,conf):

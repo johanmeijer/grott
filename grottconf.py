@@ -36,7 +36,7 @@ class Conf :
         self.tmzone = "local"                                                                       #set timezone (at this moment only used for influxdb)                
 
         #Growatt server default 
-        self.growattip = "47.91.67.66"
+        self.growattip = "server.growatt.com"
         self.growattport = 5279
 
         #MQTT default
