@@ -8,7 +8,7 @@ After=network.target
 [Service]
 SyslogIdentifier=grott
 Type=simple
-User=root
+User=pi
 
 WorkingDirectory=/home/pi/grott/
 ExecStart=-/usr/bin/python3 -u /home/pi/grott/grott.py -v
