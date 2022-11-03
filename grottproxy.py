@@ -11,6 +11,7 @@ import struct
 import textwrap
 from itertools import cycle # to support "cycling" the iterator
 import time, json, datetime, codecs
+from typing import Dict
 ## to resolve errno 32: broken pipe issue (only linux)
 if sys.platform != 'win32' :
    from signal import signal, SIGPIPE, SIG_DFL
@@ -72,6 +73,17 @@ def validate_record(xdata):
     return(returncc)
 
 
+class ProxyPair:
+
+    """ 
+    Client/Datalogger <-> Growatt server communication channels
+    Unique per client connection
+    """
+    def __init__(self, logger_sock: socket.socket, growatt_sock: socket.socket):
+        self.client = logger_sock
+        self.server = growatt_sock
+
+
 class Forward:
     def __init__(self):
         self.forward = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -120,69 +132,112 @@ class Proxy:
 
         self.server.listen(200)
         self.forward_to = (conf.growattip, conf.growattport)
-        
-    def main(self,conf):
-        self.input_list.append(self.server)
-        while 1:
-            time.sleep(delay)
-            ss = select.select
-            inputready, outputready, exceptready = ss(self.input_list, [], [])
-            for self.s in inputready:
-                if self.s == self.server:
-                    self.on_accept(conf)
-                    break
-                try: 
-                    self.data, self.addr = self.s.recvfrom(buffer_size)
-                except: 
-                    if conf.verbose : print("\t - Grott connection error") 
-                    self.on_close(conf)   
-                    break
-                if len(self.data) == 0:
-                    self.on_close(conf)
-                    break
-                else:
-                    self.on_recv(conf)
+        self.__clients: Dict[int, ProxyPair] = {}  # file descriptor <-> socket pair pointers at runtime
+        """ Dataloggers added as clients """
+        self.__forwarders: Dict[int, ProxyPair] = {}  # file descriptor <-> socket pair pointers at runtime
+        """ Proxy connections to server.growatt added as forwarders """
+        self.poller = select.poll()
+        self.conf = conf  # conf moved in the class as it's provided on initialization. No need to be passed in every method
 
-    def on_accept(self,conf):
+    def main(self):
+        self.poller.register(self.server.fileno(), select.POLLIN)
+
+        while True:
+            events = self.poller.poll(1000)  # Once per second or on event 
+            for f_no, ev_mask in events:
+
+                """ Proxy Logic """
+                if f_no == self.server.fileno():
+                    """ Register a new connection and poll for data """
+                    self.on_accept()
+                    continue
+                elif self.__clients.get(f_no):
+                    """ Read from client/datalogger socket"""
+                    try:
+                        data, flags = self.__clients[f_no].client.recvfrom(buffer_size)
+                    except ConnectionResetError:
+                        data = b''
+                    except Exception as e:
+                        if self.conf.verbose: print(f'Connection closed unexpectedly by the client: {e}')
+                        data = b''
+                    if len(data) == 0 and self.conf.verbose:
+                        print('Connection closed from client/datalogger')
+                elif self.__forwarders.get(f_no):
+                    """ Read from server.growatt 
+                        Block command logic can be hooked directly here
+                    """
+                    try:
+                        data, flags = self.__forwarders[f_no].server.recvfrom(buffer_size)
+                    except ConnectionResetError:
+                        data = b''
+                    except Exception as e:
+                        if self.conf.verbose: print(f'Connection closed unexpectedly by the server: {e}')
+                        data = b''
+                    if len(data) == 0 and self.conf.verbose:
+                        print('Connection closed from server.growatt')
+
+                if len(data) == 0:
+                    self.on_close(f_no)
+                    continue
+                else:
+                    self.on_recv(f_no, data)        
+
+
+    def on_accept(self):
         forward = Forward().start(self.forward_to[0], self.forward_to[1])
         clientsock, clientaddr = self.server.accept()
+        pair = ProxyPair(clientsock, forward)
         if forward:
-            if conf.verbose: print("\t -", clientaddr, "has connected")
-            self.input_list.append(clientsock)
-            self.input_list.append(forward)
-            self.channel[clientsock] = forward
-            self.channel[forward] = clientsock
+            if self.conf.verbose: print("\t -", clientaddr, "has connected")
+
+            self.__clients.update({pair.client.fileno(): pair})
+            self.__forwarders.update({pair.server.fileno(): pair})
+            self.poller.register(pair.client.fileno(), select.POLLIN)
+            self.poller.register(pair.server.fileno(), select.POLLIN)
         else:
             if conf.verbose: 
                 print("\t - Can't establish connection with remote server."),
                 print("\t - Closing connection with client side", clientaddr)
             clientsock.close()
 
-    def on_close(self,conf):
-        if conf.verbose: 
+    def on_close(self, f_no: int):
+        if self.__clients.get(f_no):
+            unreg = self.__clients.pop(f_no)
+            peer = unreg.client
+        else:
+            unreg = self.__forwarders.pop(f_no)
+            peer = unreg.server
+        if self.conf.verbose: 
             #try / except to resolve errno 107: Transport endpoint is not connected 
             try: 
-                print("\t -", self.s.getpeername(), "has disconnected")
+                print("\t -", peer.getpeername(), "has disconnected")
             except:  
                 print("\t -", "peer has disconnected")
+        self.poller.unregister(unreg.client.fileno())
+        self.poller.unregister(unreg.server.fileno())
+        try:
+            # Send an empty packet to the other end of the connection and close both sockets.
+            if peer == unreg.server:
+                unreg.client.send(b'')
+            else:
+                unreg.server.send(b'')
+        except:
+            pass
+        unreg.client.close()
+        unreg.server.close()        
 
-        #remove objects from input_list
-        self.input_list.remove(self.s)
-        self.input_list.remove(self.channel[self.s])
-        out = self.channel[self.s]
-        # close the connection with client
-        self.channel[out].close()  # equivalent to do self.s.close()
-        # close the connection with remote server
-        self.channel[self.s].close()
-        # delete both objects from channel dict
-        del self.channel[out]
-        del self.channel[self.s]
+    def on_recv(self, f_no: int, sock_data: bytes):
+        data = sock_data      
+        conf = self.conf
+        
+        if self.__forwarders.get(f_no):
+            channel = self.__forwarders[f_no].client
+        else:
+            channel = self.__clients[f_no].server
 
-    def on_recv(self,conf):
-        data = self.data      
         print("")
         print("\t - " + "Growatt packet received:") 
-        print("\t\t ", self.channel[self.s])
+        print("\t\t ", channel)
         
         #test if record is not corrupted
         vdata = "".join("{:02x}".format(n) for n in data)
@@ -232,7 +287,10 @@ class Proxy:
                 return
 
         # send data to destination
-        self.channel[self.s].send(data)
+        """ Forward to the other end of the pair (selected at the entrypoint)
+        and process the data if meets the requirements
+        """
+        channel.send(data)
         if len(data) > conf.minrecl :
             #process received data
             procdata(conf,data)    
