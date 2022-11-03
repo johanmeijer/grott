@@ -537,7 +537,12 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
         print("Missing configuration for ha_mqtt")
         return 1
 
-    conn = MqttStateHandler.get_conn(conf)
+    try:
+        conn = MqttStateHandler.get_conn(conf)
+    except Exception as e:
+        MqttStateHandler.reset()
+        print("[HA Extension] Error while connecting to HA: {}".format(e))
+        return 3
 
     # Need to decode the json string
     jsonmsg = json.loads(jsonmsg)
