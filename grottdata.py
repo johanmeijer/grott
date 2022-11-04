@@ -62,7 +62,8 @@ def procdata(conf,data):
     header = "".join("{:02x}".format(n) for n in data[0:8])
     ndata = len(data)
     buffered = "nodetect"                                               # set buffer detection to nodetect (for compat mode), wil in auto detection changed to no or yes        
-   
+    is_smart_meter = header[14:16] in ("20","1b")
+
     # automatic detect protocol (decryption and protocol) only if compat = False!
     novalidrec = False
     if conf.compat is False : 
@@ -72,10 +73,10 @@ def procdata(conf,data):
         #print(header)
         layout = "T" + header[6:8] + header[12:14] + header[14:16]
         #v270 add X for extended except for smart monitor records
-        if ((ndata > 375) and (header[14:16] not in ("20","1b"))) :  layout = layout + "X"
+        if ((ndata > 375) and not is_smart_meter) :  layout = layout + "X"
 
         #v270 no invtype added to layout for smart monitor records
-        if (conf.invtype != "default") and (header[14:16] not in ("20","1b")) :
+        if (conf.invtype != "default") and not is_smart_meter :
                 layout = layout + conf.invtype.upper()
 
         if header[14:16] == "50" : buffered = "yes"
@@ -145,22 +146,27 @@ def procdata(conf,data):
        
         if (conf.invtype == "default") :
             # Handle systems with mixed invtype
-            if (ndata > 50) :
+            if (ndata > 50) and not is_smart_meter:
                 # There is enough data for an inverter serial number
                 inverterType = "default"
 
-                inverterSerial = result_string[76:96]
-                inverterSerial = codecs.decode(inverterSerial, "hex").decode('utf-8')
-                if conf.verbose:
-                    print("\t - Possible Inverter serial", inverterSerial)
-
-                # Lookup inverter type based on inverter serial
+                inverterSerial = None
                 try:
-                    inverterType = conf.invtypemap[inverterSerial]
-                    print("\t - Matched inverter serial to inverter type", inverterType)
-                except:
-                    inverterType = "default"
-                    print("\t - Inverter serial not recognised - using inverter type", inverterType)
+                    inverterSerial = codecs.decode(result_string[76:96], "hex").decode('ASCII')
+                    if conf.verbose:
+                        print("\t - Possible Inverter serial", inverterSerial)
+                except UnicodeDecodeError:
+                    # In case of problem (eg: new record type with different serial placement)
+                    pass
+
+                if inverterSerial:
+                    # Lookup inverter type based on inverter serial
+                    try:
+                        inverterType = conf.invtypemap[inverterSerial]
+                        print("\t - Matched inverter serial to inverter type", inverterType)
+                    except:
+                        inverterType = "default"
+                        print("\t - Inverter serial not recognised - using inverter type", inverterType)
 
                 if (inverterType != "default") :
                     layout = layout + inverterType.upper()
