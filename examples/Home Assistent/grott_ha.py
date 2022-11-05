@@ -20,6 +20,15 @@ Config:
     - ha_mqtt_port (required): The port (the default is oftent 1883)
     - ha_mqtt_user (optional): The user use to connect to the broker (you can use your user)
     - ha_mqtt_password (optional): The password to connect to the mqtt broket (you can use your password)
+    
+Return codes:
+    - 0: Everything is OK
+    - 1: Missing MQTT extvar configuration 
+    - 2: Error while publishing the measure value message
+    - 3: MQTT connection error
+    - 4: Error while creating last_push status key
+    - 5: Refused to push a buffered message (prevent invalid stats, not en error)
+    - 6: Error while configuring HA MQTT sensor devices
 """
 
 
@@ -559,7 +568,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
         # Skip buffered message, HA don't support them
         if conf.verbose:
             print("\t - Grott HA - skipped buffered")
-        return 1
+        return 5
 
     device_serial = jsonmsg["device"]
     values = jsonmsg["values"]
@@ -588,7 +597,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
             except:
                 # Reset connection state in case of problem
                 MqttStateHandler.reset()
-                return 1
+                return 6
 
         # Create a virtual last_push key to allow tracking when there was the last data transmission
 
