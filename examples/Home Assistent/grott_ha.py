@@ -8,7 +8,7 @@ from paho.mqtt.client import Client
 
 from grottconf import Conf
 
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 
 """A pluging for grott
 This plugin allow to have autodiscovery of the device in HA
@@ -20,15 +20,16 @@ Config:
     - ha_mqtt_port (required): The port (the default is oftent 1883)
     - ha_mqtt_user (optional): The user use to connect to the broker (you can use your user)
     - ha_mqtt_password (optional): The password to connect to the mqtt broket (you can use your password)
-    
+
 Return codes:
     - 0: Everything is OK
-    - 1: Missing MQTT extvar configuration 
+    - 1: Missing MQTT extvar configuration
     - 2: Error while publishing the measure value message
     - 3: MQTT connection error
     - 4: Error while creating last_push status key
     - 5: Refused to push a buffered message (prevent invalid stats, not en error)
     - 6: Error while configuring HA MQTT sensor devices
+    - 7: Can't configure device for HA MQTT
 """
 
 
@@ -578,11 +579,15 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
     # Add a new value to the existing values
     values["grott_last_push"] = dt.isoformat()
 
-    if not MqttStateHandler.is_configured(device_serial):
+    # Layout can be undefined
+    if not MqttStateHandler.is_configured(device_serial) and getattr(conf, "layout", None):
         print(f"\tGrott HA {__version__} - creating {device_serial} config in HA")
         for key in values.keys():
             # Generate a configuration payload
             payload = make_payload(conf, device_serial, "", key, key)
+            if not payload:
+                print(f"\t[Grott HA] {__version__} skipped key: {key}")
+                continue
 
             try:
                 conn.publish(
@@ -594,7 +599,10 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
                     json.dumps(payload),
                     retain=True,
                 )
-            except:
+            except Exception as e:
+                print(
+                    f"\t - [grott HA] {__version__} Exception while creating new sensor {key}: {e}"
+                )
                 # Reset connection state in case of problem
                 MqttStateHandler.reset()
                 return 6
@@ -613,7 +621,10 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
                 json.dumps(payload),
                 retain=True,
             )
-        except:
+        except Exception as e:
+            print(
+                f"\t - [grott HA] {__version__} Exception while creating new sensor last push: {e}"
+            )
             # Reset connection state in case of problem
             MqttStateHandler.reset()
             return 4
@@ -621,11 +632,13 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
         # Now it's configured, no need to come back
         MqttStateHandler.set_configured(device_serial)
 
+    if not MqttStateHandler.is_configured(device_serial):
+        print(f"\t[Grott HA] {__version__} Can't configure device: {device_serial}")
+        return 7
+
     # Push the vales to the topics
     try:
-        conn.publish(
-            state_topic.format(device=device_serial), json.dumps(values)
-        )
+        conn.publish(state_topic.format(device=device_serial), json.dumps(values))
     except Exception as e:
         print("[HA ext] - Exception while publishing - {}".format(e))
         # Reset connection state in case of problem
