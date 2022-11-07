@@ -170,6 +170,8 @@ def procdata(conf,data):
 
                 if (inverterType != "default") :
                     layout = layout + inverterType.upper()
+                    # Update the conf.layout like done earlier
+                    conf.layout = layout
 
         if conf.verbose: 
            print("\t - " + 'Growatt new layout processing')
