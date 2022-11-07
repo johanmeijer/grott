@@ -191,7 +191,16 @@ mapping = {
         "device_class": "energy",
         "name": "{device} Generated PV energy (Today)",
         "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.epvToday| float / 10 }}",
+        "value_template": "{{value_json.epvtotal | float / 10 }}",
+        "icon": "mdi:solar-power",
+        "state_class": "total",
+    },
+    # For SPH compatiblity
+    "epvTotal": {
+        "device_class": "energy",
+        "name": "{device} Generated PV energy (Today)",
+        "unit_of_measurement": "kWh",
+        "value_template": "{{value_json.epvTotal| float / 10 }}",
         "icon": "mdi:solar-power",
         "state_class": "total",
     },
