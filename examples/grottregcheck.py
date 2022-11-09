@@ -156,7 +156,7 @@ class GrottRegChecker:
     @property
     def buffered(self) -> bool:
         """ True if this is a buffered packet """
-        return int(self.packet[14:16], 16) == 50
+        return int(self.packet[14:16], 16) == 80
 
     def _in_header(self, hex_str: str) -> bool:
         """ Check for a hex sequence in the header of the packet
