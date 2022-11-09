@@ -72,25 +72,15 @@
 
     "deratingmode"      : {"value" :494, "length" : 2, "type" : "num", "divide" : 1},
 
-    "#warning"           : {"value" :518, "length" : 4, "type" : "numx", "divide" : 1},
 
-    "eacharge_today"     : {"value" :606, "length" : 4, "type" : "num", "divide" : 10}, 
-    "eacharge_total"     : {"value" :614, "length" : 4, "type" : "num", "divide" : 10}, 
-    "batterytype"        : {"value" :634, "length" : 2, "type" : "num", "divide" : 1},
+    "pviso"               : {"value" :886, "length": 2, "type": "num", "divide": 1},
+    "r_dci_current"       : {"value" :890, "length": 2, "type": "num", "divide": 10},
+    "s_dci_current"       : {"value" :894, "length": 2, "type": "num", "divide": 10},
+    "t_dci_current"       : {"value" :898, "length": 2, "type": "num", "divide": 10},
+    "pid_bus_voltage"     : {"value" :902, "length": 2, "type": "num", "divide": 10},
 
-    "pviso"               : {"value" :966, "length": 2, "type": "num", "divide": 1},
-    "r_dci_current"       : {"value" :970, "length": 2, "type": "num", "divide": 10},
-    "s_dci_current"       : {"value" :974, "length": 2, "type": "num", "divide": 10},
-    "t_dci_current"       : {"value" :978, "length": 2, "type": "num", "divide": 10},
-    "pid_bus_voltage"     : {"value" :982, "length": 2, "type": "num", "divide": 10},
-    "gfci_current_205"    : {"value" :986, "length": 2, "type": "num", "divide": 10},
-    "ct_i_r"              : {"value" :990, "length": 2, "type": "num", "divide": 10},
-
-    
     "out_apparent_pwr"  : {"value" :1006, "length": 4, "type": "numx", "divide": 10},
-    "reactive_pwr_real"   : {"value" :1014, "length": 4, "type": "numx", "divide": 10},
-    "reactive_pwr_nominal"  : {"value" :1022, "length": 4, "type": "numx", "divide": 10},
-    "reactive_pwr_tot"    : {"value" :1030, "length": 4, "type": "numx", "divide": 10}
+
 
     }
 }
