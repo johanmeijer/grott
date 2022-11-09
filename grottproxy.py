@@ -182,7 +182,6 @@ class Proxy:
                 else:
                     self.on_recv(f_no, data)        
 
-
     def on_accept(self):
         forward = Forward().start(self.forward_to[0], self.forward_to[1])
         clientsock, clientaddr = self.server.accept()
@@ -195,7 +194,7 @@ class Proxy:
             self.poller.register(pair.client.fileno(), select.POLLIN)
             self.poller.register(pair.server.fileno(), select.POLLIN)
         else:
-            if conf.verbose: 
+            if self.conf.verbose:
                 print("\t - Can't establish connection with remote server."),
                 print("\t - Closing connection with client side", clientaddr)
             clientsock.close()
