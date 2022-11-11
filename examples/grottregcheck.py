@@ -1,6 +1,5 @@
 # coding: utf-8
 import enum
-from typing import Tuple
 
 
 class InverterType(str, enum.Enum):
@@ -29,7 +28,7 @@ class GrottRegChecker:
     
     Tested with data from packets: T060104XMAX / T060103XMAX / T050104XMAX / T050104XMAX / SPF packet from the examples
         
-    This tools is based on Growatt Inverter Modbus RTU Protocol V1.20 from 28-Apr-2020
+    This tool is based on Growatt Inverter Modbus RTU Protocol V1.20 from 28-Apr-2020
         and real data as seen by Grott
     
     Examples:
@@ -79,7 +78,7 @@ class GrottRegChecker:
     
     def ascii_at(self, s_register: int, e_register: int):
         """
-            Extract ASCII string from the data enclosed between the 
+            Extract ASCII string from the data enclosed between the
             start and end registers.
 
         :param s_register: Start of the ASCII string
@@ -126,6 +125,13 @@ class GrottRegChecker:
             if ascii_to:
                 ascii_to = self._translate_reg_to_pos(ascii_to)
                 ascii_to += self.second_group_offset
+            if self.inverter == InverterType.SPF and x >= 90 and self.has_third_map:
+                """ Apply the offset once more to move behind the third
+                    register map
+                """
+                x += self.second_group_offset
+                if ascii_to:
+                    ascii_to += self.second_group_offset
 
         if ascii_to:
             x_end = ascii_to * 2
@@ -158,6 +164,11 @@ class GrottRegChecker:
         """ True if this is a buffered packet """
         return int(self.packet[14:16], 16) == 80
 
+    @property
+    def has_third_map(self) -> bool:
+        """ True if the first marker/register map is prefixed with 03 """
+        return self.packet[self.data_start-10:self.data_start-8] == '03'
+
     def _in_header(self, hex_str: str) -> bool:
         """ Check for a hex sequence in the header of the packet
             Update the data_start property if the string is found
@@ -185,7 +196,7 @@ class GrottRegChecker:
                 return InverterType.MIN
             if self._in_header('0203e80464'):
                 return InverterType.SPA
-            if self._in_header('020000002c'):
+            if self._in_header('030000002c') or self._in_header('020000002c'):
                 return InverterType.SPF
             if self._in_header('020000007c'):
                 """ All other for which the first group is in the range 0-124 """
@@ -203,7 +214,7 @@ class GrottRegChecker:
                     # TODO: Find the difference between SPH & MIX
                     return InverterType.SPH
         if self.report:
-            if self._in_header('020000002c'):
+            if self._in_header('020000002c') or self._in_header('030000002c'):
                 return InverterType.SPF
             elif self._in_header('020000007c'):
                 """ All with first group 0-124 """
@@ -221,7 +232,9 @@ class GrottRegChecker:
                         MIX / SPA / SPH all use the [1000:1024] range 
                     """
                     # TODO: Find a way to distinguish between these types
-                    return InverterType.UNKNOWN
+                    if self.has_third_map:
+                        return InverterType.SPA
+                    return InverterType.SPH
         return inv_default
 
     def _translate_reg_to_pos(self, reg: int):
@@ -260,6 +273,11 @@ class GrottRegChecker:
                 elif self.inverter == InverterType.SPA:
                     if 1000 < reg <= 1124:
                         return reg - 1000
+                    elif 1130 < reg <= 1140:
+                        """ These should be at the end pf the packet 
+                            Pure speculation at the moment (needs a real packet from SPA for verification)
+                        """
+                        return 250 + reg - 1130
                     else:
                         return 125 + reg - 2000
 
