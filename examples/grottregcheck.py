@@ -1,5 +1,22 @@
 # coding: utf-8
+import enum
+from typing import Tuple
 
+
+class InverterType(str, enum.Enum):
+    MAC = 'mac'
+    MAX = 'max'
+    MID = 'mid'
+    MIN = 'min'
+    MIX = 'mix'
+    SPA = 'spa'
+    SPF = 'spf'
+    SPH = 'sph'
+    UNKNOWN = 'unk'
+
+    @classmethod
+    def _missing_(cls, value):
+        return InverterType.UNKNOWN
 
 
 class GrottRegChecker:
@@ -10,36 +27,31 @@ class GrottRegChecker:
     In verbose mode will print a JSON strings compatible with the Grott
     layout format
     
-    Tested with data from packets: T060104X & T060103X - the latter however,
-        needs 4 bytes ofset after position 125 in order to align with the 
-        documentation (the offset is controlled via the apply_2b_offset property)
+    Tested with data from packets: T060104XMAX / T060103XMAX / T050104XMAX / T050104XMAX / SPF packet from the examples
         
     This tools is based on Growatt Inverter Modbus RTU Protocol V1.20 from 28-Apr-2020
         and real data as seen by Grott
     
     Examples:
     >>> checker = GrottRegChecker('''...''')
-    >>> checker.apply_2b_offset = True
     >>> checker.ascii_at(125, 132)
-    {"value" :666, "length" : 10, "type" : "text"},
-    'PV   80000'
+    {"value" :666, "length" : 14, "type" : "text"},
+    'PV   80000    '
     >>> checker.ascii_at(34, 42)
     {"value" :294, "length" : 16, "type" : "text"},
     '   PV Inverter  '
     >>> checker.int_at(45)
     {"value" :338, "length" : 2, "type" : "num"},
     2022
-    >>> checker.report
-    True
     >>> checker.verbose
     True
+    >>> checker.inverter
+    <InverterType.MAX: 'max'>
     
     """
-    
-    data_start = 158
-    """ Start of the modbus data in the pakcet
-        Offset from the Grott plain data as seen in verbose mode 
-    """
+
+    header_max_len = 158
+    """ MAX header length. Scan this range for a register map """
     second_group_offset = 2
     
     def __init__(self, hex_data: str):
@@ -50,7 +62,9 @@ class GrottRegChecker:
         self.packet = ''.join([x.strip() for x in hex_data.split('\n')])
         self.debug = False
         self.verbose = False
-        self.apply_2b_offset = False
+        self.apply_2b_offset = True  # Enabled by default
+        self.data_start = 0
+        self.inverter = self.inv_auto_detect()
 
     def int_at(self, register: int):
         """ Try to extract an integer from the provided position """
@@ -84,7 +98,7 @@ class GrottRegChecker:
             
     def long_at(self, register: int):
         """ 
-            Try extraction of a long signed integer from the sepcified
+            Try extraction of a long signed integer from the specified
             register 
         """
         start, end = self._reg_boundary(register, long=True)
@@ -101,14 +115,19 @@ class GrottRegChecker:
             Transform the ID to start/end positions in the plain
             data
         """
-        if self.apply_2b_offset and self.report and x > 124:
-            """ Apply an offset when delaing with a report packet 
-                and the register is above 124
+        second_group = 44 if self.inverter == InverterType.SPF else 124
+        x = self._translate_reg_to_pos(x)
+
+        if self.apply_2b_offset and x > second_group:
+            """ Always use 2 bytes offset  
+                if the register is in the second group
             """
             x += self.second_group_offset
             if ascii_to:
+                ascii_to = self._translate_reg_to_pos(ascii_to)
                 ascii_to += self.second_group_offset
-        if ascii_to and ascii_to > 0:
+
+        if ascii_to:
             x_end = ascii_to * 2
             x = x * 2
             if self.debug:
@@ -116,7 +135,7 @@ class GrottRegChecker:
             return self.data_start + x*2, self.data_start + x_end*2
         else:
             x = x * 2
-            if  long:
+            if long:
                 x_end = x + 4
             else:
                 x_end = x + 2
@@ -126,6 +145,123 @@ class GrottRegChecker:
     
     @property
     def report(self) -> bool:
-        """ True if we dealing with a report packet """
+        """ True if we are dealing with a report packet """
         return int(self.packet[14:16], 16) == 3
-    
+
+    @property
+    def datapacket(self) -> bool:
+        """ True if we are dealing with a datarecord """
+        return int(self.packet[14:16], 16) == 4
+
+    @property
+    def buffered(self) -> bool:
+        """ True if this is a buffered packet """
+        return int(self.packet[14:16], 16) == 80
+
+    def _in_header(self, hex_str: str) -> bool:
+        """ Check for a hex sequence in the header of the packet
+            Update the data_start property if the string is found
+        """
+        try:
+            position = self.packet[:self.header_max_len].index(hex_str)
+            self.data_start = position + 10
+            return True
+        except ValueError:
+            return False
+        except Exception as e:
+            print(e)
+
+    def inv_auto_detect(self) -> InverterType:
+        """
+        Inverter auto detection
+
+        Register map values
+        First group -> struct.pack('>bhh', 2, <range_start>, <range_end>).hex()
+        Second group -> struct.pack('>hh', <range_start>, <range_end>).hex()
+        """
+        inv_default = InverterType.UNKNOWN
+        if self.datapacket or self.buffered:
+            if self._in_header('020bb80c34'):
+                return InverterType.MIN
+            if self._in_header('0203e80464'):
+                return InverterType.SPA
+            if self._in_header('020000002c'):
+                return InverterType.SPF
+            if self._in_header('020000007c'):
+                """ All other for which the first group is in the range 0-124 """
+                """ peek into the next map """
+                next_map = self.data_start + 500  # 125 words * 4
+                if self.packet[next_map:next_map+8] == '007d00f9':
+                    if self.packet[7] == '5':
+                        return InverterType.MID
+                    elif self.packet[7] == '6':
+                        return InverterType.MAX
+                elif self.packet[next_map:next_map+8] == '03e80464':
+                    """ CAN BE SPH/MIX - SPH seems more commonly used
+                        Return SPH for now 
+                    """
+                    # TODO: Find the difference between SPH & MIX
+                    return InverterType.SPH
+        if self.report:
+            if self._in_header('020000002c'):
+                return InverterType.SPF
+            elif self._in_header('020000007c'):
+                """ All with first group 0-124 """
+                next_map = self.data_start + 500
+                if self.packet[next_map:next_map+8] == '0bb80c34':
+                    return InverterType.MIN
+                elif self.packet[next_map:next_map+8] == '007d00f9':
+                    if self.packet[7] == '5':
+                        return InverterType.MID
+                    elif self.packet[7] == '6':
+                        return InverterType.MAX
+                elif self.packet[next_map:next_map+8] == '03e80464':
+                    """ Need more info about the storage type inverters 
+                        and their report (03) packet
+                        MIX / SPA / SPH all use the [1000:1024] range 
+                    """
+                    # TODO: Find a way to distinguish between these types
+                    return InverterType.UNKNOWN
+        return inv_default
+
+    def _translate_reg_to_pos(self, reg: int):
+        """
+        Translate a register to position
+        Used by the _reg_boundary method to map a register to its
+        actual position in the packet
+        """
+        """ Directly mapped """
+        if self.inverter in [InverterType.MAX, InverterType.MID, InverterType.MAC]:
+            return reg
+        if self.inverter == InverterType.SPF:
+            return reg
+
+        """ Inverters which registers need translation """
+        if self.inverter == InverterType.MIN:
+            if self.report and reg <= 124:
+                return reg
+            elif self.report and reg >= 3000:
+                return 125 + reg - 3000
+            if self.datapacket or self.buffered:
+                return reg - 3000
+
+        if self.inverter in [InverterType.MIX, InverterType.SPA, InverterType.SPH]:
+            if self.report:
+                if reg <= 124:
+                    return reg
+                else:
+                    return 125 + reg - 1000
+            if self.datapacket or self.buffered:
+                if self.inverter in [InverterType.MIX, InverterType.SPH]:
+                    if reg <= 124:
+                        return reg
+                    else:
+                        return 125 + reg - 1000
+                elif self.inverter == InverterType.SPA:
+                    if 1000 < reg <= 1124:
+                        return reg - 1000
+                    else:
+                        return 125 + reg - 2000
+
+        # Raise error in case that we have unhandled case
+        raise ValueError(f'Unhandled inverter/register combination {self.inverter} -> {reg}')
