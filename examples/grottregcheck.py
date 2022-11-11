@@ -125,7 +125,8 @@ class GrottRegChecker:
             if ascii_to:
                 ascii_to = self._translate_reg_to_pos(ascii_to)
                 ascii_to += self.second_group_offset
-            if self.inverter == InverterType.SPF and x >= 90 and self.has_third_map:
+            if self.inverter == InverterType.SPF and x >= 90 and self.has_third_map or \
+                    self.inverter == InverterType.SPA and x >= 250 and self.has_third_map:
                 """ Apply the offset once more to move behind the third
                     register map
                 """
