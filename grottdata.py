@@ -11,11 +11,36 @@ import sys
 import struct
 import textwrap
 from itertools import cycle # to support "cycling" the iterator
-import json, codecs 
+import json, codecs
+from typing import Dict
 # requests
 
 #import mqtt                       
 import paho.mqtt.publish as publish
+
+
+class GrottPvOutLimit:
+
+    def __init__(self):
+        self.register: Dict[str, int] = {}
+
+    def ok_send(self, pvserial: str, conf) -> bool:
+        now = time.perf_counter()
+        ok = False
+        if self.register.get(pvserial):
+            ok = True if self.register.get(pvserial) + conf.pvuplimit * 60 < now else False
+            if ok:
+                self.register[pvserial] = int(now)
+            else:
+                if conf.verbose: print(f'\t - PVOut: Update refused for {pvserial} due to time limitation')
+        else:
+            self.register.update({pvserial: int(now)})
+            ok = True
+        return ok
+
+
+pvout_limit = GrottPvOutLimit()
+
 
 # Formats multi-line data
 def format_multi_line(prefix, string, size=80):
@@ -494,7 +519,10 @@ def procdata(conf,data):
  
             if not pvidfound:
                 if conf.verbose : print("\t - " + "pvsystemid not found for inverter : ", definedkey["pvserial"])   
-                return                       
+                return
+            if not pvout_limit.ok_send(definedkey["pvserial"], conf):
+                # Will print a line for the refusal in verbose mode (see GrottPvOutLimit at the top)
+                return
             if conf.verbose : print("\t - " + "Grott send data to PVOutput systemid: ", pvssid, "for inverter: ", definedkey["pvserial"]) 
             pvheader = { 
                 "X-Pvoutput-Apikey"     : conf.pvapikey,
