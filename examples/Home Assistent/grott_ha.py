@@ -8,7 +8,7 @@ from paho.mqtt.publish import single, multiple
 
 from grottconf import Conf
 
-__version__ = "0.0.6"
+__version__ = "0.0.7-rc1"
 
 """A pluging for grott
 This plugin allow to have autodiscovery of the device in HA
@@ -238,16 +238,16 @@ mapping = {
     },
     "pactogridr": {
         "name": "Energy export (Today)",
-        "state_class": "measurement",
         "device_class": "energy",
+        "state_class": "measurement",
         "unit_of_measurement": "Wh",
         "state_class": "total",
         "icon": "mdi:solar-power",
     },
     "pactogridtot": {
         "name": "Energy export (Total)",
-        "state_class": "measurement",
         "device_class": "energy",
+        "state_class": "measurement",
         "unit_of_measurement": "Wh",
         "state_class": "total_increasing",
         "icon": "mdi:solar-power",
