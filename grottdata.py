@@ -11,11 +11,36 @@ import sys
 import struct
 import textwrap
 from itertools import cycle # to support "cycling" the iterator
-import json, codecs 
+import json, codecs
+from typing import Dict
 # requests
 
 #import mqtt                       
 import paho.mqtt.publish as publish
+
+
+class GrottPvOutLimit:
+
+    def __init__(self):
+        self.register: Dict[str, int] = {}
+
+    def ok_send(self, pvserial: str, conf) -> bool:
+        now = time.perf_counter()
+        ok = False
+        if self.register.get(pvserial):
+            ok = True if self.register.get(pvserial) + conf.pvuplimit * 60 < now else False
+            if ok:
+                self.register[pvserial] = int(now)
+            else:
+                if conf.verbose: print(f'\t - PVOut: Update refused for {pvserial} due to time limitation')
+        else:
+            self.register.update({pvserial: int(now)})
+            ok = True
+        return ok
+
+
+pvout_limit = GrottPvOutLimit()
+
 
 # Formats multi-line data
 def format_multi_line(prefix, string, size=80):
@@ -62,7 +87,8 @@ def procdata(conf,data):
     header = "".join("{:02x}".format(n) for n in data[0:8])
     ndata = len(data)
     buffered = "nodetect"                                               # set buffer detection to nodetect (for compat mode), wil in auto detection changed to no or yes        
-   
+    is_smart_meter = header[14:16] in ("20","1b")
+
     # automatic detect protocol (decryption and protocol) only if compat = False!
     novalidrec = False
     if conf.compat is False : 
@@ -72,10 +98,10 @@ def procdata(conf,data):
         #print(header)
         layout = "T" + header[6:8] + header[12:14] + header[14:16]
         #v270 add X for extended except for smart monitor records
-        if ((ndata > 375) and (header[14:16] not in ("20","1b"))) :  layout = layout + "X"
+        if ((ndata > 375) and not is_smart_meter) :  layout = layout + "X"
 
         #v270 no invtype added to layout for smart monitor records
-        if (conf.invtype != "default") and (header[14:16] not in ("20","1b")) :
+        if (conf.invtype != "default") and not is_smart_meter :
                 layout = layout + conf.invtype.upper()
 
         if header[14:16] == "50" : buffered = "yes"
@@ -145,25 +171,32 @@ def procdata(conf,data):
        
         if (conf.invtype == "default") :
             # Handle systems with mixed invtype
-            if (ndata > 50) :
+            if (ndata > 50) and not is_smart_meter:
                 # There is enough data for an inverter serial number
                 inverterType = "default"
 
-                inverterSerial = result_string[76:96]
-                inverterSerial = codecs.decode(inverterSerial, "hex").decode('utf-8')
-                if conf.verbose:
-                    print("\t - Possible Inverter serial", inverterSerial)
-
-                # Lookup inverter type based on inverter serial
+                inverterSerial = None
                 try:
-                    inverterType = conf.invtypemap[inverterSerial]
-                    print("\t - Matched inverter serial to inverter type", inverterType)
-                except:
-                    inverterType = "default"
-                    print("\t - Inverter serial not recognised - using inverter type", inverterType)
+                    inverterSerial = codecs.decode(result_string[76:96], "hex").decode('ASCII')
+                    if conf.verbose:
+                        print("\t - Possible Inverter serial", inverterSerial)
+                except UnicodeDecodeError:
+                    # In case of problem (eg: new record type with different serial placement)
+                    pass
+
+                if inverterSerial:
+                    # Lookup inverter type based on inverter serial
+                    try:
+                        inverterType = conf.invtypemap[inverterSerial]
+                        print("\t - Matched inverter serial to inverter type", inverterType)
+                    except:
+                        inverterType = "default"
+                        print("\t - Inverter serial not recognised - using inverter type", inverterType)
 
                 if (inverterType != "default") :
                     layout = layout + inverterType.upper()
+                    # Update the conf.layout like done earlier
+                    conf.layout = layout
 
         if conf.verbose: 
            print("\t - " + 'Growatt new layout processing')
@@ -486,7 +519,10 @@ def procdata(conf,data):
  
             if not pvidfound:
                 if conf.verbose : print("\t - " + "pvsystemid not found for inverter : ", definedkey["pvserial"])   
-                return                       
+                return
+            if not pvout_limit.ok_send(definedkey["pvserial"], conf):
+                # Will print a line for the refusal in verbose mode (see GrottPvOutLimit at the top)
+                return
             if conf.verbose : print("\t - " + "Grott send data to PVOutput systemid: ", pvssid, "for inverter: ", definedkey["pvserial"]) 
             pvheader = { 
                 "X-Pvoutput-Apikey"     : conf.pvapikey,
