@@ -8,7 +8,7 @@ from paho.mqtt.publish import single, multiple
 
 from grottconf import Conf
 
-__version__ = "0.0.7-rc1"
+__version__ = "0.0.7-rc2"
 
 """A pluging for grott
 This plugin allow to have autodiscovery of the device in HA
@@ -43,83 +43,83 @@ mapping = {
     },
     "pvserial": {"name": "Serial"},
     "pv1watt": {
+        "name": "PV1 Watt",
         "state_class": "measurement",
         "device_class": "power",
-        "name": "PV1 Watt",
-        "unit_of_measurement": "w",
+        "unit_of_measurement": "W",
     },
     "pv1voltage": {
+        "name": "PV1 Voltage",
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "PV1 Voltage",
         "unit_of_measurement": "V",
     },
     "pv1current": {
+        "name": "PV1 Current",
         "state_class": "measurement",
         "device_class": "current",
-        "name": "PV1 Current",
         "unit_of_measurement": "A",
     },
     "pv2watt": {
+        "name": "PV2 Watt",
         "state_class": "measurement",
         "device_class": "power",
-        "name": "PV2 Watt",
-        "unit_of_measurement": "w",
+        "unit_of_measurement": "W",
     },
     "pv2voltage": {
+        "name": "PV2 Voltage",
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "PV2 Voltage",
         "unit_of_measurement": "V",
     },
     "pv2current": {
+        "name": "PV2 Current",
         "state_class": "measurement",
         "device_class": "current",
-        "name": "PV2 Current",
         "unit_of_measurement": "A",
     },
     "pvpowerin": {
+        "name": "PV Input (Actual)",
         "state_class": "measurement",
         "device_class": "power",
-        "name": "Input kiloWatt (Actual)",
         "unit_of_measurement": "W",
     },
     "pvpowerout": {
+        "name": "PV Output (Actual)",
         "state_class": "measurement",
         "device_class": "power",
-        "name": "Output kiloWatt (Actual)",
         "unit_of_measurement": "W",
     },
     "pvfrequentie": {
+        "name": "Grid frequency",
         "state_class": "measurement",
         "device_class": "frequency",
-        "name": "Grid frequency",
         "unit_of_measurement": "Hz",
         "icon": "mdi:waveform",
     },
     # Grid config
     "pvgridvoltage": {
+        "name": "Phase 1 voltage",
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "Phase 1 voltage",
         "unit_of_measurement": "V",
     },
     "pvgridvoltage2": {
+        "name": "Phase 2 voltage",
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "Phase 2 voltage",
         "unit_of_measurement": "V",
     },
     "pvgridvoltage3": {
+        "name": "Phase 3 voltage",
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "Phase 3 voltage",
         "unit_of_measurement": "V",
     },
     "pvgridcurrent": {
+        "name": "Phase 1 current",
         "state_class": "measurement",
         "device_class": "current",
-        "name": "Phase 1 current",
         "unit_of_measurement": "A",
     },
     "pvgridcurrent2": {
@@ -129,34 +129,34 @@ mapping = {
         "unit_of_measurement": "A",
     },
     "pvgridcurrent3": {
+        "name": "Phase 3 current",
         "state_class": "measurement",
         "device_class": "current",
-        "name": "Phase 3 current",
         "unit_of_measurement": "A",
     },
     "pvgridpower": {
+        "name": "Phase 1 power",
         "state_class": "measurement",
         "device_class": "power",
-        "name": "Phase 1 power",
         "unit_of_measurement": "W",
     },
     "pvgridpower2": {
+        "name": "Phase 2 power",
         "state_class": "measurement",
         "device_class": "power",
-        "name": "Phase 2 power",
         "unit_of_measurement": "W",
     },
     "pvgridpower3": {
+        "name": "Phase 3 power",
         "state_class": "measurement",
         "device_class": "power",
-        "name": "Phase 3 power",
         "unit_of_measurement": "W",
     },
     # End grid
     "pvenergytoday": {
+        "name": "Generated energy (Today)",
         "state_class": "total",
         "device_class": "energy",
-        "name": "Generated energy (Today)",
         "unit_of_measurement": "kWh",
         "icon": "mdi:solar-power",
     },
@@ -245,9 +245,9 @@ mapping = {
         "value_template": "{{ value_json.totworktime| float / 7200 | round(2) }}",
     },
     "pvtemperature": {
+        "name": "Inverter temperature",
         "state_class": "measurement",
         "device_class": "temperature",
-        "name": "Inverter temperature",
         "unit_of_measurement": "°C",
     },
     "pvipmtemperature": {
@@ -257,48 +257,48 @@ mapping = {
         "state_class": "measurement",
     },
     "pvboottemperature": {
-        "device_class": "temperature",
         "name": "Inverter boost temperature",
+        "device_class": "temperature",
         "unit_of_measurement": "°C",
         "state_class": "measurement",
     },
     "pvboosttemp": {
-        "device_class": "temperature",
         "name": "Inverter boost temperature",
+        "device_class": "temperature",
         "unit_of_measurement": "°C",
         "state_class": "measurement",
     },
     "etogrid_tod": {
-        "device_class": "energy",
         "name": "Energy to grid (Today)",
+        "device_class": "energy",
         "unit_of_measurement": "kWh",
         "icon": "mdi:transmission-tower-import",
         "state_class": "total",
     },
     "etogrid_tot": {
-        "device_class": "energy",
         "name": "Energy to grid (Total)",
+        "device_class": "energy",
         "unit_of_measurement": "kWh",
         "icon": "mdi:transmission-tower-import",
         "state_class": "total_increasing",
     },
     "etouser_tod": {
-        "device_class": "energy",
         "name": "Import from grid (Today)",
+        "device_class": "energy",
         "unit_of_measurement": "kWh",
         "icon": "mdi:solar-power",
         "state_class": "total",
     },
     "etouser_tot": {
-        "device_class": "energy",
         "name": "Import from grid (Total)",
+        "device_class": "energy",
         "unit_of_measurement": "kWh",
         "icon": "mdi:transmission-tower-export",
         "state_class": "total_increasing",
     },
     "pactouserr": {
-        "device_class": "energy",
         "name": "Import from grid (Actual)",
+        "device_class": "energy",
         "device_class": "power",
         "unit_of_measurement": "W",
         "icon": "mdi:transmission-tower-export",
@@ -311,8 +311,8 @@ mapping = {
     #     "icon": "mdi:transmission-tower-export",
     # },
     "elocalload_tod": {
-        "device_class": "energy",
         "name": "Load consumption (Today)",
+        "device_class": "energy",
         "unit_of_measurement": "Wh",
         "icon": "mdi:solar-power",
         "state_class": "total",
@@ -331,33 +331,33 @@ mapping = {
         "icon": "mdi:transmission-tower-export",
     },
     "grott_last_push": {
-        "device_class": "timestamp",
         "name": "Grott last data push",
+        "device_class": "timestamp",
         "value_template": "{{value_json.grott_last_push}}",
     },
     "grott_last_measure": {
-        "device_class": "timestamp",
         "name": "Last measure",
+        "device_class": "timestamp",
     },
     # batteries
     "eacharge_today": {
-        "device_class": "energy",
         "name": "Battery charge from AC (Today)",
+        "device_class": "energy",
         "unit_of_measurement": "kWh",
         "icon": "mdi:battery-arrow-up",
         "state_class": "total",
     },
     "eacharge_total": {
-        "device_class": "energy",
         "name": "Battery charge from AC (Today)",
+        "device_class": "energy",
         "unit_of_measurement": "kWh",
         "icon": "mdi:solar-power",
         "state_class": "total_increasing",
     },
     "vbat": {
+        "name": "Battery voltage",
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "Battery voltage",
         "unit_of_measurement": "V",
     },
     "SOC": {
@@ -442,18 +442,16 @@ mapping = {
         "name": "System fault register 7",
     },
     "vpv1": {
+        "name": "PV1 Voltage",
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "PV1 Voltage",
         "unit_of_measurement": "V",
-        "value_template": "{{value_json.pv1voltage| float / 10 }}",
     },
     "vpv2": {
+        "name": "PV2 Voltage",
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "PV2 Voltage",
         "unit_of_measurement": "V",
-        "value_template": "{{value_json.pv1voltage| float / 10 }}",
     },
     "ppv1": {
         "name": "PV1 charge power",
@@ -494,9 +492,7 @@ mapping = {
 }
 
 
-def make_payload(
-    conf: Conf, device: str, device_class: str, name: str, key: str, unit: str = None
-):
+def make_payload(conf: Conf, device: str, name: str, key: str, unit: str = None):
     # Default configuration payload
     payload = {
         "name": "{device} {name}",
@@ -507,7 +503,6 @@ def make_payload(
             "name": device,
             "manufacturer": "GrowWatt",
         },
-        "value_template": f"{{{{ value_json.{key} }}}}",
     }
 
     # If there's a custom mapping add the new values
@@ -519,23 +514,27 @@ def make_payload(
         payload["name"] = "{device} " + payload["name"]
 
     # Generate the name of the key, with all the param available
-    payload["name"] = payload["name"].format(
-        device=device, device_class=device_class, name=name, key=key
-    )
+    payload["name"] = payload["name"].format(device=device, name=name, key=key)
     # HA automatically group the sensor if the device name is prepended
 
     # Reuse the existing divide value if available and not existing
     # and apply it to the HA config
     layout = conf.recorddict[conf.layout]
-    if key in layout:
-        if layout[key].get("type", "") == "num" and layout[key].get("divide"):
-            if "value_template" not in payload:
-                payload[
-                    "value_template"
-                ] = "{{{{value_json.{key} | float / {divide} }}}}".format(
-                    key=key,
-                    divide=layout[key].get("divide"),
-                )
+    if "value_template" not in payload and key in layout:
+        # From grottdata:207, default type is num, also process numx
+        if layout[key].get("type", "num") in ("num", "numx") and layout[key].get(
+            "divide", "1"
+        ):
+            payload[
+                "value_template"
+            ] = "{{{{ value_json.{key} | float / {divide} }}}}".format(
+                key=key,
+                divide=layout[key].get("divide"),
+            )
+
+    if "value_template" not in payload:
+        payload["value_template"] = f"{{{{ value_json.{key} }}}}"
+
     return payload
 
 
@@ -627,7 +626,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
         print(f"\tGrott HA {__version__} - creating {device_serial} config in HA")
         for key in values.keys():
             # Generate a configuration payload
-            payload = make_payload(conf, device_serial, "", key, key)
+            payload = make_payload(conf, device_serial, key, key)
             if not payload:
                 print(f"\t[Grott HA] {__version__} skipped key: {key}")
                 continue
@@ -655,7 +654,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
 
         try:
             key = "grott_last_push"
-            payload = make_payload(conf, device_serial, "", key, key)
+            payload = make_payload(conf, device_serial, key, key)
             topic = config_topic.format(
                 sensor_type="sensor",
                 device=device_serial,
