@@ -4,9 +4,11 @@
 import json
 from datetime import datetime, timezone
 
-from paho.mqtt.client import Client
+from paho.mqtt.publish import single, multiple
 
 from grottconf import Conf
+
+__version__ = "0.0.7-rc2"
 
 """A pluging for grott
 This plugin allow to have autodiscovery of the device in HA
@@ -18,6 +20,16 @@ Config:
     - ha_mqtt_port (required): The port (the default is oftent 1883)
     - ha_mqtt_user (optional): The user use to connect to the broker (you can use your user)
     - ha_mqtt_password (optional): The password to connect to the mqtt broket (you can use your password)
+
+Return codes:
+    - 0: Everything is OK
+    - 1: Missing MQTT extvar configuration
+    - 2: Error while publishing the measure value message
+    - 3: MQTT connection error
+    - 4: Error while creating last_push status key
+    - 5: Refused to push a buffered message (prevent invalid stats, not en error)
+    - 6: Error while configuring HA MQTT sensor devices
+    - 7: Can't configure device for HA MQTT
 """
 
 
@@ -27,349 +39,329 @@ state_topic = "homeassistant/grott/{device}/state"
 
 mapping = {
     "datalogserial": {
-        "name": "{device} Datalogger serial",
+        "name": "Datalogger serial",
     },
-    "pvserial": {"name": "{device} Serial"},
+    "pvserial": {"name": "Serial"},
     "pv1watt": {
+        "name": "PV1 Watt",
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} PV1 Watt",
-        "unit_of_measurement": "w",
-        "value_template": "{{value_json.pv1watt| float / 10 }}",
+        "unit_of_measurement": "W",
     },
     "pv1voltage": {
+        "name": "PV1 Voltage",
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "{device} PV1 Voltage",
         "unit_of_measurement": "V",
-        "value_template": "{{value_json.pv1voltage| float / 10 }}",
     },
     "pv1current": {
+        "name": "PV1 Current",
         "state_class": "measurement",
         "device_class": "current",
-        "name": "{device} PV1 Current",
         "unit_of_measurement": "A",
-        "value_template": "{{value_json.pv1current| float / 10 }}",
     },
     "pv2watt": {
+        "name": "PV2 Watt",
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} PV2 Watt",
-        "unit_of_measurement": "w",
-        "value_template": "{{value_json.pv2watt| float / 10 }}",
+        "unit_of_measurement": "W",
     },
     "pv2voltage": {
+        "name": "PV2 Voltage",
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "{device} PV2 Voltage",
         "unit_of_measurement": "V",
-        "value_template": "{{value_json.pv2voltage| float / 10 }}",
     },
     "pv2current": {
+        "name": "PV2 Current",
         "state_class": "measurement",
         "device_class": "current",
-        "name": "{device} PV2 Current",
         "unit_of_measurement": "A",
-        "value_template": "{{value_json.pv2current| float / 10 }}",
     },
     "pvpowerin": {
+        "name": "PV Input (Actual)",
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} Input kiloWatt (Actual)",
-        "unit_of_measurement": "kW",
-        "value_template": "{{value_json.pvpowerin| float / 10000 }}",
+        "unit_of_measurement": "W",
     },
     "pvpowerout": {
+        "name": "PV Output (Actual)",
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} Output kiloWatt (Actual)",
-        "unit_of_measurement": "kW",
-        "value_template": "{{value_json.pvpowerout| float / 10000 }}",
+        "unit_of_measurement": "W",
     },
     "pvfrequentie": {
+        "name": "Grid frequency",
         "state_class": "measurement",
         "device_class": "frequency",
-        "name": "{device} Grid frequency",
         "unit_of_measurement": "Hz",
-        "value_template": "{{value_json.pvfrequentie| float / 100 }}",
         "icon": "mdi:waveform",
     },
     # Grid config
     "pvgridvoltage": {
+        "name": "Phase 1 voltage",
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "{device} Phase 1 voltage",
         "unit_of_measurement": "V",
-        "value_template": "{{value_json.pvgridvoltage| float / 10 }}",
     },
     "pvgridvoltage2": {
+        "name": "Phase 2 voltage",
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "{device} Phase 2 voltage",
         "unit_of_measurement": "V",
-        "value_template": "{{value_json.pvgridvoltage2| float / 10 }}",
     },
     "pvgridvoltage3": {
+        "name": "Phase 3 voltage",
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "{device} Phase 3 voltage",
         "unit_of_measurement": "V",
-        "value_template": "{{value_json.pvgridvoltage3| float / 10 }}",
     },
     "pvgridcurrent": {
+        "name": "Phase 1 current",
         "state_class": "measurement",
         "device_class": "current",
-        "name": "{device} Phase 1 current",
         "unit_of_measurement": "A",
-        "value_template": "{{value_json.pvgridcurrent| float / 10 }}",
     },
     "pvgridcurrent2": {
         "state_class": "measurement",
         "device_class": "current",
-        "name": "{device} Phase 2 current",
+        "name": "Phase 2 current",
         "unit_of_measurement": "A",
-        "value_template": "{{value_json.pvgridcurrent2| float / 10 }}",
     },
     "pvgridcurrent3": {
+        "name": "Phase 3 current",
         "state_class": "measurement",
         "device_class": "current",
-        "name": "{device} Phase 3 current",
         "unit_of_measurement": "A",
-        "value_template": "{{value_json.pvgridcurrent3| float / 10 }}",
     },
     "pvgridpower": {
+        "name": "Phase 1 power",
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} Phase 1 power",
-        "unit_of_measurement": "kW",
-        "value_template": "{{value_json.pvgridpower| float / 10000 }}",
+        "unit_of_measurement": "W",
     },
     "pvgridpower2": {
+        "name": "Phase 2 power",
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} Phase 2 power",
-        "unit_of_measurement": "kW",
-        "value_template": "{{value_json.pvgridpower2| float / 10000 }}",
+        "unit_of_measurement": "W",
     },
     "pvgridpower3": {
+        "name": "Phase 3 power",
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} Phase 3 power",
-        "unit_of_measurement": "kW",
-        "value_template": "{{value_json.pvgridpower3| float / 10000 }}",
+        "unit_of_measurement": "W",
     },
     # End grid
     "pvenergytoday": {
+        "name": "Generated energy (Today)",
         "state_class": "total",
         "device_class": "energy",
-        "name": "{device} Generated energy (Today)",
         "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.pvenergytoday| float / 10 }}",
+        "icon": "mdi:solar-power",
+    },
+    "epvtoday": {
+        "name": "PV Energy today (Today)",
+        "state_class": "total",
+        "device_class": "energy",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:solar-power",
+    },
+    "epv1today": {
+        "name": "Solar PV1 production",
+        "state_class": "total",
+        "device_class": "energy",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:solar-power",
+    },
+    "epv2today": {
+        "name": "Solar PV2 production",
+        "state_class": "total",
+        "device_class": "energy",
+        "unit_of_measurement": "kWh",
         "icon": "mdi:solar-power",
     },
     "pvenergytotal": {
         "state_class": "total_increasing",
         "device_class": "energy",
-        "name": "{device} Generated energy (Total)",
+        "name": "Generated energy (Total)",
         "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.pvenergytotal| float / 10 }}",
         "icon": "mdi:solar-power",
     },
     "epvtotal": {
+        "name": "Generated PV energy (Total)",
         "device_class": "energy",
-        "name": "{device} Generated PV energy (Today)",
         "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.epvToday| float / 10 }}",
+        "icon": "mdi:solar-power",
+        "state_class": "total",
+    },
+    "epv1total": {
+        "name": "Solar PV1 production (Total)",
+        "state_class": "total",
+        "device_class": "energy",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:solar-power",
+    },
+    "epv2total": {
+        "name": "Solar PV2 production (Total)",
+        "state_class": "total",
+        "device_class": "energy",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:solar-power",
+    },
+    # For SPH compatiblity
+    "epvTotal": {
+        "name": "Generated PV energy (Total)",
+        "device_class": "energy",
+        "unit_of_measurement": "kWh",
         "icon": "mdi:solar-power",
         "state_class": "total",
     },
     "pactogridr": {
-        "state_class": "measurement",
+        "name": "Energy export (Today)",
         "device_class": "energy",
-        "name": "{device} Energy export (Today)",
-        "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.pactogridr| float / 10 }}",
+        "state_class": "measurement",
+        "unit_of_measurement": "Wh",
+        "state_class": "total",
         "icon": "mdi:solar-power",
     },
     "pactogridtot": {
+        "name": "Energy export (Total)",
         "device_class": "energy",
-        "name": "{device} Energy export (Total)",
-        "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.pactogridtot| float / 10 }}",
+        "state_class": "measurement",
+        "unit_of_measurement": "Wh",
+        "state_class": "total_increasing",
         "icon": "mdi:solar-power",
-        "state_class": "total",
     },
     "pvstatus": {
-        "name": "{device} State",
-        "value_template": "{% if value_json.pvstatus == 0 %}Standby{% elif value_json.pvstatus == 1 %}Normal{% elif value_json.pvstatus == 2 %}Fault{% else %}Unknown{% endif %}",
+        "name": "State",
+        # "value_template": "{% if value_json.pvstatus == 0 %}Standby{% elif value_json.pvstatus == 1 %}Normal{% elif value_json.pvstatus == 2 %}Fault{% else %}Unknown{% endif %}",
         "icon": "mdi:power-settings",
     },
     "totworktime": {
+        "name": "Working time",
         "device_class": "duration",
-        "name": "{device} Working time",
         "unit_of_measurement": "hours",
         "value_template": "{{ value_json.totworktime| float / 7200 | round(2) }}",
     },
     "pvtemperature": {
+        "name": "Inverter temperature",
         "state_class": "measurement",
         "device_class": "temperature",
-        "name": "{device} Inverter temperature",
         "unit_of_measurement": "°C",
-        "value_template": "{{value_json.pvtemperature| float / 10 }}",
     },
     "pvipmtemperature": {
+        "name": "IPM temperature",
         "device_class": "temperature",
         "unit_of_measurement": "°C",
-        "value_template": "{{value_json.pvipmtemperature| float / 10 }}",
         "state_class": "measurement",
-    },  # TODO, find name: "name": "{device} Inverter temperature",
+    },
     "pvboottemperature": {
+        "name": "Inverter boost temperature",
         "device_class": "temperature",
-        "name": "{device} Inverter boost temperature",
         "unit_of_measurement": "°C",
-        "value_template": "{{value_json.pvboottemperature| float / 10 }}",
         "state_class": "measurement",
     },
     "pvboosttemp": {
+        "name": "Inverter boost temperature",
         "device_class": "temperature",
-        "name": "{device} Inverter boost temperature",
         "unit_of_measurement": "°C",
-        "value_template": "{{value_json.pvboosttemp| float / 10 }}",
         "state_class": "measurement",
     },
     "etogrid_tod": {
+        "name": "Energy to grid (Today)",
         "device_class": "energy",
-        "name": "{device} Energy to grid (Today)",
         "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.etogrid_tod| float / 10 }}",
         "icon": "mdi:transmission-tower-import",
         "state_class": "total",
     },
     "etogrid_tot": {
+        "name": "Energy to grid (Total)",
         "device_class": "energy",
-        "name": "{device} Energy to grid (Total)",
         "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.etogrid_tot| float / 10 }}",
         "icon": "mdi:transmission-tower-import",
         "state_class": "total_increasing",
     },
     "etouser_tod": {
+        "name": "Import from grid (Today)",
         "device_class": "energy",
-        "name": "{device} Import from grid (Today)",
         "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.etouser_tod| float / 10 }}",
         "icon": "mdi:solar-power",
         "state_class": "total",
     },
     "etouser_tot": {
+        "name": "Import from grid (Total)",
         "device_class": "energy",
-        "name": "{device} Import from grid (Total)",
         "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.etouser_tot| float / 10 }}",
         "icon": "mdi:transmission-tower-export",
         "state_class": "total_increasing",
     },
     "pactouserr": {
-        "name": "{device} Import from grid current",
+        "name": "Import from grid (Actual)",
+        "device_class": "energy",
         "device_class": "power",
-        "unit_of_measurement": "kW",
-        "value_template": "{{value_json.pactouserr| float / 10 }}",
+        "unit_of_measurement": "W",
         "icon": "mdi:transmission-tower-export",
     },
     # Register 1015 # TODO: investiagate
     # "pactousertot": {
-    #     "name": "{device} Power consumption total",
+    #     "name": "Power consumption total",
     #     "device_class": "power",
     #     "unit_of_measurement": "kW",
     #     "icon": "mdi:transmission-tower-export",
     # },
     "elocalload_tod": {
+        "name": "Load consumption (Today)",
         "device_class": "energy",
-        "name": "{device} Load consumption (Today)",
-        "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.elocalload_tod| float / 10 }}",
+        "unit_of_measurement": "Wh",
         "icon": "mdi:solar-power",
         "state_class": "total",
     },
     "elocalload_tot": {
+        "name": "Load consumption (Total)",
         "device_class": "energy",
-        "name": "{device} Load consumption (Total)",
-        "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.elocalload_tot| float / 10 }}",
+        "unit_of_measurement": "Wh",
         "icon": "mdi:solar-power",
         "state_class": "total_increasing",
     },
     "plocaloadr": {
-        "name": "{device} Local load consumption",
+        "name": "Local load consumption",
         "device_class": "power",
-        "unit_of_measurement": "kW",
-        "value_template": "{{value_json.plocaloadr| float / 10 }}",
+        "unit_of_measurement": "W",
         "icon": "mdi:transmission-tower-export",
     },
-    "epv1today": {
-        "device_class": "energy",
-        "name": "{device} Solar production (Today)",
-        "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.epv1today| float / 10 }}",
-        "icon": "mdi:solar-power",
-        "state_class": "total",
-    },
-    "epv1total": {
-        "device_class": "energy",
-        "name": "{device} Solar production (Total)",
-        "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.epv1total| float / 10 }}",
-        "icon": "mdi:solar-power",
-        "state_class": "total_increasing",
-    },
-    "epv2today": {
-        "device_class": "energy",
-        "name": "{device} Solar PV2 production (Today)",
-        "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.epv2today| float / 10 }}",
-        "icon": "mdi:solar-power",
-        "state_class": "total",
-    },
-    "epv2total": {
-        "device_class": "energy",
-        "name": "{device} Solar PV2 production (Total)",
-        "unit_of_measurement": "kWh",
-        "value_template": "{{value_json.epv2total| float / 10 }}",
-        "icon": "mdi:solar-power",
-        "state_class": "total_increasing",
-    },
     "grott_last_push": {
+        "name": "Grott last data push",
         "device_class": "timestamp",
-        "name": "{device} Grott last data push",
         "value_template": "{{value_json.grott_last_push}}",
     },
     "grott_last_measure": {
+        "name": "Last measure",
         "device_class": "timestamp",
-        "name": "{device} Last measure",
     },
     # batteries
     "eacharge_today": {
+        "name": "Battery charge from AC (Today)",
         "device_class": "energy",
-        "name": "{device} Battery charge from AC (Today)",
         "unit_of_measurement": "kWh",
         "icon": "mdi:battery-arrow-up",
         "state_class": "total",
     },
     "eacharge_total": {
+        "name": "Battery charge from AC (Today)",
         "device_class": "energy",
-        "name": "{device} Battery charge from AC (Today)",
         "unit_of_measurement": "kWh",
         "icon": "mdi:solar-power",
         "state_class": "total_increasing",
     },
     "vbat": {
+        "name": "Battery voltage",
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "{device} Battery voltage",
         "unit_of_measurement": "V",
     },
     "SOC": {
-        "name": "{device} Battery charge",
+        "name": "Battery charge",
         "device_class": "battery",
         "state_class": "measurement",
         "unit_of_measurement": "%",
@@ -377,46 +369,47 @@ mapping = {
     },
     # taken from register 1048 of RTU manual v1.20
     "batterytype": {
-        "name": "{device} Batteries type",
+        "name": "Batteries type",
         "value_template": "{% if value_json.batterytype == 0 %}Lithium{% elif value_json.batterytype == '1' %}Lead-acid{% elif value_json.batterytype == '2' %}Other{% else %}Unknown{% endif %}",
         "icon": "mdi:power-settings",
     },
     "p1charge1": {
-        "name": "{device} Battery charge",
+        "name": "Battery charge",
         "device_class": "power",
         "unit_of_measurement": "kW",
+        "state_class": "measurement",
         "icon": "mdi:battery-arrow-up",
     },
     "eharge1_tod": {
-        "name": "{device} Battery charge (Today)",
+        "name": "Battery charge (Today)",
         "device_class": "energy",
         "state_class": "total",
         "unit_of_measurement": "kWh",
         "icon": "mdi:battery-arrow-up",
     },
     "eharge1_tot": {
-        "name": "{device} Battery charge (Total)",
+        "name": "Battery charge (Total)",
         "device_class": "energy",
         "state_class": "total_increasing",
         "unit_of_measurement": "kWh",
         "icon": "mdi:battery-arrow-up",
     },
     "edischarge1_tod": {
-        "name": "{device} Battery discharge (Today)",
+        "name": "Battery discharge (Today)",
         "device_class": "energy",
         "state_class": "total",
         "unit_of_measurement": "kWh",
         "icon": "mdi:battery-arrow-down",
     },
     "edischarge1_tot": {
-        "name": "{device} Battery discharge (Total)",
+        "name": "Battery discharge (Total)",
         "device_class": "energy",
         "state_class": "total_increasing",
         "unit_of_measurement": "kWh",
         "icon": "mdi:battery-arrow-down",
     },
     "battemp": {
-        "name": "{device} Battery temperature",
+        "name": "Battery temperature",
         "device_class": "temperature",
         "unit_of_measurement": "°C",
         "icon": "mdi:thermometer",
@@ -424,33 +417,83 @@ mapping = {
     "spbusvolt": {
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "{device} BP bus voltage",
+        "name": "BP bus voltage",
         "unit_of_measurement": "V",
     },
+    "systemfaultword1": {
+        "name": "System fault register 1",
+    },
+    "systemfaultword2": {
+        "name": "System fault register 2",
+    },
     "systemfaultword3": {
-        "name": "{device} System faultregister",
-        "value_template": """
-            {% if value_json.systemfaultword3 == 0%}
-                OK
-            {% else %}
-                {% if value_json.systemfaultword3|int|bitwise_and(1) > 0 %}
-                    Battery reverse
-                {% endif %}
-                {% if value_json.systemfaultword3|int|bitwise_and(2) > 0 %}
-                    BMS Battery Open
-                {% endif %}
-                {% if value_json.systemfaultword3|int|bitwise_and(4) > 0 %}
-                    Battery Voltage Low
-                {% endif %}
-            {% endif %}
-        """,
+        "name": "System fault register 3",
+    },
+    "systemfaultword4": {
+        "name": "System fault register 4",
+    },
+    "systemfaultword5": {
+        "name": "System fault register 5",
+    },
+    "systemfaultword6": {
+        "name": "System fault register 6",
+    },
+    "systemfaultword7": {
+        "name": "System fault register 7",
+    },
+    "vpv1": {
+        "name": "PV1 Voltage",
+        "state_class": "measurement",
+        "device_class": "voltage",
+        "unit_of_measurement": "V",
+    },
+    "vpv2": {
+        "name": "PV2 Voltage",
+        "state_class": "measurement",
+        "device_class": "voltage",
+        "unit_of_measurement": "V",
+    },
+    "ppv1": {
+        "name": "PV1 charge power",
+        "device_class": "power",
+        "unit_of_measurement": "W",
+        "state_class": "measurement",
+    },
+    "ppv2": {
+        "name": "PV1 charge power",
+        "device_class": "power",
+        "unit_of_measurement": "W",
+        "state_class": "measurement",
+    },
+    "buck1curr": {
+        "name": "Buck1 current",
+        "device_class": "current",
+        "unit_of_measurement": "A",
+        "state_class": "measurement",
+    },
+    "buck2curr": {
+        "name": "Buck2 current",
+        "device_class": "current",
+        "unit_of_measurement": "A",
+        "state_class": "measurement",
+    },
+    "op_watt": {
+        "name": "Output active power",
+        "device_class": "power",
+        "unit_of_measurement": "W",
+        "state_class": "measurement",
+    },
+    "op_va": {
+        "name": "Output apparent power",
+        "device_class": "apparent_power",
+        "unit_of_measurement": "VA",
+        "state_class": "measurement",
     },
 }
 
 
-def make_payload(
-    conf: Conf, device: str, device_class: str, name: str, key: str, unit: str = None
-):
+def make_payload(conf: Conf, device: str, name: str, key: str, unit: str = None):
+    # Default configuration payload
     payload = {
         "name": "{device} {name}",
         "unique_id": f"grott_{device}_{key}",  # Generate a unique device ID
@@ -460,57 +503,44 @@ def make_payload(
             "name": device,
             "manufacturer": "GrowWatt",
         },
-        "value_template": f"{{{{ value_json.{key} }}}}",
     }
 
     # If there's a custom mapping add the new values
     if key in mapping:
         payload.update(mapping[key])
 
+    if not payload["name"].startswith("{device} "):
+        # Prepend the {device} template, prevent repeating
+        payload["name"] = "{device} " + payload["name"]
+
     # Generate the name of the key, with all the param available
-    payload["name"] = payload["name"].format(
-        device=device, device_class=device_class, name=name, key=key
-    )
+    payload["name"] = payload["name"].format(device=device, name=name, key=key)
+    # HA automatically group the sensor if the device name is prepended
 
     # Reuse the existing divide value if available and not existing
     # and apply it to the HA config
     layout = conf.recorddict[conf.layout]
-    if key in layout:
-        if layout[key].get("type", "") == "num" and layout[key].get("divide"):
-            if "value_template" not in payload:
-                payload[
-                    "value_template"
-                ] = "{{{{value_json.{key} | float / {divide} }}}}".format(
-                    key=key,
-                    divide=layout[key].get("divide"),
-                )
+    if "value_template" not in payload and key in layout:
+        # From grottdata:207, default type is num, also process numx
+        if layout[key].get("type", "num") in ("num", "numx") and layout[key].get(
+            "divide", "1"
+        ):
+            payload[
+                "value_template"
+            ] = "{{{{ value_json.{key} | float / {divide} }}}}".format(
+                key=key,
+                divide=layout[key].get("divide"),
+            )
+
+    if "value_template" not in payload:
+        payload["value_template"] = f"{{{{ value_json.{key} }}}}"
+
     return payload
 
 
 class MqttStateHandler:
-    # Hold the persistent connection
-    __mqtt_conn = None
     __pv_config = {}
-
-    @classmethod
-    def get_conn(cls, conf):
-        # Prevent making a lot of connections, reuse the existing one
-        if cls.__mqtt_conn:
-            return cls.__mqtt_conn
-
-        cls.__mqtt_conn = Client()
-        if "ha_mqtt_user" in conf.extvar:
-            cls.__mqtt_conn.username_pw_set(
-                conf.extvar["ha_mqtt_user"], conf.extvar["ha_mqtt_password"]
-            )
-
-        # Need to convert the port if passed as a string
-        port = conf.extvar["ha_mqtt_port"]
-        if isinstance(port, str):
-            port = int(port)
-
-        cls.__mqtt_conn.connect(conf.extvar["ha_mqtt_host"], port)
-        return cls.__mqtt_conn
+    client_name = "Grott - HA"
 
     @classmethod
     def is_configured(cls, serial: str):
@@ -520,13 +550,47 @@ class MqttStateHandler:
     def set_configured(cls, serial: str):
         cls.__pv_config[serial] = True
 
-    @classmethod
-    def reset(cls):
-        cls.__mqtt_conn = None
-        cls.__pv_config = {}
+
+def process_conf(conf: Conf):
+    required_params = [
+        "ha_mqtt_host",
+        "ha_mqtt_port",
+    ]
+    if not all([param in conf.extvar for param in required_params]):
+        print("Missing configuration for ha_mqtt")
+        raise AttributeError
+
+    if "ha_mqtt_user" in conf.extvar:
+        auth = {
+            "username": conf.extvar["ha_mqtt_user"],
+            "password": conf.extvar["ha_mqtt_password"],
+        }
+    else:
+        auth = None
+
+    # Need to convert the port if passed as a string
+    port = conf.extvar["ha_mqtt_port"]
+    if isinstance(port, str):
+        port = int(port)
+    return {
+        "client_id": MqttStateHandler.client_name,
+        "auth": auth,
+        "hostname": conf.extvar["ha_mqtt_host"],
+        "port": port,
+    }
 
 
-def grottext(conf: Conf, data: str, jsonmsg: dict):
+def publish_single(conf: Conf, topic, payload, retain=False):
+    conf = process_conf(conf)
+    return single(topic, payload=payload, retain=retain, **conf)
+
+
+def publish_multiple(conf: Conf, msgs):
+    conf = process_conf(conf)
+    return multiple(msgs, **conf)
+
+
+def grottext(conf: Conf, data: str, jsonmsg: str):
     """Allow to push to HA MQTT bus, with auto discovery"""
 
     required_params = [
@@ -537,8 +601,6 @@ def grottext(conf: Conf, data: str, jsonmsg: dict):
         print("Missing configuration for ha_mqtt")
         return 1
 
-    conn = MqttStateHandler.get_conn(conf)
-
     # Need to decode the json string
     jsonmsg = json.loads(jsonmsg)
 
@@ -546,66 +608,85 @@ def grottext(conf: Conf, data: str, jsonmsg: dict):
         # Skip buffered message, HA don't support them
         if conf.verbose:
             print("\t - Grott HA - skipped buffered")
-        return 1
+        return 5
 
     device_serial = jsonmsg["device"]
     values = jsonmsg["values"]
 
     # Send the last push in UTC with TZ
     dt = datetime.now(timezone.utc)
+    # Add a new value to the existing values
     values["grott_last_push"] = dt.isoformat()
 
-    if not MqttStateHandler.is_configured(device_serial):
-        print(f"\tGrott HA - creating {device_serial} config in HA")
+    # Layout can be undefined
+    if not MqttStateHandler.is_configured(device_serial) and getattr(
+        conf, "layout", None
+    ):
+        configs_payloads = []
+        print(f"\tGrott HA {__version__} - creating {device_serial} config in HA")
         for key in values.keys():
             # Generate a configuration payload
-            payload = make_payload(conf, device_serial, "", key, key)
+            payload = make_payload(conf, device_serial, key, key)
+            if not payload:
+                print(f"\t[Grott HA] {__version__} skipped key: {key}")
+                continue
 
             try:
-                conn.publish(
-                    config_topic.format(
-                        sensor_type="sensor",
-                        device=device_serial,
-                        attribut=key,
-                    ),
-                    json.dumps(payload),
-                    retain=True,
+                topic = config_topic.format(
+                    sensor_type="sensor",
+                    device=device_serial,
+                    attribut=key,
                 )
-            except:
-                # Reset connection state in case of problem
-                MqttStateHandler.reset()
-                return 1
+                configs_payloads.append(
+                    {
+                        "topic": topic,
+                        "payload": json.dumps(payload),
+                        "retain": True,
+                    }
+                )
+            except Exception as e:
+                print(
+                    f"\t - [grott HA] {__version__} Exception while creating new sensor {key}: {e}"
+                )
+                return 6
 
         # Create a virtual last_push key to allow tracking when there was the last data transmission
 
         try:
             key = "grott_last_push"
-            payload = make_payload(conf, device_serial, "", key, key)
-            conn.publish(
-                config_topic.format(
-                    sensor_type="sensor",
-                    device=device_serial,
-                    attribut=key,
-                ),
-                json.dumps(payload),
-                retain=True,
+            payload = make_payload(conf, device_serial, key, key)
+            topic = config_topic.format(
+                sensor_type="sensor",
+                device=device_serial,
+                attribut=key,
             )
-        except:
-            # Reset connection state in case of problem
-            MqttStateHandler.reset()
-            return 1
-
+            configs_payloads.append(
+                {
+                    "topic": topic,
+                    "payload": json.dumps(payload),
+                    "retain": True,
+                }
+            )
+        except Exception as e:
+            print(
+                f"\t - [grott HA] {__version__} Exception while creating new sensor last push: {e}"
+            )
+            return 4
+        publish_multiple(conf, configs_payloads)
         # Now it's configured, no need to come back
         MqttStateHandler.set_configured(device_serial)
 
+    if not MqttStateHandler.is_configured(device_serial):
+        print(f"\t[Grott HA] {__version__} Can't configure device: {device_serial}")
+        return 7
+
     # Push the vales to the topics
     try:
-        conn.publish(
-            state_topic.format(device=device_serial, attribut=key), json.dumps(values)
+        publish_single(
+            conf, state_topic.format(device=device_serial), json.dumps(values)
         )
-
-    except:
+    except Exception as e:
+        print("[HA ext] - Exception while publishing - {}".format(e))
         # Reset connection state in case of problem
-        MqttStateHandler.reset()
         return 2
     return 0
