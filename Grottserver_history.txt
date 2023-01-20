@@ -23,3 +23,6 @@ Version history
 - Improve error handling (stability) for grottserver (0.0.10) (thanks to tabascoz)
 0.0.11
 - Fix bug with "05" protocol (thanks to ehoutsma)
+- Add support for setting multiple register (thanks to @markt-asf, see PR #191), 
+0.0.12 
+- Fixes to support "older" inverter/datalogger configurations (using "02" protocol)

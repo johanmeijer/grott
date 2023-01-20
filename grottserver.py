@@ -14,9 +14,9 @@ from urllib.parse import urlparse, parse_qs, parse_qsl
 from collections import defaultdict
 
 # grottserver.py emulates the server.growatt.com website and is initial developed for debugging and testing grott.
-# Updated: 2022-09-27
+# Updated: 2023-01-20
 # Version:
-verrel = "0.0.11a"
+verrel = "0.0.12"
 
 # Declare Variables (to be moved to config file later)
 serverhost = "0.0.0.0"
@@ -961,7 +961,7 @@ class sendrecvserver:
                         #print("header1 : ", header[6:8])
                         result_string = decrypt(data) 
                     else :         
-                        result_string = data   
+                        result_string = data.hex()   
             
                     loggerid = result_string[16:36]
                     loggerid = codecs.decode(loggerid, "hex").decode('utf-8')
