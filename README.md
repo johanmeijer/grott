@@ -40,6 +40,8 @@ The purpose of Grott is to read, parse and forward the *raw metrics as they are 
 * Added option to add inverter serial to MQTT topic (thanks to @ebosveld)
   - Add mqttinverterintopic = True to MQTT section of grott.ini or use  qmqttinverterintopic = "True" environmental (e.g. docker).
 
+### For all changes see: https://github.com/johanmeijer/grott/blob/Master-(2.7.8)/Version_history.txt
+
 ### Two modes of metric data retrieval
 Grott can intercept the inverter metrics in two distinct modes:
 * Proxy mode (man in the middle): The Growatt ShineWifi or ShineLAN box can be easily configured to use Grott as an alternative server to the default server.growatt.com. Grott then acts as a relay to the Growatt servers. Grott reads the transmitted data, and then forwards the data to server.grott.com.
