@@ -1,0 +1,22 @@
+# Grott - Home Assistant Growatt sensors 
+# 
+# This file exposes all sensors from Grott to HA, including dummy sensors for the type of the inverter and the type and serial number of the datalogger (Be aware, the dummy
+# sensors have to be set manually) 
+
+- name: Growatt - Type
+  unique_id: growatt_invertertype
+  # Please set the type of your inverter
+  state: "SPH6000"
+  icon: mdi:select-inverse
+
+- name: Growatt - Datalogger type
+  unique_id: growatt_datloggertype
+  # Please set the type of your datalogger
+  state: "ShineWifi S"
+  icon: mdi:select-inverse
+
+- name: Growatt - Datalogger serial
+  unique_id: growatt_datlogger_serial
+  # Please set the serial number of your datalogger
+  state: "ABCDEFG"
+  icon: mdi:select-inverse
