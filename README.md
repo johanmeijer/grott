@@ -2,7 +2,7 @@
 ## The Growatt Inverter Monitor 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=RQFS46F9JTESQ&item_name=Grott+&currency_code=EUR)
 
-### !!!! This Beta version (2.7.8) is closed for future development. This release will be promoted to master soon!!!!!!!!!
+### !!!! This is Beta version (2.8.x) 
 
 Growatt inverters can send performance and status metrics (log data) to the Growatt company servers. The inverters rely on either a ShineWIFI module or a ShineLAN box to relay the data to Growatt. The metrics stored on the Growatt servers then can be viewed on the Growatt website or using the ShinePhone mobile app. 
 
@@ -10,7 +10,10 @@ The purpose of Grott is to read, parse and forward the *raw metrics as they are 
 
 ### Please see: https://github.com/johanmeijer/grott/wiki/@Statement-of-use-and-limitations before using Grott.
 
-### New in Version 2.7  (Beta)
+### New in Version 2.8
+* Added first SPA support (2.8.1)
+
+### New in Version 2.7  
 * Added first beta of grottserver to act as destination for inverter/datalogger data (remove need to cummunicate with internet).
   - grottserver version 0.0.5 is able to sent read/write register commands to inverter and datalogger.
   - see discussions (#98) for more information: https://github.com/johanmeijer/grott/discussions/98
