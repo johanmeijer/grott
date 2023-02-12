@@ -239,5 +239,8 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - Do not run the Grott service as root (thanks to phavekes, see PR #195)
   Needs some additional documentation !!!!!!
  - Add PvOutput limit to limit Configurable (via grott.ini) PvOut upload limit (in minutes) (thanks to @githubDante, see PR 202/237) 
-2.7.8 
+2.7.8 (promoted to master)
 - grottserver 0.0.12. Fixes to support "older" inverter/datalogger configurations (using "02" protocol). 
+2.8.0 (New beta, 2.7.8. promoted to master)
+2.8.1 
+- added first SPA support 
