@@ -17,6 +17,7 @@ Should be able to support multiples inverters
 
 Version 0.0.7
   - Corrected a bug when creating the configuration
+  - Add QoS 1 to reduce the possibility of lost message.
 
 Config:
     - ha_mqtt_host (required): The host of the MQTT broker user by HA (often the IP of HA)
@@ -625,7 +626,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
         conf, "layout", None
     ):
         configs_payloads = []
-        print(f"\tGrott HA {__version__} - creating {device_serial} config in HA")
+        print(f"\tGrott HA {__version__} - creating {device_serial} config in HA, {len(values.keys())} to push")
         for key in values.keys():
             # Generate a configuration payload
             payload = make_payload(conf, device_serial, key, key)
@@ -644,6 +645,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
                         "topic": topic,
                         "payload": json.dumps(payload),
                         "retain": True,
+                        "qos": 1,
                     }
                 )
             except Exception as e:
@@ -667,6 +669,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
                     "topic": topic,
                     "payload": json.dumps(payload),
                     "retain": True,
+                    "qos": 1,
                 }
             )
         except Exception as e:
@@ -674,7 +677,9 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
                 f"\t - [grott HA] {__version__} Exception while creating new sensor last push: {e}"
             )
             return 4
+        print(f"\tPushing {len(configs_payloads)} configurations payload to HA")
         publish_multiple(conf, configs_payloads)
+        print(f"\tConfigurations pushed")
         # Now it's configured, no need to come back
         MqttStateHandler.set_configured(device_serial)
 
@@ -682,7 +687,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
         print(f"\t[Grott HA] {__version__} Can't configure device: {device_serial}")
         return 7
 
-    # Push the vales to the topics
+    # Push the values to the topics
     try:
         publish_single(
             conf, state_topic.format(device=device_serial), json.dumps(values)
