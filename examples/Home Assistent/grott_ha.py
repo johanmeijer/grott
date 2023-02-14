@@ -8,12 +8,15 @@ from paho.mqtt.publish import single, multiple
 
 from grottconf import Conf
 
-__version__ = "0.0.7-rc2"
+__version__ = "0.0.7-rc3"
 
 """A pluging for grott
 This plugin allow to have autodiscovery of the device in HA
 
 Should be able to support multiples inverters
+
+Version 0.0.7
+  - Corrected a bug when creating the configuration
 
 Config:
     - ha_mqtt_host (required): The host of the MQTT broker user by HA (often the IP of HA)
@@ -522,14 +525,13 @@ def make_payload(conf: Conf, device: str, name: str, key: str, unit: str = None)
     layout = conf.recorddict[conf.layout]
     if "value_template" not in payload and key in layout:
         # From grottdata:207, default type is num, also process numx
-        if layout[key].get("type", "num") in ("num", "numx") and layout[key].get(
-            "divide", "1"
-        ):
+        if layout[key].get("type", "num") in ("num", "numx"):
+            divider = layout[key].get("divide", "1")
             payload[
                 "value_template"
             ] = "{{{{ value_json.{key} | float / {divide} }}}}".format(
                 key=key,
-                divide=layout[key].get("divide"),
+                divide=divider,
             )
 
     if "value_template" not in payload:
@@ -690,3 +692,45 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
         # Reset connection state in case of problem
         return 2
     return 0
+
+
+def test_generate_payload():
+    "Test that an auto generated payload for MQTT configuration"
+
+    class TestConf():
+        recorddict = {
+            "test": {
+                "pvpowerout": {"value" :122, "length" : 4, "type" : "num", "divide" : 10}
+            }
+        }
+        layout = "test"
+
+    payload = make_payload(TestConf(), "NCO7410", "pvpowerout", "pvpowerout")
+    print(payload)
+    # The default divider for pvpowerout is 10
+    assert payload["value_template"] == "{{ value_json.pvpowerout | float / 10 }}"
+    assert payload["name"] == "NCO7410 PV Output (Actual)"
+    assert payload["unique_id"] == "grott_NCO7410_pvpowerout"
+    assert payload["state_class"] == "measurement"
+    assert payload["device_class"] == "power"
+    assert payload["unit_of_measurement"] == "W"
+    
+def test_generate_payload_without_divider():
+    "Test that an auto generated payload for MQTT configuration"
+    class TestConf():
+        recorddict = {
+            "test": {
+                "pvpowerout": {"value" :122, "length" : 4, "type" : "num", }
+            }
+        }
+        layout = "test"
+
+    payload = make_payload(TestConf(), "NCO7410", "pvpowerout", "pvpowerout")
+    print(payload)
+    # The default divider for pvpowerout is 10
+    assert payload["value_template"] == "{{ value_json.pvpowerout | float / 1 }}"
+    assert payload["name"] == "NCO7410 PV Output (Actual)"
+    assert payload["unique_id"] == "grott_NCO7410_pvpowerout"
+    assert payload["state_class"] == "measurement"
+    assert payload["device_class"] == "power"
+    assert payload["unit_of_measurement"] == "W"
