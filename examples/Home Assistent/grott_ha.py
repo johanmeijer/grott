@@ -8,7 +8,7 @@ from paho.mqtt.publish import single, multiple
 
 from grottconf import Conf
 
-__version__ = "0.0.7-rc4"
+__version__ = "0.0.7-rc5"
 
 """A pluging for grott
 This plugin allow to have autodiscovery of the device in HA
@@ -18,6 +18,7 @@ Should be able to support multiples inverters
 Version 0.0.7
   - Corrected a bug when creating the configuration
   - Add QoS 1 to reduce the possibility of lost message.
+  - Updated Total work time unit.
 
 Config:
     - ha_mqtt_host (required): The host of the MQTT broker user by HA (often the IP of HA)
@@ -245,7 +246,7 @@ mapping = {
     "totworktime": {
         "name": "Working time",
         "device_class": "duration",
-        "unit_of_measurement": "hours",
+        "unit_of_measurement": "h",
         "value_template": "{{ value_json.totworktime| float / 7200 | round(2) }}",
     },
     "pvtemperature": {
@@ -626,7 +627,9 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
         conf, "layout", None
     ):
         configs_payloads = []
-        print(f"\tGrott HA {__version__} - creating {device_serial} config in HA, {len(values.keys())} to push")
+        print(
+            f"\tGrott HA {__version__} - creating {device_serial} config in HA, {len(values.keys())} to push"
+        )
         for key in values.keys():
             # Generate a configuration payload
             payload = make_payload(conf, device_serial, key, key)
@@ -702,10 +705,10 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
 def test_generate_payload():
     "Test that an auto generated payload for MQTT configuration"
 
-    class TestConf():
+    class TestConf:
         recorddict = {
             "test": {
-                "pvpowerout": {"value" :122, "length" : 4, "type" : "num", "divide" : 10}
+                "pvpowerout": {"value": 122, "length": 4, "type": "num", "divide": 10}
             }
         }
         layout = "test"
@@ -719,13 +722,19 @@ def test_generate_payload():
     assert payload["state_class"] == "measurement"
     assert payload["device_class"] == "power"
     assert payload["unit_of_measurement"] == "W"
-    
+
+
 def test_generate_payload_without_divider():
     "Test that an auto generated payload for MQTT configuration"
-    class TestConf():
+
+    class TestConf:
         recorddict = {
             "test": {
-                "pvpowerout": {"value" :122, "length" : 4, "type" : "num", }
+                "pvpowerout": {
+                    "value": 122,
+                    "length": 4,
+                    "type": "num",
+                }
             }
         }
         layout = "test"
