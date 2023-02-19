@@ -25,6 +25,7 @@ Config:
     - ha_mqtt_port (required): The port (the default is oftent 1883)
     - ha_mqtt_user (optional): The user use to connect to the broker (you can use your user)
     - ha_mqtt_password (optional): The password to connect to the mqtt broket (you can use your password)
+    - ha_mqtt_retain (optional): Set the retain flag for the data message (default: False)
 
 Return codes:
     - 0: Everything is OK
@@ -496,6 +497,12 @@ mapping = {
     },
 }
 
+MQTT_HOST_CONF_KEY = "ha_mqtt_host"
+MQTT_PORT_CONF_KEY = "ha_mqtt_port"
+MQTT_USERNAME_CONF_KEY = "ha_mqtt_user"
+MQTT_PASSWORD_CONF_KEY = "ha_mqtt_password"
+MQTT_RETAIN_CONF_KEY = "ha_mqtt_retain"
+
 
 def make_payload(conf: Conf, device: str, name: str, key: str, unit: str = None):
     # Default configuration payload
@@ -557,29 +564,29 @@ class MqttStateHandler:
 
 def process_conf(conf: Conf):
     required_params = [
-        "ha_mqtt_host",
-        "ha_mqtt_port",
+        MQTT_HOST_CONF_KEY,
+        MQTT_PORT_CONF_KEY,
     ]
     if not all([param in conf.extvar for param in required_params]):
         print("Missing configuration for ha_mqtt")
         raise AttributeError
 
-    if "ha_mqtt_user" in conf.extvar:
+    if MQTT_USERNAME_CONF_KEY in conf.extvar:
         auth = {
-            "username": conf.extvar["ha_mqtt_user"],
-            "password": conf.extvar["ha_mqtt_password"],
+            "username": conf.extvar[MQTT_USERNAME_CONF_KEY],
+            "password": conf.extvar[MQTT_PASSWORD_CONF_KEY],
         }
     else:
         auth = None
 
     # Need to convert the port if passed as a string
-    port = conf.extvar["ha_mqtt_port"]
+    port = conf.extvar[MQTT_PORT_CONF_KEY]
     if isinstance(port, str):
         port = int(port)
     return {
         "client_id": MqttStateHandler.client_name,
         "auth": auth,
-        "hostname": conf.extvar["ha_mqtt_host"],
+        "hostname": conf.extvar[MQTT_HOST_CONF_KEY],
         "port": port,
     }
 
@@ -598,8 +605,8 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
     """Allow to push to HA MQTT bus, with auto discovery"""
 
     required_params = [
-        "ha_mqtt_host",
-        "ha_mqtt_port",
+        MQTT_HOST_CONF_KEY,
+        MQTT_PORT_CONF_KEY,
     ]
     if not all([param in conf.extvar for param in required_params]):
         print("Missing configuration for ha_mqtt")
@@ -690,10 +697,14 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
         print(f"\t[Grott HA] {__version__} Can't configure device: {device_serial}")
         return 7
 
-    # Push the values to the topics
+    # Push the values to the topic
+    retain = conf.extvar.get(MQTT_RETAIN_CONF_KEY, False)
     try:
         publish_single(
-            conf, state_topic.format(device=device_serial), json.dumps(values)
+            conf,
+            state_topic.format(device=device_serial),
+            json.dumps(values),
+            retain=retain,
         )
     except Exception as e:
         print("[HA ext] - Exception while publishing - {}".format(e))
