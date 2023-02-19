@@ -8,18 +8,25 @@ from paho.mqtt.publish import single, multiple
 
 from grottconf import Conf
 
-__version__ = "0.0.7-rc2"
+__version__ = "0.0.7-rc6"
 
 """A pluging for grott
 This plugin allow to have autodiscovery of the device in HA
 
 Should be able to support multiples inverters
 
+Version 0.0.7
+  - Corrected a bug when creating the configuration
+  - Add QoS 1 to reduce the possibility of lost message.
+  - Updated Total work time unit.
+  - Add support for setting the retain flag
+
 Config:
     - ha_mqtt_host (required): The host of the MQTT broker user by HA (often the IP of HA)
     - ha_mqtt_port (required): The port (the default is oftent 1883)
     - ha_mqtt_user (optional): The user use to connect to the broker (you can use your user)
     - ha_mqtt_password (optional): The password to connect to the mqtt broket (you can use your password)
+    - ha_mqtt_retain (optional): Set the retain flag for the data message (default: False)
 
 Return codes:
     - 0: Everything is OK
@@ -241,7 +248,7 @@ mapping = {
     "totworktime": {
         "name": "Working time",
         "device_class": "duration",
-        "unit_of_measurement": "hours",
+        "unit_of_measurement": "h",
         "value_template": "{{ value_json.totworktime| float / 7200 | round(2) }}",
     },
     "pvtemperature": {
@@ -491,6 +498,12 @@ mapping = {
     },
 }
 
+MQTT_HOST_CONF_KEY = "ha_mqtt_host"
+MQTT_PORT_CONF_KEY = "ha_mqtt_port"
+MQTT_USERNAME_CONF_KEY = "ha_mqtt_user"
+MQTT_PASSWORD_CONF_KEY = "ha_mqtt_password"
+MQTT_RETAIN_CONF_KEY = "ha_mqtt_retain"
+
 
 def make_payload(conf: Conf, device: str, name: str, key: str, unit: str = None):
     # Default configuration payload
@@ -522,14 +535,13 @@ def make_payload(conf: Conf, device: str, name: str, key: str, unit: str = None)
     layout = conf.recorddict[conf.layout]
     if "value_template" not in payload and key in layout:
         # From grottdata:207, default type is num, also process numx
-        if layout[key].get("type", "num") in ("num", "numx") and layout[key].get(
-            "divide", "1"
-        ):
+        if layout[key].get("type", "num") in ("num", "numx"):
+            divider = layout[key].get("divide", "1")
             payload[
                 "value_template"
             ] = "{{{{ value_json.{key} | float / {divide} }}}}".format(
                 key=key,
-                divide=layout[key].get("divide"),
+                divide=divider,
             )
 
     if "value_template" not in payload:
@@ -553,29 +565,29 @@ class MqttStateHandler:
 
 def process_conf(conf: Conf):
     required_params = [
-        "ha_mqtt_host",
-        "ha_mqtt_port",
+        MQTT_HOST_CONF_KEY,
+        MQTT_PORT_CONF_KEY,
     ]
     if not all([param in conf.extvar for param in required_params]):
         print("Missing configuration for ha_mqtt")
         raise AttributeError
 
-    if "ha_mqtt_user" in conf.extvar:
+    if MQTT_USERNAME_CONF_KEY in conf.extvar:
         auth = {
-            "username": conf.extvar["ha_mqtt_user"],
-            "password": conf.extvar["ha_mqtt_password"],
+            "username": conf.extvar[MQTT_USERNAME_CONF_KEY],
+            "password": conf.extvar[MQTT_PASSWORD_CONF_KEY],
         }
     else:
         auth = None
 
     # Need to convert the port if passed as a string
-    port = conf.extvar["ha_mqtt_port"]
+    port = conf.extvar[MQTT_PORT_CONF_KEY]
     if isinstance(port, str):
         port = int(port)
     return {
         "client_id": MqttStateHandler.client_name,
         "auth": auth,
-        "hostname": conf.extvar["ha_mqtt_host"],
+        "hostname": conf.extvar[MQTT_HOST_CONF_KEY],
         "port": port,
     }
 
@@ -594,8 +606,8 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
     """Allow to push to HA MQTT bus, with auto discovery"""
 
     required_params = [
-        "ha_mqtt_host",
-        "ha_mqtt_port",
+        MQTT_HOST_CONF_KEY,
+        MQTT_PORT_CONF_KEY,
     ]
     if not all([param in conf.extvar for param in required_params]):
         print("Missing configuration for ha_mqtt")
@@ -623,7 +635,9 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
         conf, "layout", None
     ):
         configs_payloads = []
-        print(f"\tGrott HA {__version__} - creating {device_serial} config in HA")
+        print(
+            f"\tGrott HA {__version__} - creating {device_serial} config in HA, {len(values.keys())} to push"
+        )
         for key in values.keys():
             # Generate a configuration payload
             payload = make_payload(conf, device_serial, key, key)
@@ -642,6 +656,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
                         "topic": topic,
                         "payload": json.dumps(payload),
                         "retain": True,
+                        "qos": 1,
                     }
                 )
             except Exception as e:
@@ -665,6 +680,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
                     "topic": topic,
                     "payload": json.dumps(payload),
                     "retain": True,
+                    "qos": 1,
                 }
             )
         except Exception as e:
@@ -672,7 +688,9 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
                 f"\t - [grott HA] {__version__} Exception while creating new sensor last push: {e}"
             )
             return 4
+        print(f"\tPushing {len(configs_payloads)} configurations payload to HA")
         publish_multiple(conf, configs_payloads)
+        print(f"\tConfigurations pushed")
         # Now it's configured, no need to come back
         MqttStateHandler.set_configured(device_serial)
 
@@ -680,13 +698,65 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
         print(f"\t[Grott HA] {__version__} Can't configure device: {device_serial}")
         return 7
 
-    # Push the vales to the topics
+    # Push the values to the topic
+    retain = conf.extvar.get(MQTT_RETAIN_CONF_KEY, False)
     try:
         publish_single(
-            conf, state_topic.format(device=device_serial), json.dumps(values)
+            conf,
+            state_topic.format(device=device_serial),
+            json.dumps(values),
+            retain=retain,
         )
     except Exception as e:
         print("[HA ext] - Exception while publishing - {}".format(e))
         # Reset connection state in case of problem
         return 2
     return 0
+
+
+def test_generate_payload():
+    "Test that an auto generated payload for MQTT configuration"
+
+    class TestConf:
+        recorddict = {
+            "test": {
+                "pvpowerout": {"value": 122, "length": 4, "type": "num", "divide": 10}
+            }
+        }
+        layout = "test"
+
+    payload = make_payload(TestConf(), "NCO7410", "pvpowerout", "pvpowerout")
+    print(payload)
+    # The default divider for pvpowerout is 10
+    assert payload["value_template"] == "{{ value_json.pvpowerout | float / 10 }}"
+    assert payload["name"] == "NCO7410 PV Output (Actual)"
+    assert payload["unique_id"] == "grott_NCO7410_pvpowerout"
+    assert payload["state_class"] == "measurement"
+    assert payload["device_class"] == "power"
+    assert payload["unit_of_measurement"] == "W"
+
+
+def test_generate_payload_without_divider():
+    "Test that an auto generated payload for MQTT configuration"
+
+    class TestConf:
+        recorddict = {
+            "test": {
+                "pvpowerout": {
+                    "value": 122,
+                    "length": 4,
+                    "type": "num",
+                }
+            }
+        }
+        layout = "test"
+
+    payload = make_payload(TestConf(), "NCO7410", "pvpowerout", "pvpowerout")
+    print(payload)
+    # The default divider for pvpowerout is 10
+    assert payload["value_template"] == "{{ value_json.pvpowerout | float / 1 }}"
+    assert payload["name"] == "NCO7410 PV Output (Actual)"
+    assert payload["unique_id"] == "grott_NCO7410_pvpowerout"
+    assert payload["state_class"] == "measurement"
+    assert payload["device_class"] == "power"
+    assert payload["unit_of_measurement"] == "W"
