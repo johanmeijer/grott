@@ -244,3 +244,4 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 2.8.0 (New beta, 2.7.8. promoted to master)
 2.8.1 
 - added first SPA support 
+- increase hardcoded register limit from 1024 to 4096
