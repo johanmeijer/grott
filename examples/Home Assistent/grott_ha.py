@@ -8,7 +8,7 @@ from paho.mqtt.publish import single, multiple
 
 from grottconf import Conf
 
-__version__ = "0.0.7-rc6"
+__version__ = "0.0.7-RC7"
 
 """A pluging for grott
 This plugin allow to have autodiscovery of the device in HA
@@ -20,6 +20,7 @@ Version 0.0.7
   - Add QoS 1 to reduce the possibility of lost message.
   - Updated Total work time unit.
   - Add support for setting the retain flag
+  - Add more configurations for measures
 
 Config:
     - ha_mqtt_host (required): The host of the MQTT broker user by HA (often the IP of HA)
@@ -49,12 +50,6 @@ mapping = {
         "name": "Datalogger serial",
     },
     "pvserial": {"name": "Serial"},
-    "pv1watt": {
-        "name": "PV1 Watt",
-        "state_class": "measurement",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-    },
     "pv1voltage": {
         "name": "PV1 Voltage",
         "state_class": "measurement",
@@ -67,8 +62,8 @@ mapping = {
         "device_class": "current",
         "unit_of_measurement": "A",
     },
-    "pv2watt": {
-        "name": "PV2 Watt",
+    "pv1watt": {
+        "name": "PV1 Watt",
         "state_class": "measurement",
         "device_class": "power",
         "unit_of_measurement": "W",
@@ -84,6 +79,30 @@ mapping = {
         "state_class": "measurement",
         "device_class": "current",
         "unit_of_measurement": "A",
+    },
+    "pv2watt": {
+        "name": "PV2 Watt",
+        "state_class": "measurement",
+        "device_class": "power",
+        "unit_of_measurement": "W",
+    },
+    "pv3voltage": {
+        "name": "PV3 Voltage",
+        "state_class": "measurement",
+        "device_class": "voltage",
+        "unit_of_measurement": "V",
+    },
+    "pv3current": {
+        "name": "PV3 Current",
+        "state_class": "measurement",
+        "device_class": "current",
+        "unit_of_measurement": "A",
+    },
+    "pv3watt": {
+        "name": "PV3 Watt",
+        "state_class": "measurement",
+        "device_class": "power",
+        "unit_of_measurement": "W",
     },
     "pvpowerin": {
         "name": "PV Input (Actual)",
@@ -104,7 +123,46 @@ mapping = {
         "unit_of_measurement": "Hz",
         "icon": "mdi:waveform",
     },
+    "frequency": {
+        "name": "Grid frequency",
+        "state_class": "measurement",
+        "device_class": "frequency",
+        "unit_of_measurement": "Hz",
+        "icon": "mdi:waveform",
+    },
+    "line_freq": {
+        "name": "Grid frequency",
+        "state_class": "measurement",
+        "device_class": "frequency",
+        "unit_of_measurement": "Hz",
+        "icon": "mdi:waveform",
+    },
+    "outputfreq": {
+        "name": "Output frequency",
+        "state_class": "measurement",
+        "device_class": "frequency",
+        "unit_of_measurement": "Hz",
+        "icon": "mdi:waveform",
+    },
+    "outputvolt": {
+        "name": "Output Voltage",
+        "state_class": "measurement",
+        "device_class": "voltage",
+        "unit_of_measurement": "V",
+    },
     # Grid config
+    "grid_volt": {
+        "name": "Output Voltage",
+        "state_class": "measurement",
+        "device_class": "voltage",
+        "unit_of_measurement": "V",
+    },
+    "bus_volt": {
+        "name": "Bus Voltage",
+        "state_class": "measurement",
+        "device_class": "voltage",
+        "unit_of_measurement": "V",
+    },
     "pvgridvoltage": {
         "name": "Phase 1 voltage",
         "state_class": "measurement",
@@ -168,7 +226,14 @@ mapping = {
         "icon": "mdi:solar-power",
     },
     "epvtoday": {
-        "name": "PV Energy today (Today)",
+        "name": "Solar energy today",
+        "state_class": "total",
+        "device_class": "energy",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:solar-power",
+    },
+    "epvToday": {
+        "name": "Solar energy today",
         "state_class": "total",
         "device_class": "energy",
         "unit_of_measurement": "kWh",
@@ -196,7 +261,7 @@ mapping = {
         "icon": "mdi:solar-power",
     },
     "epvtotal": {
-        "name": "Generated PV energy (Total)",
+        "name": "Lifetime solar energy",
         "device_class": "energy",
         "unit_of_measurement": "kWh",
         "icon": "mdi:solar-power",
@@ -209,7 +274,21 @@ mapping = {
         "unit_of_measurement": "kWh",
         "icon": "mdi:solar-power",
     },
+    "epv1tot": {
+        "name": "Solar PV1 production (Total)",
+        "state_class": "total",
+        "device_class": "energy",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:solar-power",
+    },
     "epv2total": {
+        "name": "Solar PV2 production (Total)",
+        "state_class": "total",
+        "device_class": "energy",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:solar-power",
+    },
+    "epv2tot": {
         "name": "Solar PV2 production (Total)",
         "state_class": "total",
         "device_class": "energy",
@@ -225,9 +304,8 @@ mapping = {
         "state_class": "total",
     },
     "pactogridr": {
-        "name": "Energy export (Today)",
+        "name": "Export to grid (Today)",
         "device_class": "energy",
-        "state_class": "measurement",
         "unit_of_measurement": "Wh",
         "state_class": "total",
         "icon": "mdi:solar-power",
@@ -235,7 +313,6 @@ mapping = {
     "pactogridtot": {
         "name": "Energy export (Total)",
         "device_class": "energy",
-        "state_class": "measurement",
         "unit_of_measurement": "Wh",
         "state_class": "total_increasing",
         "icon": "mdi:solar-power",
@@ -258,7 +335,7 @@ mapping = {
         "unit_of_measurement": "°C",
     },
     "pvipmtemperature": {
-        "name": "IPM temperature",
+        "name": "Intelligent Power Management temperature",
         "device_class": "temperature",
         "unit_of_measurement": "°C",
         "state_class": "measurement",
@@ -276,14 +353,14 @@ mapping = {
         "state_class": "measurement",
     },
     "etogrid_tod": {
-        "name": "Energy to grid (Today)",
+        "name": "Export to grid today",
         "device_class": "energy",
         "unit_of_measurement": "kWh",
         "icon": "mdi:transmission-tower-import",
         "state_class": "total",
     },
     "etogrid_tot": {
-        "name": "Energy to grid (Total)",
+        "name": "Lifetime export to grid",
         "device_class": "energy",
         "unit_of_measurement": "kWh",
         "icon": "mdi:transmission-tower-import",
@@ -303,33 +380,46 @@ mapping = {
         "icon": "mdi:transmission-tower-export",
         "state_class": "total_increasing",
     },
+    # From https://github.com/muppet3000/homeassistant-growatt_server_api/blob/dev/custom_components/growatt_server_api/sensor_types/mix.py#L170
+    # shoud be import from grid
     "pactouserr": {
         "name": "Import from grid (Actual)",
         "device_class": "energy",
-        "device_class": "power",
-        "unit_of_measurement": "W",
+        "unit_of_measurement": "kWh",
         "icon": "mdi:transmission-tower-export",
     },
-    # Register 1015 # TODO: investiagate
-    # "pactousertot": {
-    #     "name": "Power consumption total",
-    #     "device_class": "power",
-    #     "unit_of_measurement": "kW",
-    #     "icon": "mdi:transmission-tower-export",
-    # },
+    "pactousertot": {
+        "name": "Lifetime import from grid",
+        "device_class": "energy",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:transmission-tower-export",
+        "state_class": "total_increasing",
+    },
     "elocalload_tod": {
-        "name": "Load consumption (Today)",
+        "name": "Load consumption today",
         "device_class": "energy",
         "unit_of_measurement": "Wh",
         "icon": "mdi:solar-power",
         "state_class": "total",
     },
     "elocalload_tot": {
-        "name": "Load consumption (Total)",
+        "name": "Lifetime load consumption",
         "device_class": "energy",
         "unit_of_measurement": "Wh",
         "icon": "mdi:solar-power",
         "state_class": "total_increasing",
+    },
+    "AC_InWatt": {
+        "name": "Grid input power",
+        "state_class": "measurement",
+        "device_class": "power",
+        "unit_of_measurement": "W",
+    },
+    "AC_InVA": {
+        "name": "Grid input reactive power",
+        "state_class": "measurement",
+        "device_class": "apparent_power",
+        "unit_of_measurement": "VA",
     },
     "plocaloadr": {
         "name": "Local load consumption",
@@ -374,6 +464,19 @@ mapping = {
         "unit_of_measurement": "%",
         "icon": "mdi:battery-charging-60",
     },
+    "batterySoc": {
+        "name": "Battery charge",
+        "device_class": "battery",
+        "state_class": "measurement",
+        "unit_of_measurement": "%",
+        "icon": "mdi:battery-charging-60",
+    },
+    "bat_Volt": {
+        "name": "Battery voltage",
+        "state_class": "measurement",
+        "device_class": "voltage",
+        "unit_of_measurement": "V",
+    },
     # taken from register 1048 of RTU manual v1.20
     "batterytype": {
         "name": "Batteries type",
@@ -415,8 +518,41 @@ mapping = {
         "unit_of_measurement": "kWh",
         "icon": "mdi:battery-arrow-down",
     },
+    "ebatDischarToday": {
+        "name": "Battery discharged today",
+        "device_class": "energy",
+        "state_class": "total",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:battery-arrow-down",
+    },
+    "ebatDischarTotal": {
+        "name": "Lifetime battery discharged",
+        "device_class": "energy",
+        "state_class": "total_increasing",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:battery-arrow-down",
+    },
+    "pdischarge1": {
+        "name": "Battery discharging W",
+        "device_class": "power",
+        "unit_of_measurement": "kW",
+        "state_class": "measurement",
+        "icon": "mdi:battery-arrow-up",
+    },
+    "ACCharCurr": {
+        "name": "Battery charging current",
+        "device_class": "current",
+        "unit_of_measurement": "A",
+        "state_class": "measurement",
+    },
     "battemp": {
         "name": "Battery temperature",
+        "device_class": "temperature",
+        "unit_of_measurement": "°C",
+        "icon": "mdi:thermometer",
+    },
+    "invtemp": {
+        "name": "Inverter temperature",
         "device_class": "temperature",
         "unit_of_measurement": "°C",
         "icon": "mdi:thermometer",
@@ -461,13 +597,13 @@ mapping = {
         "unit_of_measurement": "V",
     },
     "ppv1": {
-        "name": "PV1 charge power",
+        "name": "PV1 Wattage",
         "device_class": "power",
         "unit_of_measurement": "W",
         "state_class": "measurement",
     },
     "ppv2": {
-        "name": "PV1 charge power",
+        "name": "PV2 Wattage",
         "device_class": "power",
         "unit_of_measurement": "W",
         "state_class": "measurement",
@@ -494,6 +630,12 @@ mapping = {
         "name": "Output apparent power",
         "device_class": "apparent_power",
         "unit_of_measurement": "VA",
+        "state_class": "measurement",
+    },
+    "Inv_Curr": {
+        "name": "Inverter current",
+        "device_class": "current",
+        "unit_of_measurement": "A",
         "state_class": "measurement",
     },
 }
@@ -690,7 +832,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
             return 4
         print(f"\tPushing {len(configs_payloads)} configurations payload to HA")
         publish_multiple(conf, configs_payloads)
-        print(f"\tConfigurations pushed")
+        print("\tConfigurations pushed")
         # Now it's configured, no need to come back
         MqttStateHandler.set_configured(device_serial)
 
