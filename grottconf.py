@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2023-03-17 
-# Version 2.8.2
+# Updated: 2022-08-26 
+# Version 2.7.6
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -850,7 +850,7 @@ class Conf :
             "pdischarge1"        : {"value" :702, "length" : 4, "type" : "num", "divide" : 10}, 
             "p1charge1"          : {"value" :710, "length" : 4, "type" : "num", "divide" : 10}, 
             "vbat"               : {"value" :718, "length" : 2, "type" : "num", "divide" : 10}, 
-            "SOC"                : {"value" :722, "length" : 2, "type" : "num", "divide" : 1}, 
+            "SOC"                : {"value" :722, "length" : 2, "type" : "num", "divide" : 1},
             "pactouserr"         : {"value" :726, "length" : 4, "type" : "num", "divide" : 10}, 
             "#pactousers"        : {"value" :734, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
             "#pactousert"        : {"value" :742, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
@@ -1230,8 +1230,8 @@ class Conf :
             "pdischarge1"        : {"value" :622, "length" : 4, "type" : "num", "divide" : 10}, 
             "p1charge1"          : {"value" :630, "length" : 4, "type" : "num", "divide" : 10}, 
             "vbat"               : {"value" :738, "length" : 2, "type" : "num", "divide" : 10}, 
-            "SOC"                : {"value" :742, "length" : 2, "type" : "num", "divide" : 1}, 
-            "pactouserr"         : {"value" :746, "length" : 4, "type" : "num", "divide" : 10},     
+            "SOC"                : {"value" :742, "length" : 2, "type" : "num", "divide" : 100}, 
+            "pactouserr"         : {"value" :746, "length" : 4, "type" : "num", "divide" : 10}, 
             "#pactousers"        : {"value" :654, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
             "#pactousert"        : {"value" :662, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
             "pactousertot"       : {"value" :670, "length" : 4, "type" : "num", "divide" : 10},
