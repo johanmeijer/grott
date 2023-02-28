@@ -2,13 +2,14 @@
 # author Etienne G.
 
 import json
+import traceback
 from datetime import datetime, timezone
 
 from paho.mqtt.publish import single, multiple
 
 from grottconf import Conf
 
-__version__ = "0.0.7-RC7"
+__version__ = "0.0.7-RC8"
 
 """A pluging for grott
 This plugin allow to have autodiscovery of the device in HA
@@ -303,18 +304,32 @@ mapping = {
         "icon": "mdi:solar-power",
         "state_class": "total",
     },
+    "pactouserr": {
+        "name": "Import from grid",
+        "state_class": "measurement",
+        "device_class": "power",
+        "unit_of_measurement": "W",
+        "icon": "mdi:transmission-tower-export",
+    },
+    "pactousertot": {
+        "name": "Import from grid total",
+        "state_class": "measurement",
+        "device_class": "power",
+        "unit_of_measurement": "W",
+        "icon": "mdi:transmission-tower-export",
+    },
     "pactogridr": {
-        "name": "Export to grid (Today)",
-        "device_class": "energy",
-        "unit_of_measurement": "Wh",
-        "state_class": "total",
+        "name": "Export to grid",
+        "state_class": "measurement",
+        "device_class": "power",
+        "unit_of_measurement": "W",
         "icon": "mdi:solar-power",
     },
     "pactogridtot": {
-        "name": "Energy export (Total)",
-        "device_class": "energy",
-        "unit_of_measurement": "Wh",
-        "state_class": "total_increasing",
+        "name": "Export to grid total",
+        "state_class": "measurement",
+        "device_class": "power",
+        "unit_of_measurement": "W",
         "icon": "mdi:solar-power",
     },
     "pvstatus": {
@@ -375,21 +390,6 @@ mapping = {
     },
     "etouser_tot": {
         "name": "Import from grid (Total)",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:transmission-tower-export",
-        "state_class": "total_increasing",
-    },
-    # From https://github.com/muppet3000/homeassistant-growatt_server_api/blob/dev/custom_components/growatt_server_api/sensor_types/mix.py#L170
-    # shoud be import from grid
-    "pactouserr": {
-        "name": "Import from grid (Actual)",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:transmission-tower-export",
-    },
-    "pactousertot": {
-        "name": "Lifetime import from grid",
         "device_class": "energy",
         "unit_of_measurement": "kWh",
         "icon": "mdi:transmission-tower-export",
@@ -852,6 +852,8 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
     except Exception as e:
         print("[HA ext] - Exception while publishing - {}".format(e))
         # Reset connection state in case of problem
+        if conf.verbose:
+            traceback.print_exc()
         return 2
     return 0
 
