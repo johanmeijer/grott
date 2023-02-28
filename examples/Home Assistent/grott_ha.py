@@ -462,6 +462,7 @@ mapping = {
         "device_class": "battery",
         "state_class": "measurement",
         "unit_of_measurement": "%",
+        "value_template": "{{ value_json.SOC | int }}",
         "icon": "mdi:battery-charging-60",
     },
     "batterySoc": {
