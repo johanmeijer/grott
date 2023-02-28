@@ -42,8 +42,8 @@ Return codes:
 """
 
 
-config_topic = "homeassistant/{sensor_type}/grott/{device}_{attribut}/config"
-state_topic = "homeassistant/grott/{device}/state"
+CONFIG_TOPIC = "homeassistant/{sensor_type}/grott/{device}_{attribut}/config"
+STATE_TOPIC = "homeassistant/grott/{device}/state"
 
 
 mapping = {
@@ -139,14 +139,14 @@ mapping = {
         "icon": "mdi:waveform",
     },
     "outputfreq": {
-        "name": "Output frequency",
+        "name": "Inverter output frequency",
         "state_class": "measurement",
         "device_class": "frequency",
         "unit_of_measurement": "Hz",
         "icon": "mdi:waveform",
     },
     "outputvolt": {
-        "name": "Output Voltage",
+        "name": "Inverter output Voltage",
         "state_class": "measurement",
         "device_class": "voltage",
         "unit_of_measurement": "V",
@@ -444,8 +444,36 @@ mapping = {
         "icon": "mdi:battery-arrow-up",
         "state_class": "total",
     },
+    "eacCharToday": {
+        "name": "Battery charge from grid today",
+        "device_class": "energy",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:battery-arrow-up",
+        "state_class": "total",
+    },
     "eacharge_total": {
-        "name": "Battery charge from AC (Today)",
+        "name": "Battery charge from AC (Total)",
+        "device_class": "energy",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:solar-power",
+        "state_class": "total_increasing",
+    },
+    "eacCharTotal": {
+        "name": "Lifetime battery charge from grid",
+        "device_class": "energy",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:solar-power",
+        "state_class": "total_increasing",
+    },
+    "eacDischarToday": {
+        "name": "Grid consumption today",
+        "device_class": "energy",
+        "unit_of_measurement": "kWh",
+        "icon": "mdi:solar-power",
+        "state_class": "total",
+    },
+    "eacDischarTotal": {
+        "name": "Lifetime grid consumption",
         "device_class": "energy",
         "unit_of_measurement": "kWh",
         "icon": "mdi:solar-power",
@@ -464,6 +492,11 @@ mapping = {
         "unit_of_measurement": "%",
         "value_template": "{{ value_json.SOC | int }}",
         "icon": "mdi:battery-charging-60",
+    },
+    "loadpercent": {
+        "name": "Load percentage",
+        "state_class": "measurement",
+        "unit_of_measurement": "%",
     },
     "batterySoc": {
         "name": "Battery charge",
@@ -546,6 +579,18 @@ mapping = {
         "unit_of_measurement": "A",
         "state_class": "measurement",
     },
+    "acchr_watt": {
+        "name": "Storage charging from grid",
+        "device_class": "power",
+        "unit_of_measurement": "W",
+        "state_class": "measurement",
+    },
+    "acchr_VA": {
+        "name": "Storage charging from grid reactive power",
+        "device_class": "apparent_power",
+        "unit_of_measurement": "VA",
+        "state_class": "measurement",
+    },
     "battemp": {
         "name": "Battery temperature",
         "device_class": "temperature",
@@ -558,11 +603,21 @@ mapping = {
         "unit_of_measurement": "°C",
         "icon": "mdi:thermometer",
     },
+    "dcdctemp": {
+        "name": "Battery charger temperature",
+        "device_class": "temperature",
+        "unit_of_measurement": "°C",
+        "icon": "mdi:thermometer",
+    },
     "spbusvolt": {
         "state_class": "measurement",
         "device_class": "voltage",
         "name": "BP bus voltage",
         "unit_of_measurement": "V",
+    },
+    # faults
+    "faultcode": {
+        "name": "Fault code",
     },
     "systemfaultword1": {
         "name": "System fault register 1",
@@ -584,6 +639,52 @@ mapping = {
     },
     "systemfaultword7": {
         "name": "System fault register 7",
+    },
+    "faultBit": {"name": "Fault message"},
+    "warningBit": {"name": "Warning message"},
+    "faultValue": {"name": "Fault value"},
+    "warningValue": {"name": "Warning value"},
+    "isof": {
+        "name": "ISO Fault",
+        "state_class": "measurement",
+        "device_class": "voltage",
+        "unit_of_measurement": "V",
+    },
+    "gfcif": {
+        "name": "GFCI fault",
+        "device_class": "current",
+        "unit_of_measurement": "A",
+        "state_class": "measurement",
+    },
+    "dcif": {
+        "name": "DCI fault",
+        "device_class": "current",
+        "unit_of_measurement": "A",
+        "state_class": "measurement",
+    },
+    "vpvfault": {
+        "name": "PV voltage fault",
+        "state_class": "measurement",
+        "device_class": "voltage",
+        "unit_of_measurement": "V",
+    },
+    "vacfault": {
+        "name": "AC voltage fault",
+        "state_class": "measurement",
+        "device_class": "voltage",
+        "unit_of_measurement": "V",
+    },
+    "facfault": {
+        "name": "AC frequency fault",
+        "state_class": "measurement",
+        "device_class": "frequency",
+        "unit_of_measurement": "Hz",
+    },
+    "tmpfault": {
+        "name": "Temperature fault",
+        "state_class": "measurement",
+        "device_class": "temperature",
+        "unit_of_measurement": "°C",
     },
     "vpv1": {
         "name": "PV1 Voltage",
@@ -622,19 +723,25 @@ mapping = {
         "state_class": "measurement",
     },
     "op_watt": {
-        "name": "Output active power",
+        "name": "Inverter active power",
         "device_class": "power",
         "unit_of_measurement": "W",
         "state_class": "measurement",
     },
     "op_va": {
-        "name": "Output apparent power",
+        "name": "Inverter apparent power",
         "device_class": "apparent_power",
         "unit_of_measurement": "VA",
         "state_class": "measurement",
     },
     "Inv_Curr": {
         "name": "Inverter current",
+        "device_class": "current",
+        "unit_of_measurement": "A",
+        "state_class": "measurement",
+    },
+    "OP_Curr": {
+        "name": "Inverter consumption current",
         "device_class": "current",
         "unit_of_measurement": "A",
         "state_class": "measurement",
@@ -789,7 +896,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
                 continue
 
             try:
-                topic = config_topic.format(
+                topic = CONFIG_TOPIC.format(
                     sensor_type="sensor",
                     device=device_serial,
                     attribut=key,
@@ -813,7 +920,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
         try:
             key = "grott_last_push"
             payload = make_payload(conf, device_serial, key, key)
-            topic = config_topic.format(
+            topic = CONFIG_TOPIC.format(
                 sensor_type="sensor",
                 device=device_serial,
                 attribut=key,
@@ -846,7 +953,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
     try:
         publish_single(
             conf,
-            state_topic.format(device=device_serial),
+            STATE_TOPIC.format(device=device_serial),
             json.dumps(values),
             retain=retain,
         )
