@@ -5,7 +5,7 @@ import json
 import traceback
 from datetime import datetime, timezone
 
-from paho.mqtt.publish import single, multiple
+from paho.mqtt.publish import multiple, single
 
 from grottconf import Conf
 
