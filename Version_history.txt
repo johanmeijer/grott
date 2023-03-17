@@ -245,3 +245,8 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 2.8.1 
 - added first SPA support 
 - increase hardcoded register limit from 1024 to 4096
+2.8.2 
+- added first MIN support 
+- added some field to SPA layout 
+- fix bug with gverbose environment (see pr: #304)
+- fix bug in devider for batery SOC (see pr: #305)
