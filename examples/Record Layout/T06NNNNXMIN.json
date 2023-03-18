@@ -1,4 +1,4 @@
-{"T06NNNNXMIM": {
+{"T06NNNNXMIN": {
      "decrypt"           : {"value" :"true"},
      "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
      "date"              : {"value" :136, "divide" : 10}, 
@@ -156,4 +156,4 @@
      "bms_fw"             : {"value" : 1074,"length" : 2,"type" : "num","divide" : 1},
      "bms_mcuversion"     : {"value" : 1078,"length" : 2,"type" : "num","divide" : 1},
      "bms_commtype"       : {"value" : 1082,"length" : 2,"type" : "num","divide" : 1}
-	      } }
+	} }
