@@ -511,6 +511,36 @@ mapping = {
         "device_class": "voltage",
         "unit_of_measurement": "V",
     },
+    "ACDischarWatt": {
+        "name": "Load power",
+        "device_class": "power",
+        "unit_of_measurement": "W",
+        "state_class": "measurement",
+    },
+    "ACDischarVA": {
+        "name": "Load reactive power ",
+        "device_class": "apparent_power",
+        "unit_of_measurement": "VA",
+        "state_class": "measurement",
+    },
+    "BatDischarWatt": {
+        "name": "Battery discharge power",
+        "device_class": "power",
+        "unit_of_measurement": "W",
+        "state_class": "measurement",
+    },
+    "BatWatt": {
+        "name": "Battery discharge power",
+        "device_class": "power",
+        "unit_of_measurement": "W",
+        "state_class": "measurement",
+    },
+    "BatDischarVA": {
+        "name": "Battery discharge reactive power",
+        "device_class": "apparent_power",
+        "unit_of_measurement": "VA",
+        "state_class": "measurement",
+    },
     # taken from register 1048 of RTU manual v1.20
     "batterytype": {
         "name": "Batteries type",
@@ -753,6 +783,7 @@ MQTT_PORT_CONF_KEY = "ha_mqtt_port"
 MQTT_USERNAME_CONF_KEY = "ha_mqtt_user"
 MQTT_PASSWORD_CONF_KEY = "ha_mqtt_password"
 MQTT_RETAIN_CONF_KEY = "ha_mqtt_retain"
+# JSON_CONFIG = "ha_config"
 
 
 def make_payload(conf: Conf, device: str, name: str, key: str, unit: str = None):
