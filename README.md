@@ -12,6 +12,7 @@ The purpose of Grott is to read, parse and forward the *raw metrics as they are 
 
 ### New in Version 2.8
 * Added first SPA support (2.8.1)
+* Added first MIN support (2.8.2)
 
 ### New in Version 2.7  
 * Added first beta of grottserver to act as destination for inverter/datalogger data (remove need to cummunicate with internet).
