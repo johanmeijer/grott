@@ -4,6 +4,8 @@
 import json
 import traceback
 from datetime import datetime, timezone
+from typing import Optional
+from dataclasses import dataclass, asdict
 
 from paho.mqtt.publish import multiple, single
 
@@ -46,736 +48,297 @@ CONFIG_TOPIC = "homeassistant/{sensor_type}/grott/{device}_{attribut}/config"
 STATE_TOPIC = "homeassistant/grott/{device}/state"
 
 
+@dataclass
+class BaseSensor:
+    name: str
+    icon: Optional[str] = None
+    value_template: Optional[str] = None
+
+
+@dataclass
+class MeasurementSensor(BaseSensor):
+    state_class: str = "measurement"
+    device_class: Optional[str] = None
+
+
+@dataclass
+class PercentSensor(MeasurementSensor):
+    unit_of_measurement: str = "%"
+
+
+@dataclass
+class VoltageSensor(MeasurementSensor):
+    device_class: str = "voltage"
+    unit_of_measurement: str = "V"
+
+
+@dataclass
+class CurrentSensor(MeasurementSensor):
+    device_class: str = "current"
+    unit_of_measurement: str = "A"
+
+
+@dataclass
+class PowerSensor(MeasurementSensor):
+    device_class: str = "power"
+    unit_of_measurement: str = "W"
+
+
+@dataclass
+class FrequencySensor(MeasurementSensor):
+    device_class: str = "frequency"
+    unit_of_measurement: str = "Hz"
+
+
+@dataclass
+class TemperatureSensor(MeasurementSensor):
+    device_class: str = "temperature"
+    unit_of_measurement: str = "°C"
+
+
+@dataclass
+class DurationSensor(MeasurementSensor):
+    device_class: str = "duration"
+    unit_of_measurement: str = "h"
+
+
+@dataclass
+class ApparentPower(MeasurementSensor):
+    device_class: str = "apparent_power"
+    unit_of_measurement: str = "VA"
+
+
+@dataclass
+class BatteryChargeSensor(MeasurementSensor):
+    device_class: str = "battery"
+    unit_of_measurement: str = "%"
+
+
+@dataclass
+class EnergySensor(MeasurementSensor):
+    state_class: str = "total"
+    device_class: str = "energy"
+    unit_of_measurement: str = "kWh"
+
+
+@dataclass
+class IncreasingEnergySensor(MeasurementSensor):
+    state_class: str = "total_increasing"
+    device_class: str = "energy"
+    unit_of_measurement: str = "kWh"
+
+
 mapping = {
-    "datalogserial": {
-        "name": "Datalogger serial",
-    },
-    "pvserial": {"name": "Serial"},
-    "pv1voltage": {
-        "name": "PV1 Voltage",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
-    "pv1current": {
-        "name": "PV1 Current",
-        "state_class": "measurement",
-        "device_class": "current",
-        "unit_of_measurement": "A",
-    },
-    "pv1watt": {
-        "name": "PV1 Watt",
-        "state_class": "measurement",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-    },
-    "pv2voltage": {
-        "name": "PV2 Voltage",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
-    "pv2current": {
-        "name": "PV2 Current",
-        "state_class": "measurement",
-        "device_class": "current",
-        "unit_of_measurement": "A",
-    },
-    "pv2watt": {
-        "name": "PV2 Watt",
-        "state_class": "measurement",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-    },
-    "pv3voltage": {
-        "name": "PV3 Voltage",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
-    "pv3current": {
-        "name": "PV3 Current",
-        "state_class": "measurement",
-        "device_class": "current",
-        "unit_of_measurement": "A",
-    },
-    "pv3watt": {
-        "name": "PV3 Watt",
-        "state_class": "measurement",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-    },
-    "pvpowerin": {
-        "name": "PV Input (Actual)",
-        "state_class": "measurement",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-    },
-    "pvpowerout": {
-        "name": "PV Output (Actual)",
-        "state_class": "measurement",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-    },
-    "pvfrequentie": {
-        "name": "Grid frequency",
-        "state_class": "measurement",
-        "device_class": "frequency",
-        "unit_of_measurement": "Hz",
-        "icon": "mdi:waveform",
-    },
-    "frequency": {
-        "name": "Grid frequency",
-        "state_class": "measurement",
-        "device_class": "frequency",
-        "unit_of_measurement": "Hz",
-        "icon": "mdi:waveform",
-    },
-    "line_freq": {
-        "name": "Grid frequency",
-        "state_class": "measurement",
-        "device_class": "frequency",
-        "unit_of_measurement": "Hz",
-        "icon": "mdi:waveform",
-    },
-    "outputfreq": {
-        "name": "Inverter output frequency",
-        "state_class": "measurement",
-        "device_class": "frequency",
-        "unit_of_measurement": "Hz",
-        "icon": "mdi:waveform",
-    },
-    "outputvolt": {
-        "name": "Inverter output Voltage",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
+    "datalogserial": BaseSensor("Datalogger serial"),
+    "pvserial": BaseSensor("serial"),
+    "pv1voltage": VoltageSensor("PV1 Voltage"),
+    "pv1current": CurrentSensor("PV1 Current"),
+    "pv1watt": PowerSensor("PV1 Watt"),
+    "pv2voltage": VoltageSensor("PV2 Voltage"),
+    "pv2current": CurrentSensor("PV2 Current"),
+    "pv2watt": PowerSensor("PV2 Watt"),
+    "pv3voltage": VoltageSensor("PV3 Voltage"),
+    "pv3current": CurrentSensor("PV3 Current"),
+    "pv3watt": PowerSensor("PV3 Watt"),
+    "pvpowerin": PowerSensor("PV Input (Actual)"),
+    "pvpowerout": PowerSensor("PV Output (Actual)"),
+    "pvfrequentie": FrequencySensor("Grid Frequency", icon="mdi:waveform"),
+    "frequency": FrequencySensor("Grid Frequency", icon="mdi:waveform"),
+    "line_freq": FrequencySensor("Grid Frequency", icon="mdi:waveform"),
+    "outputfreq": FrequencySensor("Inverter output frequency", icon="mdi:waveform"),
+    "outputvolt": VoltageSensor("Inverter output Voltage"),
     # Grid config
-    "grid_volt": {
-        "name": "Output Voltage",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
-    "bus_volt": {
-        "name": "Bus Voltage",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
-    "pvgridvoltage": {
-        "name": "Phase 1 voltage",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
-    "pvgridvoltage2": {
-        "name": "Phase 2 voltage",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
-    "pvgridvoltage3": {
-        "name": "Phase 3 voltage",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
-    "pvgridcurrent": {
-        "name": "Phase 1 current",
-        "state_class": "measurement",
-        "device_class": "current",
-        "unit_of_measurement": "A",
-    },
-    "pvgridcurrent2": {
-        "state_class": "measurement",
-        "device_class": "current",
-        "name": "Phase 2 current",
-        "unit_of_measurement": "A",
-    },
-    "pvgridcurrent3": {
-        "name": "Phase 3 current",
-        "state_class": "measurement",
-        "device_class": "current",
-        "unit_of_measurement": "A",
-    },
-    "pvgridpower": {
-        "name": "Phase 1 power",
-        "state_class": "measurement",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-    },
-    "pvgridpower2": {
-        "name": "Phase 2 power",
-        "state_class": "measurement",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-    },
-    "pvgridpower3": {
-        "name": "Phase 3 power",
-        "state_class": "measurement",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-    },
+    "grid_volt": VoltageSensor("Grid Voltage"),
+    "bus_volt": VoltageSensor("Bus Voltage"),
+    "pvgridvoltage": VoltageSensor("Phase 1 voltage"),
+    "pvgridvoltage2": VoltageSensor("Phase 2 voltage"),
+    "pvgridvoltage3": VoltageSensor("Phase 3 voltage"),
+    "pvgridcurrent": CurrentSensor("Phase 1 current"),
+    "pvgridcurrent2": CurrentSensor("Phase 2 current"),
+    "pvgridcurrent3": CurrentSensor("Phase 3 current"),
+    "pvgridpower": PowerSensor("Phase 1 power"),
+    "pvgridpower2": PowerSensor("Phase 2 power"),
+    "pvgridpower3": PowerSensor("Phase 3 power"),
     # End grid
-    "pvenergytoday": {
-        "name": "Generated energy (Today)",
-        "state_class": "total",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-    },
-    "epvtoday": {
-        "name": "Solar energy today",
-        "state_class": "total",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-    },
-    "epvToday": {
-        "name": "Solar energy today",
-        "state_class": "total",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-    },
-    "epv1today": {
-        "name": "Solar PV1 production",
-        "state_class": "total",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-    },
-    "epv2today": {
-        "name": "Solar PV2 production",
-        "state_class": "total",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-    },
-    "pvenergytotal": {
-        "state_class": "total_increasing",
-        "device_class": "energy",
-        "name": "Generated energy (Total)",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-    },
-    "epvtotal": {
-        "name": "Lifetime solar energy",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-        "state_class": "total",
-    },
-    "epv1total": {
-        "name": "Solar PV1 production (Total)",
-        "state_class": "total",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-    },
-    "epv1tot": {
-        "name": "Solar PV1 production (Total)",
-        "state_class": "total",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-    },
-    "epv2total": {
-        "name": "Solar PV2 production (Total)",
-        "state_class": "total",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-    },
-    "epv2tot": {
-        "name": "Solar PV2 production (Total)",
-        "state_class": "total",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-    },
+    "pvenergytoday": EnergySensor("Generated energy (Today)", icon="mdi:solar-power"),
+    "epvtoday": EnergySensor("Solar energy today", icon="mdi:solar-power"),
+    "epvToday": IncreasingEnergySensor("Solar energy today", icon="mdi:solar-power"),
+    "epv1today": EnergySensor("Solar PV1 energy today", icon="mdi:solar-power"),
+    "epv2today": EnergySensor("Solar PV2 energy today", icon="mdi:solar-power"),
+    "pvenergytotal": IncreasingEnergySensor(
+        "Generated energy (Total)", icon="mdi:solar-power"
+    ),
+    "epvtotal": IncreasingEnergySensor("Lifetime solar energy", icon="mdi:solar-power"),
+    "epv1total": IncreasingEnergySensor(
+        "Solar PV1 production (Total)", icon="mdi:solar-power"
+    ),
+    "epv1tot": IncreasingEnergySensor(
+        "Solar PV1 production (Total)", icon="mdi:solar-power"
+    ),
+    "epv2total": IncreasingEnergySensor(
+        "Solar PV2 production (Total)", icon="mdi:solar-power"
+    ),
+    "epv2tot": IncreasingEnergySensor(
+        "Solar PV3 production (Total)", icon="mdi:solar-power"
+    ),
     # For SPH compatiblity
-    "epvTotal": {
-        "name": "Generated PV energy (Total)",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-        "state_class": "total",
-    },
-    "pactouserr": {
-        "name": "Import from grid",
-        "state_class": "measurement",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-        "icon": "mdi:transmission-tower-export",
-    },
-    "pactousertot": {
-        "name": "Import from grid total",
-        "state_class": "measurement",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-        "icon": "mdi:transmission-tower-export",
-    },
-    "pactogridr": {
-        "name": "Export to grid",
-        "state_class": "measurement",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-        "icon": "mdi:solar-power",
-    },
-    "pactogridtot": {
-        "name": "Export to grid total",
-        "state_class": "measurement",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-        "icon": "mdi:solar-power",
-    },
-    "pvstatus": {
-        "name": "State",
-        # "value_template": "{% if value_json.pvstatus == 0 %}Standby{% elif value_json.pvstatus == 1 %}Normal{% elif value_json.pvstatus == 2 %}Fault{% else %}Unknown{% endif %}",
-        "icon": "mdi:power-settings",
-    },
-    "totworktime": {
-        "name": "Working time",
-        "device_class": "duration",
-        "unit_of_measurement": "h",
-        "value_template": "{{ value_json.totworktime| float / 7200 | round(2) }}",
-    },
-    "pvtemperature": {
-        "name": "Inverter temperature",
-        "state_class": "measurement",
-        "device_class": "temperature",
-        "unit_of_measurement": "°C",
-    },
-    "pvipmtemperature": {
-        "name": "Intelligent Power Management temperature",
-        "device_class": "temperature",
-        "unit_of_measurement": "°C",
-        "state_class": "measurement",
-    },
-    "pvboottemperature": {
-        "name": "Inverter boost temperature",
-        "device_class": "temperature",
-        "unit_of_measurement": "°C",
-        "state_class": "measurement",
-    },
-    "pvboosttemp": {
-        "name": "Inverter boost temperature",
-        "device_class": "temperature",
-        "unit_of_measurement": "°C",
-        "state_class": "measurement",
-    },
-    "etogrid_tod": {
-        "name": "Export to grid today",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:transmission-tower-import",
-        "state_class": "total",
-    },
-    "etogrid_tot": {
-        "name": "Lifetime export to grid",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:transmission-tower-import",
-        "state_class": "total_increasing",
-    },
-    "etouser_tod": {
-        "name": "Import from grid (Today)",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-        "state_class": "total",
-    },
-    "etouser_tot": {
-        "name": "Import from grid (Total)",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:transmission-tower-export",
-        "state_class": "total_increasing",
-    },
-    "elocalload_tod": {
-        "name": "Load consumption today",
-        "device_class": "energy",
-        "unit_of_measurement": "Wh",
-        "icon": "mdi:solar-power",
-        "state_class": "total",
-    },
-    "elocalload_tot": {
-        "name": "Lifetime load consumption",
-        "device_class": "energy",
-        "unit_of_measurement": "Wh",
-        "icon": "mdi:solar-power",
-        "state_class": "total_increasing",
-    },
-    "AC_InWatt": {
-        "name": "Grid input power",
-        "state_class": "measurement",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-    },
-    "AC_InVA": {
-        "name": "Grid input reactive power",
-        "state_class": "measurement",
-        "device_class": "apparent_power",
-        "unit_of_measurement": "VA",
-    },
-    "plocaloadr": {
-        "name": "Local load consumption",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-        "icon": "mdi:transmission-tower-export",
-    },
-    "grott_last_push": {
-        "name": "Grott last data push",
-        "device_class": "timestamp",
-        "value_template": "{{value_json.grott_last_push}}",
-    },
-    "grott_last_measure": {
-        "name": "Last measure",
-        "device_class": "timestamp",
-    },
+    "epvTotal": IncreasingEnergySensor(
+        "Generated PV energy (Total)", icon="mdi:solar-power"
+    ),
+    "pactouserr": PowerSensor("Import from grid", icon="mdi:transmission-tower-export"),
+    "pactousertot": PowerSensor(
+        "Import from grid total", icon="mdi:transmission-tower-export"
+    ),
+    "pactogridr": PowerSensor("Export to grid", icon="mdi:solar-power"),
+    "pactogridtot": PowerSensor("Export to grid total", icon="mdi:solar-power"),
+    "pvstatus": BaseSensor("State", icon="mdi:power-settings"),
+    "totworktime": DurationSensor(
+        "Working time",
+        value_template="{{ value_json.totworktime| float / 7200 | round(2) }}",
+    ),
+    "pvtemperature": TemperatureSensor("Inverter temperature", icon="mdi:thermometer"),
+    "pvipmtemperature": TemperatureSensor(
+        "Intelligent Power Management temperature", icon="mdi:thermometer"
+    ),
+    "pvboottemperature": TemperatureSensor(
+        "Inverter boost temperature", icon="mdi:thermometer"
+    ),
+    "pvboosttemp": TemperatureSensor(
+        "Inverter boost temperature", icon="mdi:thermometer"
+    ),
+    # Energy
+    "etogrid_tod": EnergySensor(
+        "Export to grid today", icon="mdi:transmission-tower-import"
+    ),
+    "etogrid_tot": IncreasingEnergySensor(
+        "Lifetime export to grid", icon="mdi:transmission-tower-import"
+    ),
+    "etouser_tod": EnergySensor(
+        "Import from grid (Today)", icon="mdi:transmission-tower-export"
+    ),
+    "etouser_tot": IncreasingEnergySensor(
+        "Import from grid (Total)", icon="mdi:transmission-tower-export"
+    ),
+    # Need to investigate
+    "elocalload_tod": EnergySensor(
+        "Load consumption today", icon="mdi:solar-power", unit_of_measurement="Wh"
+    ),
+    "elocalload_tot": IncreasingEnergySensor(
+        "Lifetime load consumption", icon="mdi:solar-power", unit_of_measurement="Wh"
+    ),
+    "AC_InWatt": PowerSensor("Grid input power"),
+    "AC_InVA": ApparentPower("Grid input apparent power"),
+    "plocaloadr": PowerSensor(
+        "Local load consumption", icon="mdi:transmission-tower-export"
+    ),
+    # extension data
+    "grott_last_push": MeasurementSensor(
+        "Grott last data push",
+        device_class="timestamp",
+        value_template="{{value_json.grott_last_push}}",
+    ),
+    "grott_last_measure": MeasurementSensor(
+        "Grott last measure",
+        device_class="timestamp",
+        value_template="{{value_json.grott_last_measure}}",
+    ),
     # batteries
-    "eacharge_today": {
-        "name": "Battery charge from AC (Today)",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:battery-arrow-up",
-        "state_class": "total",
-    },
-    "eacCharToday": {
-        "name": "Battery charge from grid today",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:battery-arrow-up",
-        "state_class": "total",
-    },
-    "eacharge_total": {
-        "name": "Battery charge from AC (Total)",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-        "state_class": "total_increasing",
-    },
-    "eacCharTotal": {
-        "name": "Lifetime battery charge from grid",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-        "state_class": "total_increasing",
-    },
-    "eacDischarToday": {
-        "name": "Grid consumption today",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-        "state_class": "total",
-    },
-    "eacDischarTotal": {
-        "name": "Lifetime grid consumption",
-        "device_class": "energy",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:solar-power",
-        "state_class": "total_increasing",
-    },
-    "vbat": {
-        "name": "Battery voltage",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
-    "SOC": {
-        "name": "Battery charge",
-        "device_class": "battery",
-        "state_class": "measurement",
-        "unit_of_measurement": "%",
-        "value_template": "{{ value_json.SOC | int }}",
-        "icon": "mdi:battery-charging-60",
-    },
-    "loadpercent": {
-        "name": "Load percentage",
-        "state_class": "measurement",
-        "unit_of_measurement": "%",
-    },
-    "batterySoc": {
-        "name": "Battery charge",
-        "device_class": "battery",
-        "state_class": "measurement",
-        "unit_of_measurement": "%",
-        "icon": "mdi:battery-charging-60",
-    },
-    "bat_Volt": {
-        "name": "Battery voltage",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
-    "ACDischarWatt": {
-        "name": "Load power",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-        "state_class": "measurement",
-    },
-    "ACDischarVA": {
-        "name": "Load reactive power ",
-        "device_class": "apparent_power",
-        "unit_of_measurement": "VA",
-        "state_class": "measurement",
-    },
-    "BatDischarWatt": {
-        "name": "Battery discharge power",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-        "state_class": "measurement",
-    },
-    "BatWatt": {
-        "name": "Battery discharge power",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-        "state_class": "measurement",
-    },
-    "BatDischarVA": {
-        "name": "Battery discharge reactive power",
-        "device_class": "apparent_power",
-        "unit_of_measurement": "VA",
-        "state_class": "measurement",
-    },
+    "eacharge_today": EnergySensor(
+        "Battery charge from AC (Today)", icon="mdi:battery-arrow-up"
+    ),
+    "eacCharToday": EnergySensor(
+        "Battery charge from grid today", icon="mdi:battery-arrow-up"
+    ),
+    "eacharge_total": IncreasingEnergySensor(
+        "Battery charge from AC (Total)", icon="mdi:battery-arrow-up"
+    ),
+    "eacCharTotal": IncreasingEnergySensor(
+        "Lifetime battery charge from grid", icon="mdi:battery-arrow-up"
+    ),
+    "eacDischarToday": EnergySensor(
+        "Battery dischage today", icon="mdi:battery-arrow-down"
+    ),
+    "eacDischarTotal": IncreasingEnergySensor(
+        "Lifetime battery discharge", icon="mdi:battery-arrow-down"
+    ),
+    "vbat": VoltageSensor("Battery voltage"),
+    "SOC": BatteryChargeSensor(
+        "Battery charge",
+        icon="mdi:battery-charging-60",
+        value_template="{{ value_json.SOC | int }}",
+    ),
+    "loadpercent": PercentSensor("Load percentage"),
+    "batterySoc": BatteryChargeSensor("Battery charge", icon="mdi:battery-charging-60"),
+    "bat_Volt": VoltageSensor("Battery voltage"),
+    "ACDischarWatt": PowerSensor("Load power"),
+    "ACDischarVA": ApparentPower("Load reactive power"),
+    "BatDischarWatt": PowerSensor("Battery discharge power"),
+    "BatWatt": PowerSensor("Battery discharge power"),
+    "BatDischarVA": ApparentPower("Battery discharge reactive power"),
     # taken from register 1048 of RTU manual v1.20
-    "batterytype": {
-        "name": "Batteries type",
-        "value_template": "{% if value_json.batterytype == 0 %}Lithium{% elif value_json.batterytype == '1' %}Lead-acid{% elif value_json.batterytype == '2' %}Other{% else %}Unknown{% endif %}",
-        "icon": "mdi:power-settings",
-    },
-    "p1charge1": {
-        "name": "Battery charge",
-        "device_class": "power",
-        "unit_of_measurement": "kW",
-        "state_class": "measurement",
-        "icon": "mdi:battery-arrow-up",
-    },
-    "eharge1_tod": {
-        "name": "Battery charge (Today)",
-        "device_class": "energy",
-        "state_class": "total",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:battery-arrow-up",
-    },
-    "eharge1_tot": {
-        "name": "Battery charge (Total)",
-        "device_class": "energy",
-        "state_class": "total_increasing",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:battery-arrow-up",
-    },
-    "edischarge1_tod": {
-        "name": "Battery discharge (Today)",
-        "device_class": "energy",
-        "state_class": "total",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:battery-arrow-down",
-    },
-    "edischarge1_tot": {
-        "name": "Battery discharge (Total)",
-        "device_class": "energy",
-        "state_class": "total_increasing",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:battery-arrow-down",
-    },
-    "ebatDischarToday": {
-        "name": "Battery discharged today",
-        "device_class": "energy",
-        "state_class": "total",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:battery-arrow-down",
-    },
-    "ebatDischarTotal": {
-        "name": "Lifetime battery discharged",
-        "device_class": "energy",
-        "state_class": "total_increasing",
-        "unit_of_measurement": "kWh",
-        "icon": "mdi:battery-arrow-down",
-    },
-    "pdischarge1": {
-        "name": "Battery discharging W",
-        "device_class": "power",
-        "unit_of_measurement": "kW",
-        "state_class": "measurement",
-        "icon": "mdi:battery-arrow-up",
-    },
-    "ACCharCurr": {
-        "name": "Battery charging current",
-        "device_class": "current",
-        "unit_of_measurement": "A",
-        "state_class": "measurement",
-    },
-    "acchr_watt": {
-        "name": "Storage charging from grid",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-        "state_class": "measurement",
-    },
-    "acchr_VA": {
-        "name": "Storage charging from grid reactive power",
-        "device_class": "apparent_power",
-        "unit_of_measurement": "VA",
-        "state_class": "measurement",
-    },
-    "battemp": {
-        "name": "Battery temperature",
-        "device_class": "temperature",
-        "unit_of_measurement": "°C",
-        "icon": "mdi:thermometer",
-    },
-    "invtemp": {
-        "name": "Inverter temperature",
-        "device_class": "temperature",
-        "unit_of_measurement": "°C",
-        "icon": "mdi:thermometer",
-    },
-    "dcdctemp": {
-        "name": "Battery charger temperature",
-        "device_class": "temperature",
-        "unit_of_measurement": "°C",
-        "icon": "mdi:thermometer",
-    },
-    "spbusvolt": {
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "name": "BP bus voltage",
-        "unit_of_measurement": "V",
-    },
+    "batterytype": BaseSensor(
+        "Battery type",
+        icon="mdi:power-settings",
+        value_template="{% if value_json.batterytype == '0' %}Lithium{% elif value_json.batterytype == '1' %}Lead-acid{% elif value_json.batterytype == '2' %}Other{% else %}Unknown{% endif %}",
+    ),
+    "p1charge1": PowerSensor("Battery charge power", icon="mdi:battery-arrow-up"),
+    "eharge1_tod": EnergySensor("Battery charge (Today)", icon="mdi:battery-arrow-up"),
+    "eharge1_tot": IncreasingEnergySensor(
+        "Battery charge (Total)", icon="mdi:battery-arrow-up"
+    ),
+    "edischarge1_tod": EnergySensor(
+        "Battery discharge (Today)", icon="mdi:battery-arrow-down"
+    ),
+    "edischarge1_tot": IncreasingEnergySensor(
+        "Battery discharge (Total)", icon="mdi:battery-arrow-down"
+    ),
+    "ebatDischarToday": EnergySensor(
+        "Battery discharged today", icon="mdi:battery-arrow-down"
+    ),
+    "ebatDischarTotal": IncreasingEnergySensor(
+        "Lifetime battery discharged", icon="mdi:battery-arrow-down"
+    ),
+    "pdischarge1": EnergySensor("Battery discharging W", icon="mdi:battery-arrow-down"),
+    "ACCharCurr": CurrentSensor("Battery charging current"),
+    "acchr_watt": PowerSensor("Storage charging from grid"),
+    "acchr_VA": ApparentPower("Storage charging from grid reactive power"),
+    "battemp": TemperatureSensor("Battery temperature", icon="mdi:thermometer"),
+    "invtemp": TemperatureSensor("Inverter temperature", icon="mdi:thermometer"),
+    "dcdctemp": TemperatureSensor(
+        "Battery charger temperature", icon="mdi:thermometer"
+    ),
+    "spbusvolt": VoltageSensor("BP bus voltage"),
     # faults
-    "faultcode": {
-        "name": "Fault code",
-    },
-    "systemfaultword1": {
-        "name": "System fault register 1",
-    },
-    "systemfaultword2": {
-        "name": "System fault register 2",
-    },
-    "systemfaultword3": {
-        "name": "System fault register 3",
-    },
-    "systemfaultword4": {
-        "name": "System fault register 4",
-    },
-    "systemfaultword5": {
-        "name": "System fault register 5",
-    },
-    "systemfaultword6": {
-        "name": "System fault register 6",
-    },
-    "systemfaultword7": {
-        "name": "System fault register 7",
-    },
-    "faultBit": {"name": "Fault message"},
-    "warningBit": {"name": "Warning message"},
-    "faultValue": {"name": "Fault value"},
-    "warningValue": {"name": "Warning value"},
-    "isof": {
-        "name": "ISO Fault",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
-    "gfcif": {
-        "name": "GFCI fault",
-        "device_class": "current",
-        "unit_of_measurement": "A",
-        "state_class": "measurement",
-    },
-    "dcif": {
-        "name": "DCI fault",
-        "device_class": "current",
-        "unit_of_measurement": "A",
-        "state_class": "measurement",
-    },
-    "vpvfault": {
-        "name": "PV voltage fault",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
-    "vacfault": {
-        "name": "AC voltage fault",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
-    "facfault": {
-        "name": "AC frequency fault",
-        "state_class": "measurement",
-        "device_class": "frequency",
-        "unit_of_measurement": "Hz",
-    },
-    "tmpfault": {
-        "name": "Temperature fault",
-        "state_class": "measurement",
-        "device_class": "temperature",
-        "unit_of_measurement": "°C",
-    },
-    "vpv1": {
-        "name": "PV1 Voltage",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
-    "vpv2": {
-        "name": "PV2 Voltage",
-        "state_class": "measurement",
-        "device_class": "voltage",
-        "unit_of_measurement": "V",
-    },
-    "ppv1": {
-        "name": "PV1 Wattage",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-        "state_class": "measurement",
-    },
-    "ppv2": {
-        "name": "PV2 Wattage",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-        "state_class": "measurement",
-    },
-    "buck1curr": {
-        "name": "Buck1 current",
-        "device_class": "current",
-        "unit_of_measurement": "A",
-        "state_class": "measurement",
-    },
-    "buck2curr": {
-        "name": "Buck2 current",
-        "device_class": "current",
-        "unit_of_measurement": "A",
-        "state_class": "measurement",
-    },
-    "op_watt": {
-        "name": "Inverter active power",
-        "device_class": "power",
-        "unit_of_measurement": "W",
-        "state_class": "measurement",
-    },
-    "op_va": {
-        "name": "Inverter apparent power",
-        "device_class": "apparent_power",
-        "unit_of_measurement": "VA",
-        "state_class": "measurement",
-    },
-    "Inv_Curr": {
-        "name": "Inverter current",
-        "device_class": "current",
-        "unit_of_measurement": "A",
-        "state_class": "measurement",
-    },
-    "OP_Curr": {
-        "name": "Inverter consumption current",
-        "device_class": "current",
-        "unit_of_measurement": "A",
-        "state_class": "measurement",
-    },
+    "faultcode": BaseSensor(name="Fault code"),
+    "systemfaultword1": BaseSensor(name="System fault register 1"),
+    "systemfaultword2": BaseSensor(name="System fault register 2"),
+    "systemfaultword3": BaseSensor(name="System fault register 3"),
+    "systemfaultword4": BaseSensor(name="System fault register 4"),
+    "systemfaultword5": BaseSensor(name="System fault register 5"),
+    "systemfaultword6": BaseSensor(name="System fault register 6"),
+    "systemfaultword7": BaseSensor(name="System fault register 7"),
+    "faultBit": BaseSensor(name="Fault message"),
+    "warningBit": BaseSensor(name="Warning message"),
+    "faultValue": BaseSensor(name="Fault value"),
+    "warningValue": BaseSensor(name="Warning value"),
+    "isof": VoltageSensor("ISO fault", icon="mdi:alert"),
+    "gfcif": CurrentSensor("GFCI fault", icon="mdi:alert"),
+    "dcif": CurrentSensor("DCI fault", icon="mdi:alert"),
+    "vpvfault": VoltageSensor("PV voltage fault", icon="mdi:alert"),
+    "vacfault": VoltageSensor("AC voltage fault", icon="mdi:alert"),
+    "facfault": FrequencySensor("AC frequency fault", icon="mdi:alert"),
+    "tmpfault": TemperatureSensor("Temperature fault", icon="mdi:alert"),
+    # PV
+    "vpv1": VoltageSensor("PV1 voltage"),
+    "vpv2": VoltageSensor("PV2 voltage"),
+    "ppv1": PowerSensor("PV1 Wattage"),
+    "ppv2": PowerSensor("PV2 Wattage"),
+    "buck1curr": CurrentSensor("Buck1 current"),
+    "buck2curr": CurrentSensor("Buck2 current"),
+    "op_watt": PowerSensor("Inverter active power"),
+    "op_va": ApparentPower("Inverter apparent power"),
+    "Inv_Curr": CurrentSensor("Inverter current"),
+    "OP_Curr": CurrentSensor("Inverter consumption current"),
 }
 
 MQTT_HOST_CONF_KEY = "ha_mqtt_host"
@@ -786,7 +349,35 @@ MQTT_RETAIN_CONF_KEY = "ha_mqtt_retain"
 # JSON_CONFIG = "ha_config"
 
 
-def make_payload(conf: Conf, device: str, name: str, key: str, unit: str = None):
+def to_dict(obj: BaseSensor) -> dict:
+    """Convert a dataclass object to dict
+
+    :param obj: The sensor object to convert
+    :return: A dictionary representation of the object
+    """
+    dict_obj = asdict(obj)
+    # Remove None values
+    return {k: v for k, v in dict_obj.items() if v is not None}
+
+
+def make_payload(
+    conf: Conf, device: str, key: str, name: Optional[str] = None, unit: str = None
+) -> dict:
+    """Generate a MQTT payload for a sensor
+    Use default values to create a sensor payload, then update with custom
+    attributes if they exist. (e.g. unit_of_measurement/total increasing/etc.)
+
+    :param conf: The configuration object, use to extract default divider
+    :param device: Use the device name as part of the sensor name + device
+    :param key: The key of the sensor sent by grott
+    :param name: The name of the sensor, if you want something different
+    :param unit: unit of measurement
+    :return: A dictionary with the MQTT configuration payload
+    """
+
+    if name is None:
+        name = key
+
     # Default configuration payload
     payload = {
         "name": "{device} {name}",
@@ -799,9 +390,13 @@ def make_payload(conf: Conf, device: str, name: str, key: str, unit: str = None)
         },
     }
 
-    # If there's a custom mapping add the new values
+    # If there's a custom mapping, add the new values
     if key in mapping:
-        payload.update(mapping[key])
+        key_mapping = mapping[key]
+        if isinstance(key_mapping, BaseSensor):
+            # convert the mapping to a dict
+            key_mapping = to_dict(key_mapping)
+        payload.update(key_mapping)
 
     if not payload["name"].startswith("{device} "):
         # Prepend the {device} template, prevent repeating
@@ -817,6 +412,7 @@ def make_payload(conf: Conf, device: str, name: str, key: str, unit: str = None)
     if "value_template" not in payload and key in layout:
         # From grottdata:207, default type is num, also process numx
         if layout[key].get("type", "num") in ("num", "numx"):
+            # default divide is 1
             divider = layout[key].get("divide", "1")
             payload[
                 "value_template"
@@ -825,6 +421,7 @@ def make_payload(conf: Conf, device: str, name: str, key: str, unit: str = None)
                 divide=divider,
             )
 
+    # generate a default value template if not existing
     if "value_template" not in payload:
         payload["value_template"] = f"{{{{ value_json.{key} }}}}"
 
@@ -921,7 +518,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
         )
         for key in values.keys():
             # Generate a configuration payload
-            payload = make_payload(conf, device_serial, key, key)
+            payload = make_payload(conf, device_serial, key)
             if not payload:
                 print(f"\t[Grott HA] {__version__} skipped key: {key}")
                 continue
