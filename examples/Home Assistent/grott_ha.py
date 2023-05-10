@@ -13,7 +13,7 @@ from grottconf import Conf
 
 __version__ = "0.0.7-RC8"
 
-"""A pluging for grott
+"""A plugin for grott
 This plugin allow to have autodiscovery of the device in HA
 
 Should be able to support multiples inverters
@@ -24,12 +24,13 @@ Version 0.0.7
   - Updated Total work time unit.
   - Add support for setting the retain flag
   - Add more configurations for measures
+  - Refactored code for measures
 
 Config:
     - ha_mqtt_host (required): The host of the MQTT broker user by HA (often the IP of HA)
-    - ha_mqtt_port (required): The port (the default is oftent 1883)
+    - ha_mqtt_port (required): The port (the default is often 1883)
     - ha_mqtt_user (optional): The user use to connect to the broker (you can use your user)
-    - ha_mqtt_password (optional): The password to connect to the mqtt broket (you can use your password)
+    - ha_mqtt_password (optional): The password to connect to the mqtt broker (you can use your password)
     - ha_mqtt_retain (optional): Set the retain flag for the data message (default: False)
 
 Return codes:
@@ -59,6 +60,7 @@ class BaseSensor:
 class MeasurementSensor(BaseSensor):
     state_class: str = "measurement"
     device_class: Optional[str] = None
+    unit_of_measurement: Optional[str] = None
 
 
 @dataclass
@@ -360,18 +362,39 @@ def to_dict(obj: BaseSensor) -> dict:
     return {k: v for k, v in dict_obj.items() if v is not None}
 
 
-def make_payload(
-    conf: Conf, device: str, key: str, name: Optional[str] = None, unit: str = None
-) -> dict:
+def is_valid_mqtt_topic(key_name: str) -> bool:
+    """Check if the key is a valid mqtt topic
+
+    :param key_name: The value of the key (e.g. "ACDischarWatt")
+    :return: True if the key is a valid mqtt topic, False otherwise
+    """
+    # Character used to bind wildcard topics
+    if key_name.startswith("#"):
+        return False
+    # Character used to bind single level topics
+    if key_name.startswith("+"):
+        return False
+    # should not start or end with /
+    if key_name.startswith("/"):
+        return False
+    if key_name.endswith("/"):
+        return False
+    # system topics
+    if key_name.startswith("$"):
+        return False
+    return True
+
+
+def make_payload(conf: Conf, device: str, key: str, name: Optional[str] = None) -> dict:
     """Generate a MQTT payload for a sensor
     Use default values to create a sensor payload, then update with custom
-    attributes if they exist. (e.g. unit_of_measurement/total increasing/etc.)
+    attributes if they exist.
+    E.g., unit_of_measurement/total increasing/etc.
 
-    :param conf: The configuration object, use to extract default divider
+    :param conf: The configuration object, used to extract default divider
     :param device: Use the device name as part of the sensor name + device
     :param key: The key of the sensor sent by grott
     :param name: The name of the sensor, if you want something different
-    :param unit: unit of measurement
     :return: A dictionary with the MQTT configuration payload
     """
 
@@ -404,7 +427,7 @@ def make_payload(
 
     # Generate the name of the key, with all the param available
     payload["name"] = payload["name"].format(device=device, name=name, key=key)
-    # HA automatically group the sensor if the device name is prepended
+    # HA automatically group the sensors if the device name is prepended
 
     # Reuse the existing divide value if available and not existing
     # and apply it to the HA config
@@ -481,7 +504,7 @@ def publish_multiple(conf: Conf, msgs):
 
 
 def grottext(conf: Conf, data: str, jsonmsg: str):
-    """Allow to push to HA MQTT bus, with auto discovery"""
+    """Allow pushing to HA MQTT bus, with auto discovery"""
 
     required_params = [
         MQTT_HOST_CONF_KEY,
@@ -517,6 +540,11 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
             f"\tGrott HA {__version__} - creating {device_serial} config in HA, {len(values.keys())} to push"
         )
         for key in values.keys():
+            # Prevent creating invalid MQTT topics
+            if not is_valid_mqtt_topic(key):
+                if conf.verbose:
+                    print(f"\t[Grott HA] {__version__} skipped key: {key}")
+                continue
             # Generate a configuration payload
             payload = make_payload(conf, device_serial, key)
             if not payload:
@@ -547,7 +575,7 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
 
         try:
             key = "grott_last_push"
-            payload = make_payload(conf, device_serial, key, key)
+            payload = make_payload(conf, device_serial, key)
             topic = CONFIG_TOPIC.format(
                 sensor_type="sensor",
                 device=device_serial,
@@ -587,25 +615,41 @@ def grottext(conf: Conf, data: str, jsonmsg: str):
         )
     except Exception as e:
         print("[HA ext] - Exception while publishing - {}".format(e))
-        # Reset connection state in case of problem
+        # Reset connection state in case of a problem
         if conf.verbose:
             traceback.print_exc()
         return 2
     return 0
 
 
-def test_generate_payload():
-    "Test that an auto generated payload for MQTT configuration"
+# Test section
+# In the same file to keep the plugin contained
 
-    class TestConf:
-        recorddict = {
+test_serial = "NCO7410"
+test_key = "pvpowerout"
+test_layout = "test"
+
+
+class FakeConf:
+    def __init__(self):
+        self.recorddict = {
             "test": {
-                "pvpowerout": {"value": 122, "length": 4, "type": "num", "divide": 10}
+                test_key: {
+                    "value": 122,
+                    "length": 4,
+                    "type": "num",
+                }
             }
         }
-        layout = "test"
+        self.layout = "test"
 
-    payload = make_payload(TestConf(), "NCO7410", "pvpowerout", "pvpowerout")
+
+def test_generate_payload():
+    "Test that an auto-generated payload for MQTT configuration"
+    conf = FakeConf()
+    # Override the divider
+    conf.recorddict["test"][test_key]["divide"] = 10
+    payload = make_payload(conf, test_serial, test_key)
     print(payload)
     # The default divider for pvpowerout is 10
     assert payload["value_template"] == "{{ value_json.pvpowerout | float / 10 }}"
@@ -617,21 +661,9 @@ def test_generate_payload():
 
 
 def test_generate_payload_without_divider():
-    "Test that an auto generated payload for MQTT configuration"
+    "Test that an auto-generated payload for MQTT configuration"
 
-    class TestConf:
-        recorddict = {
-            "test": {
-                "pvpowerout": {
-                    "value": 122,
-                    "length": 4,
-                    "type": "num",
-                }
-            }
-        }
-        layout = "test"
-
-    payload = make_payload(TestConf(), "NCO7410", "pvpowerout", "pvpowerout")
+    payload = make_payload(FakeConf(), test_serial, test_key)
     print(payload)
     # The default divider for pvpowerout is 10
     assert payload["value_template"] == "{{ value_json.pvpowerout | float / 1 }}"
@@ -640,3 +672,79 @@ def test_generate_payload_without_divider():
     assert payload["state_class"] == "measurement"
     assert payload["device_class"] == "power"
     assert payload["unit_of_measurement"] == "W"
+
+
+def test_is_valid_mqtt_topic():
+    assert is_valid_mqtt_topic("plocaloadr") is True
+    assert is_valid_mqtt_topic("#nbusvolt") is False
+
+
+def test_to_dict():
+    # test the to_dict function
+    res = to_dict(
+        MeasurementSensor(
+            "Grott last data push",
+            device_class="timestamp",
+            value_template="{{value_json.grott_last_push}}",
+        )
+    )
+    assert res["name"] == "Grott last data push"
+    assert res["device_class"] == "timestamp"
+    assert res["value_template"] == "{{value_json.grott_last_push}}"
+    # Even if present in the dataclass should not be serialized
+    assert "unit_of_measurement" not in res
+
+
+def test_manual_divider():
+    "Test that's the manual value template is not overwritten"
+    # Alter the configuration
+    conf = FakeConf()
+    value_template = "{{value_json.pvpowerout | float / 10000}}"
+    key = "pvpowerout"
+    mapping[key].value_template = value_template
+    payload = make_payload(conf, test_serial, key)
+    # Remove the alteration
+    mapping[key].value_template = None
+
+    assert payload["value_template"] == value_template
+
+
+def test_unknown_mapping():
+    "Test that an unknown mapping still has a good divider"
+
+    conf = FakeConf()
+    conf.recorddict[conf.layout].update(
+        {
+            "test": {"value": 290, "length": 4, "type": "num", "divide": 51},
+            "test_not_num": {"value": 290, "length": 4, "type": "text", "divide": 51},
+        }
+    )
+
+    # No mapping should use the raw divider
+    payload = make_payload(conf, test_serial, "test")
+    assert payload["value_template"] == "{{ value_json.test | float / 51 }}"
+
+    # Type not text should return the raw value
+    payload = make_payload(conf, test_serial, "test_not_num")
+    assert payload["value_template"] == "{{ value_json.test_not_num }}"
+
+
+def test_name_generation():
+    "Test the output of the name generation"
+
+    conf = FakeConf()
+    # test date {"value" :76, "length" : 10, "type" : "text"},
+    payload = make_payload(conf, test_serial, test_key)
+
+    assert payload["name"] == "NCO7410 PV Output (Actual)"
+
+
+def test_name_generation_non_mapped():
+    "Test the output of the name generation"
+
+    conf = FakeConf()
+
+    # test date {"value" :76, "length" : 10, "type" : "text"},
+    payload = make_payload(conf, test_serial, "duck")
+
+    assert payload["name"] == "NCO7410 duck"
