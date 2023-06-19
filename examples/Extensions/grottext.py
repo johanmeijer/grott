@@ -13,7 +13,7 @@ def grottext(conf,data,jsonmsg) :
 
         print("\t - " + "Grott extension module entered ") 
         ###
-        ### uncomment this print statements if you want to see the information that is availble.
+        ### uncomment this print statements if you want to see the information that is available.
         ###
 
         #print(jsonmsg)
@@ -22,7 +22,12 @@ def grottext(conf,data,jsonmsg) :
         #print(conf.extvar)
 
     url = "http://" + conf.extvar["ip"] + ":" + str(conf.extvar["port"]) 
-    
+
+    fullurl = conf.extvar["url"]
+
+    if fullurl:
+        url = fullurl
+
     try: 
         r = requests.post(url, json = jsonmsg)
 
