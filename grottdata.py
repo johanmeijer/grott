@@ -452,16 +452,9 @@ def procdata(conf,data):
                         "values" : {}
                     }
 
-        for key in definedkey : 
-
-            #if key != "pvserial" : 
-                #if conf.recorddict[layout][key]["type"] == "num" : 
-                # only add int values to the json object 
-                #print(definedkey[key])
-                #print(type(definedkey[key]))                                 
-                #if type(definedkey[key]) == type(1) :                                                                     
-                #    jsonobj["values"][key] = definedkey[key]
-            jsonobj["values"][key] = definedkey[key]
+        for key in definedkey :
+            divider = conf.get_recdivider(key)
+            jsonobj["values"][key] = definedkey[key]/divider if conf.mqttapplydividers and divider is not None else definedkey[key]
                      
         jsonmsg = json.dumps(jsonobj) 
         
@@ -635,8 +628,9 @@ def procdata(conf,data):
                     }    
 
         for key in definedkey : 
-            if key != "date" : 
-                ifobj["fields"][key] = definedkey[key]
+            if key != "date" :
+                divider = conf.get_recdivider(key)
+                ifobj["fields"][key] = definedkey[key]/divider if conf.ifapplydividers and divider is not None else definedkey[key] 
         
         #Create list for influx
         ifjson = [ifobj]

@@ -7,6 +7,7 @@ import configparser, sys, argparse, os, json, io
 import ipaddress
 from os import walk
 from grottdata import format_multi_line, str2bool
+from typing import Optional
 
 class Conf : 
 
@@ -51,7 +52,7 @@ class Conf :
         self.mqttuser = "grott"
         self.mqttpsw = "growatt2020"
         self.mqttretain = False
-        self.mqttpostprocess = False                                                                 #Post process mqtt message (applying dividers etc.)    
+        self.mqttapplydividers = False                                                               # Apply dividers defined in the Record Layouts before sending data out to MQTT    
 
         #pvoutput default 
         self.pvoutput = False
@@ -77,7 +78,7 @@ class Conf :
         self.iftoken  = "influx_token"
         self.iforg  = "grottorg"
         self.ifbucket = "grottdb" 
-        self.ifpostprocess = False                                                                  #Post process influxdb message (applying dividers etc.)
+        self.ifapplydividers = False                                                                  # Apply dividers defined in the Record Layouts before sending data out to InfluxDB    
 
         #extension 
         self.extension = False
@@ -394,7 +395,7 @@ class Conf :
         if config.has_option("MQTT","auth"): self.mqttauth = config.getboolean("MQTT","auth")
         if config.has_option("MQTT","user"): self.mqttuser = config.get("MQTT","user")
         if config.has_option("MQTT","password"): self.mqttpsw = config.get("MQTT","password")
-        if config.has_option("MQTT","postprocessdata"): self.mqttpostprocess = config.getboolean("MQTT","postprocessdata")
+        if config.has_option("MQTT","applydividers"): self.mqttapplydividers = config.getboolean("MQTT","applydividers")
         if config.has_option("PVOutput","pvoutput"): self.pvoutput = config.get("PVOutput","pvoutput")
         if config.has_option("PVOutput","pvtemp"): self.pvtemp = config.get("PVOutput","pvtemp")
         if config.has_option("PVOutput","pvdisv1"): self.pvdisv1 = config.get("PVOutput","pvdisv1")
@@ -419,7 +420,7 @@ class Conf :
         if config.has_option("influx","org"): self.iforg = config.get("influx","org")
         if config.has_option("influx","bucket"): self.ifbucket = config.get("influx","bucket")
         if config.has_option("influx","token"): self.iftoken = config.get("influx","token")
-        if config.has_option("influx","postprocessdata"): self.ifpostprocess = config.getboolean("influx","postprocessdata")
+        if config.has_option("influx","applydividers"): self.ifapplydividers = config.getboolean("influx","applydividers")
         #extensionINFLUX
         if config.has_option("extension","extension"): self.extension = config.get("extension","extension") 
         if config.has_option("extension","extname"): self.extname = config.get("extension","extname") 
@@ -1609,3 +1610,19 @@ class Conf :
             if self.verbose : print(key, " : ")
             if self.verbose : print(self.recorddict[key])  
 
+    # Get the key divider, if applicable
+    def get_recdivider(self, key) -> Optional[int]: 
+        
+        # No divider if the key doesn't exist
+        if not key in self.recorddict[self.layout]:
+            return None
+        
+        # No divider if the key is not numeric
+        if not ('type' in self.recorddict[self.layout][key] and self.recorddict[self.layout][key]['type'] in ['num', 'numx']):
+            return None
+
+        # No divider if there is no divide key
+        if not 'divide' in self.recorddict[self.layout][key]:
+            return None
+
+        return self.recorddict[self.layout][key]['divide']

@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 import json
 
 from grottconf import Conf
@@ -78,6 +78,22 @@ class TestProcData:
     # Apr 10 16:36:39 europa grott[145191]:                          689, "ebatDischarToday": 11, "ebatDischarTotal": 17992, "eacDischarToday":
     # Apr 10 16:36:39 europa grott[145191]:                          0, "eacDischarTotal": 0, "ACCharCurr": 0, "ACDischarWatt": 0, "ACDischarVA":
     # Apr 10 16:36:39 europa grott[145191]:                          0, "BatDischarWatt": 420, "BatDischarVA": 420, "BatWatt": 590}}
+    #
+    # Apr 10 16:36:39 europa grott[145191]:          - Grott influxdb jsonmsg:
+    # Apr 10 16:36:39 europa grott[145191]:                          [{'measurement': 'GYH2BLL080', 'time': '2023-04-10T12:20:31', 'fields':
+    # Apr 10 16:36:39 europa grott[145191]:                          {'datalogserial': 'DDD0CAB191', 'pvserial': 'GYH2BLL080', 'pvstatus': 2,
+    # Apr 10 16:36:39 europa grott[145191]:                          'vpv1': 0, 'vpv2': 0, 'ppv1': 0, 'ppv2': 0, 'buck1curr': 0, 'buck2curr': 0,
+    # Apr 10 16:36:39 europa grott[145191]:                          'op_watt': 480, 'pvpowerout': 480, 'op_va': 320000, 'acchr_watt': 0,
+    # Apr 10 16:36:39 europa grott[145191]:                          'acchr_VA': 0, 'bat_Volt': 5310, 'batterySoc': 100, 'bus_volt': 0,
+    # Apr 10 16:36:39 europa grott[145191]:                          'grid_volt': 0, 'line_freq': 0, 'outputvolt': 2080, 'pvgridvoltage': 2080,
+    # Apr 10 16:36:39 europa grott[145191]:                          'outputfreq': 5000, 'invtemp': 256, 'dcdctemp': 259, 'loadpercent': 27,
+    # Apr 10 16:36:39 europa grott[145191]:                          'buck1_ntc': 0, 'buck2_ntc': 0, 'OP_Curr': 4, 'Inv_Curr': 4, 'AC_InWatt': 0,
+    # Apr 10 16:36:39 europa grott[145191]:                          'AC_InVA': 0, 'faultBit': 0, 'warningBit': 0, 'faultValue': 0,
+    # Apr 10 16:36:39 europa grott[145191]:                          'warningValue': 0, 'constantPowerOK': 0, 'epvtoday': 33, 'pvenergytoday':
+    # Apr 10 16:36:39 europa grott[145191]:                          33, 'epvtotal': 24345, 'eacCharToday': 0, 'eacCharTotal': 689,
+    # Apr 10 16:36:39 europa grott[145191]:                          'ebatDischarToday': 11, 'ebatDischarTotal': 17992, 'eacDischarToday': 0,
+    # Apr 10 16:36:39 europa grott[145191]:                          'eacDischarTotal': 0, 'ACCharCurr': 0, 'ACDischarWatt': 0, 'ACDischarVA': 0,
+    # Apr 10 16:36:39 europa grott[145191]:                          'BatDischarWatt': 420, 'BatDischarVA': 420, 'BatWatt': 590}}]
 
     valid_data =  b'\x00\xa1\x00\x06\x01\x5f\x01\x04\x03\x36\x2b\x47\x22\x35\x36\x76\x4b\x5e\x77'\
     b'\x61\x74\x74\x47\x72\x6f\x77\x61\x74\x74\x47\x72\x6f\x77\x61\x74\x74\x47\x72'\
@@ -100,17 +116,37 @@ class TestProcData:
     b'\x74\x74\x47\x72\x6f\x77\x61\x74\x74\x47\x72\x6f\x77\x61\x74\x4b\x2f'
 
     @pytest.mark.parametrize('cfg_file, expected', [
-    ('tests/testdata/grott_postprocess_test_mqtt_true.ini', 59), 
-    ('tests/testdata/grott_postprocess_test_mqtt_false.ini', 590)])
+    ('tests/testdata/grott_applydividers_test_mqtt_true.ini', 59), 
+    ('tests/testdata/grott_applydividers_test_mqtt_false.ini', 590)])
     @patch('grottdata.publish.single')
-    def test_procdata(self, mock_publish_single, cfg_file, expected):
+    def test_mqtt_applydividers(self, mock_publish_single, cfg_file, expected):
         conf = Conf("2.7.8", cmdargs=['-c', cfg_file])
         grottdata.procdata(conf,self.valid_data)
         assert mock_publish_single.called == True
         json_payload = json.loads(mock_publish_single.call_args.kwargs['payload'])
         assert json_payload['device'] == 'GYH2BLL080'
+        assert json_payload['values']['pvserial'] == 'GYH2BLL080'
         assert json_payload['values']['BatWatt'] == expected
 
 
-    
+    @pytest.mark.parametrize('cfg_file, expected', [
+    ('tests/testdata/grott_applydividers_test_influxdb_false.ini', 590), 
+    ('tests/testdata/grott_applydividers_test_influxdb_true.ini', 59)])
+    def test_influxdb_applydividers(self, cfg_file, expected):
+        conf = Conf("2.7.8", cmdargs=['-c', cfg_file])
+        
+        # we need to set influx and influx2 to True, otherwise the ifwrite_api.write() call will not be made
+        # but we have to set it after conf is initialized, to skip the actual influxdb connection opening
+        conf.influx = True
+        conf.influx2 = True
+
+        ifwrite_mock = Mock()
+        conf.ifwrite_api = ifwrite_mock
+
+        grottdata.procdata(conf,self.valid_data)
+        assert ifwrite_mock.write.called == True
+        payload = ifwrite_mock.write.call_args.args[2]
+        assert payload[0]['measurement'] == 'GYH2BLL080'
+        assert payload[0]['fields']['pvserial'] == 'GYH2BLL080'
+        assert payload[0]['fields']['BatWatt'] == expected
     
