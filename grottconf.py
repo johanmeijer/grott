@@ -232,7 +232,7 @@ class Conf :
         print("\tmqtttauth:           \t",self.mqttauth)
         print("\tmqttuser:            \t",self.mqttuser)
         print("\tmqttpsw:             \t","**secret**")                       #scramble output if tested!
-        print("\tmqttpostprocess:     \t",self.mqttpostprocess)
+        print("\mqttapplydividers:     \t",self.mqttapplydividers)
 
         #print("\tmqttpsw:     \t",self.mqttpsw)                       #scramble output if tested!
         print("_Growatt server:")
@@ -264,7 +264,7 @@ class Conf :
         print("\tbucket:             \t",self.ifbucket) 
         print("\ttoken:              \t","**secret**")
         #print("\ttoken:       \t",self.iftoken)
-        print("\tifpostprocess:      \t",self.ifpostprocess)
+        print("\ifapplydividers:      \t",self.ifapplydividers)
         
         print("_Extension:")
         print("\textension:          \t",self.extension) 
