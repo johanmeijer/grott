@@ -79,6 +79,23 @@ def str2bool(defstr):
         return(defret)
     else : return()
 
+def is_message_valid(definedkey:dict) -> bool:
+    # TODO : this test is a too arbitrary. We just assume that no Growatt inverter can handle more than 12000W of input solar power.
+    if 'ppv1' in definedkey:
+        if definedkey['ppv1'] > 12000:
+            return False
+    
+    if 'ppv2' in definedkey:
+        if definedkey['ppv2'] > 12000:
+            return False
+
+    # TODO : this test is a too arbitrary. We just assume that no Growatt inverter can produce more than 200kWh of energy in a single day.
+    if 'epvtoday' in definedkey:
+        if definedkey['epvtoday'] > 200:
+            return False
+    
+    return True
+
 def procdata(conf,data):    
     if conf.verbose: 
         print("\t - " + "Growatt original Data:") 
@@ -377,7 +394,13 @@ def procdata(conf,data):
             if conf.trace: 
                 print("\t - "+ 'Growatt unprocessed Data:')
                 print(format_multi_line("\t\t - ", result_string))  
-        
+
+    # check if data is valid
+    # sometime my SPF6000T DVM MPV sends inconsistent data, which must be discared (see unit tests for examples of corrupted data)
+    if not is_message_valid(definedkey):
+        if conf.verbose: print("\t - " + 'Growatt data not consistent, processing stopped')
+        return
+
     if dataprocessed: 
         # only sendout data to MQTT if it is processed. 
         
@@ -583,7 +606,7 @@ def procdata(conf,data):
 
     # influxDB processing 
     if conf.influx:      
-        if conf.verbose :  print("\t - " + "Grott InfluxDB publihing started")
+        if conf.verbose :  print("\t - " + "Grott InfluxDB publishing started")
         try:  
             import  pytz             
         except: 

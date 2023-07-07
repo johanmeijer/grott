@@ -4,7 +4,7 @@ from grottconf import Conf
 class TestGrottConf:
 
     def test_default_postprocess_flags(self):
-        conf = Conf("2.7.8")
+        conf = Conf("2.7.8", cmdargs=['-c', 'tests/testdata/conf_empty.ini'])
         assert conf.mqttapplydividers == False
         assert conf.ifapplydividers == False
 
