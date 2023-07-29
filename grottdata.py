@@ -490,8 +490,11 @@ def procdata(conf,data):
                if conf.verbose: print("\t - " + 'Grott MQTT message retain enabled')  
 
             try:
+                tls=None
+                if conf.mqtttlsca :
+                    tls={'ca_certs': conf.mqtttlsca}
                 #v2.7.1 add retrain variable  
-                publish.single(mqtttopic, payload=jsonmsg, qos=0, retain=conf.mqttretain, hostname=conf.mqttip,port=conf.mqttport, client_id=conf.inverterid, keepalive=60, auth=conf.pubauth)
+                publish.single(mqtttopic, payload=jsonmsg, qos=0, retain=conf.mqttretain, hostname=conf.mqttip,port=conf.mqttport, client_id=conf.inverterid, keepalive=60, auth=conf.pubauth, tls=tls)
                 if conf.verbose: print("\t - " + 'MQTT message message sent') 
             except TimeoutError:     
                 if conf.verbose: print("\t - " + 'MQTT connection time out error') 

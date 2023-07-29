@@ -51,6 +51,7 @@ class Conf :
         self.mqttuser = "grott"
         self.mqttpsw = "growatt2020"
         self.mqttretain = False
+        self.mqtttlsca = {}
 
         #pvoutput default 
         self.pvoutput = False
@@ -225,6 +226,7 @@ class Conf :
         print("\tmqttmtopicname:      \t",self.mqttmtopicname)
         print("\tmqttinverterintopic: \t",self.mqttinverterintopic)
         print("\tmqtttretain:         \t",self.mqttretain)
+        print("\tmqtttlsca:             \t",self.mqtttlsca)
         print("\tmqtttauth:           \t",self.mqttauth)
         print("\tmqttuser:            \t",self.mqttuser)
         print("\tmqttpsw:             \t","**secret**")                       #scramble output if tested!
@@ -344,6 +346,7 @@ class Conf :
         self.mqttmtopic = str2bool(self.mqttmtopic)        
         self.mqttauth = str2bool(self.mqttauth)
         self.mqttretain = str2bool(self.mqttretain)
+        self.mqtttlsca = self.mqtttlsca
         #
         self.pvoutput = str2bool(self.pvoutput)
         self.pvdisv1 = str2bool(self.pvdisv1)
@@ -384,6 +387,7 @@ class Conf :
         if config.has_option("MQTT","mtopicname"): self.mqttmtopicname = config.get("MQTT","mtopicname")
         if config.has_option("MQTT","inverterintopic"): self.mqttinverterintopic = config.getboolean("MQTT","inverterintopic")
         if config.has_option("MQTT","retain"): self.mqttretain = config.getboolean("MQTT","retain")
+        if config.has_option("MQTT","tls"): self.mqttretain = config.getboolean("MQTT","tls")
         if config.has_option("MQTT","auth"): self.mqttauth = config.getboolean("MQTT","auth")
         if config.has_option("MQTT","user"): self.mqttuser = config.get("MQTT","user")
         if config.has_option("MQTT","password"): self.mqttpsw = config.get("MQTT","password")
@@ -461,12 +465,7 @@ class Conf :
                if self.verbose : print("\nGrott Growatt server Port address env invalid")   
         #handle mqtt environmentals    
         if os.getenv('gnomqtt') != None :  self.nomqtt = self.getenv('gnomqtt')
-        if os.getenv('gmqttip') != None :    
-            try: 
-                ipaddress.ip_address(os.getenv('gmqttip'))
-                self.mqttip = self.getenv('gmqttip')
-            except: 
-                if self.verbose : print("\nGrott MQTT server IP address env invalid")
+        if os.getenv('gmqttip') != None :  self.mqttip = self.getenv('gmqttip')
         if os.getenv('gmqttport') != None :     
             if 0 <= int(os.getenv('gmqttport')) <= 65535  :  self.mqttport = int(self.getenv('gmqttport'))
             else : 
@@ -477,6 +476,7 @@ class Conf :
         if os.getenv('gmqttmtopic') != None :  self.mqttmtopic = self.getenv('gmqttmtopic')
         if os.getenv('gmqttmtopicname') != None :  self.mqttmtopicname = self.getenv('gmqttmtopicname')
         if os.getenv('gmqttretain') != None :  self.mqttretain = self.getenv('gmqttretain')
+        if os.getenv('gmqtttlsca') != None :  self.mqtttlsca = self.getenv('gmqtttlsca')
         if os.getenv('gmqttauth') != None :  self.mqttauth = self.getenv('gmqttauth')
         if os.getenv('gmqttuser') != None :  self.mqttuser = self.getenv('gmqttuser')
         if os.getenv('gmqttpassword') != None : self.mqttpsw = self.getenv('gmqttpassword')
