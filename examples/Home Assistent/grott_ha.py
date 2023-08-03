@@ -513,6 +513,7 @@ def make_payload(conf: Conf, device: str, name: str, key: str, unit: str = None)
         "state_topic": f"homeassistant/grott/{device}/state",
         "device": {
             "identifiers": [device],  # Group under a device
+            "name": device,
             "manufacturer": "GrowWatt",
         },
     }
@@ -520,14 +521,6 @@ def make_payload(conf: Conf, device: str, name: str, key: str, unit: str = None)
     # If there's a custom mapping add the new values
     if key in mapping:
         payload.update(mapping[key])
-
-    if not payload["name"].startswith("{device} "):
-        # Prepend the {device} template, prevent repeating
-        payload["name"] = "{device} " + payload["name"]
-
-    # Generate the name of the key, with all the param available
-    payload["name"] = payload["name"].format(device=device, name=name, key=key)
-    # HA automatically group the sensor if the device name is prepended
 
     # Reuse the existing divide value if available and not existing
     # and apply it to the HA config
