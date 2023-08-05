@@ -16,7 +16,7 @@ from collections import defaultdict
 # grottserver.py emulates the server.growatt.com website and is initial developed for debugging and testing grott.
 # Updated: 2023-01-20
 # Version:
-verrel = "0.0.12"
+verrel = "0.0.12a"
 
 # Declare Variables (to be moved to config file later)
 serverhost = "0.0.0.0"
@@ -348,7 +348,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
 
                 
                 #wait for response
-                for x in range(7):
+                for x in range(15):
                     if verbose: print("\t - Grotthttpserver - wait for GET response")
                     try: 
                         comresp = commandresponse[sendcommand][regkey]
