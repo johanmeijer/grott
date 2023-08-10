@@ -1,19 +1,18 @@
-# coding=utf-8
-# author Etienne G.
-
 import json
 import traceback
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Optional
-from dataclasses import dataclass, asdict
 
 from paho.mqtt.publish import multiple, single
 
 from grottconf import Conf
 
-__version__ = "0.0.7-RC8"
+__version__ = "0.0.7-RC9"
+__author__ = "Etienne G."
 
 """A plugin for grott
+
 This plugin allow to have autodiscovery of the device in HA
 
 Should be able to support multiples inverters
@@ -44,7 +43,6 @@ Return codes:
     - 7: Can't configure device for HA MQTT
 """
 
-
 CONFIG_TOPIC = "homeassistant/{sensor_type}/grott/{device}_{attribut}/config"
 STATE_TOPIC = "homeassistant/grott/{device}/state"
 
@@ -54,6 +52,14 @@ class BaseSensor:
     name: str
     icon: Optional[str] = None
     value_template: Optional[str] = None
+    state_class: Optional[str] = None
+    device_class: Optional[str] = None
+
+
+@dataclass
+class DiagnosticSensor(BaseSensor):
+    entity_category: str = "diagnostic"
+    icon = "mdi:information-outline"
 
 
 @dataclass
@@ -210,23 +216,23 @@ mapping = {
     ),
     # Energy
     "etogrid_tod": EnergySensor(
-        "Export to grid today", icon="mdi:transmission-tower-import"
+        "Export to Grid Energy - Today", icon="mdi:transmission-tower-import"
     ),
     "etogrid_tot": IncreasingEnergySensor(
-        "Lifetime export to grid", icon="mdi:transmission-tower-import"
+        "Export to Grid Energy - Total", icon="mdi:transmission-tower-import"
     ),
     "etouser_tod": EnergySensor(
-        "Import from grid (Today)", icon="mdi:transmission-tower-export"
+        "Import from Grid Energy - Today", icon="mdi:transmission-tower-export"
     ),
     "etouser_tot": IncreasingEnergySensor(
-        "Import from grid (Total)", icon="mdi:transmission-tower-export"
+        "Import from Grid Energy - Total", icon="mdi:transmission-tower-export"
     ),
     # Need to investigate
     "elocalload_tod": EnergySensor(
-        "Load consumption today", icon="mdi:solar-power", unit_of_measurement="Wh"
+        "Load Consumption Energy - Today", icon="mdi:solar-power"
     ),
     "elocalload_tot": IncreasingEnergySensor(
-        "Lifetime load consumption", icon="mdi:solar-power", unit_of_measurement="Wh"
+        "Load Consumption Energy - Total", icon="mdi:solar-power"
     ),
     "AC_InWatt": PowerSensor("Grid input power"),
     "AC_InVA": ApparentPower("Grid input apparent power"),
@@ -234,12 +240,12 @@ mapping = {
         "Local load consumption", icon="mdi:transmission-tower-export"
     ),
     # extension data
-    "grott_last_push": MeasurementSensor(
+    "grott_last_push": BaseSensor(
         "Grott last data push",
         device_class="timestamp",
         value_template="{{value_json.grott_last_push}}",
     ),
-    "grott_last_measure": MeasurementSensor(
+    "grott_last_measure": BaseSensor(
         "Grott last measure",
         device_class="timestamp",
         value_template="{{value_json.grott_last_measure}}",
@@ -271,7 +277,10 @@ mapping = {
     ),
     "loadpercent": PercentSensor("Load percentage"),
     "batterySoc": BatteryChargeSensor("Battery charge", icon="mdi:battery-charging-60"),
+    # register 28
     "bat_Volt": VoltageSensor("Battery voltage"),
+    # register 29
+    "bat_dsp": VoltageSensor("Battery bus voltage"),
     "ACDischarWatt": PowerSensor("Load power"),
     "ACDischarVA": ApparentPower("Load reactive power"),
     "BatDischarWatt": PowerSensor("Battery discharge power"),
@@ -283,7 +292,7 @@ mapping = {
         icon="mdi:power-settings",
         value_template="{% if value_json.batterytype == '0' %}Lithium{% elif value_json.batterytype == '1' %}Lead-acid{% elif value_json.batterytype == '2' %}Other{% else %}Unknown{% endif %}",
     ),
-    "p1charge1": PowerSensor("Battery charge power", icon="mdi:battery-arrow-up"),
+    "p1charge1": PowerSensor("Battery Charging Power", icon="mdi:battery-arrow-up"),
     "eharge1_tod": EnergySensor("Battery charge (Today)", icon="mdi:battery-arrow-up"),
     "eharge1_tot": IncreasingEnergySensor(
         "Battery charge (Total)", icon="mdi:battery-arrow-up"
@@ -309,20 +318,24 @@ mapping = {
     "dcdctemp": TemperatureSensor(
         "Battery charger temperature", icon="mdi:thermometer"
     ),
-    "spbusvolt": VoltageSensor("BP bus voltage"),
+    "spbusvolt": VoltageSensor("SP bus voltage"),
     # faults
-    "faultcode": BaseSensor(name="Fault code"),
-    "systemfaultword1": BaseSensor(name="System fault register 1"),
-    "systemfaultword2": BaseSensor(name="System fault register 2"),
-    "systemfaultword3": BaseSensor(name="System fault register 3"),
-    "systemfaultword4": BaseSensor(name="System fault register 4"),
-    "systemfaultword5": BaseSensor(name="System fault register 5"),
-    "systemfaultword6": BaseSensor(name="System fault register 6"),
-    "systemfaultword7": BaseSensor(name="System fault register 7"),
-    "faultBit": BaseSensor(name="Fault message"),
-    "warningBit": BaseSensor(name="Warning message"),
-    "faultValue": BaseSensor(name="Fault value"),
-    "warningValue": BaseSensor(name="Warning value"),
+    "faultcode": DiagnosticSensor(name="Fault code"),
+    "systemfaultword1": DiagnosticSensor(name="System fault register 1"),
+    "systemfaultword2": DiagnosticSensor(name="System fault register 2"),
+    "systemfaultword3": DiagnosticSensor(name="System fault register 3"),
+    "systemfaultword4": DiagnosticSensor(name="System fault register 4"),
+    "systemfaultword5": DiagnosticSensor(name="System fault register 5"),
+    "systemfaultword6": DiagnosticSensor(name="System fault register 6"),
+    "systemfaultword7": DiagnosticSensor(name="System fault register 7"),
+    "spdspstatus": DiagnosticSensor(name="SP DSP status"),
+    "faultBit": DiagnosticSensor(name="Fault message"),
+    "warningBit": DiagnosticSensor(name="Warning message"),
+    "faultValue": DiagnosticSensor(name="Fault value"),
+    "warningValue": DiagnosticSensor(name="Warning value"),
+    "constantPowerOK": DiagnosticSensor(name="Constant power OK"),
+    "systemfaultword0": DiagnosticSensor(name="System Fault Word 0"),
+    "uwsysworkmode": DiagnosticSensor(name="System work mode"),
     "isof": VoltageSensor("ISO fault", icon="mdi:alert"),
     "gfcif": CurrentSensor("GFCI fault", icon="mdi:alert"),
     "dcif": CurrentSensor("DCI fault", icon="mdi:alert"),
@@ -341,35 +354,32 @@ mapping = {
     "op_va": ApparentPower("Inverter apparent power"),
     "Inv_Curr": CurrentSensor("Inverter current"),
     "OP_Curr": CurrentSensor("Inverter consumption current"),
+    "eactoday": EnergySensor(
+        "Self-Consumption (Solar + Battery) Energy - Today (eactoday)"
+    ),
+    "eactotal": IncreasingEnergySensor(
+        "Self-Consumption (Solar + Battery) Energy - Total (eactotal)"
+    ),
+    # temperature
+    "buck1_ntc": TemperatureSensor("Buck1 temperature", icon="mdi:thermometer"),
+    "buck2_ntc": TemperatureSensor("Buck2 temperature", icon="mdi:thermometer"),
     # TODO: To map
-    # "pbusvolt": "",
     # "nbusvolt": "",
     # "rac": "",
     # "eractoday": "",
     # "eractotal": "",
-    # "eactoday": "",
-    # "eactotal": "",
-    # "bat_dsp": "",
-    # "uwsysworkmode": "",
-    # "systemfaultword0": "",
     # "plocaloadtot": "",
-    # "spdspstatus": "",
-    # "buck1_ntc": "",
-    # "buck2_ntc": "",
-    # "constantPowerOK": "",
-    # "epv1tod": "",
-    # "epv2tod": "",
     # "Vac_RS": "",
     # "Vac_ST": "",
     # "Vac_TR": "",
     # "temp4": "",
     # "uwBatVolt_DSP": "",
-    # "voltage_l1": "",
-    # "voltage_l2": "",
-    # "voltage_l3": "",
-    # "Current_l1": "",
-    # "Current_l2": "",
-    # "Current_l3": "",
+    "voltage_l1": VoltageSensor("Phase1 Voltage"),
+    "voltage_l2": VoltageSensor("Phase2 Voltage"),
+    "voltage_l3": VoltageSensor("Phase3 Voltage"),
+    "Current_l1": CurrentSensor("Phase1 Current"),
+    "Current_l2": CurrentSensor("Phase2 Current"),
+    "Current_l3": CurrentSensor("Phase3 Current"),
     # "act_power_l1": "",
     # "act_power_l2": "",
     # "act_power_l3": "",
@@ -448,6 +458,8 @@ MQTT_PORT_CONF_KEY = "ha_mqtt_port"
 MQTT_USERNAME_CONF_KEY = "ha_mqtt_user"
 MQTT_PASSWORD_CONF_KEY = "ha_mqtt_password"
 MQTT_RETAIN_CONF_KEY = "ha_mqtt_retain"
+
+
 # JSON_CONFIG = "ha_config"
 
 
@@ -487,6 +499,7 @@ def is_valid_mqtt_topic(key_name: str) -> bool:
 
 def make_payload(conf: Conf, device: str, key: str, name: Optional[str] = None) -> dict:
     """Generate a MQTT payload for a sensor
+
     Use default values to create a sensor payload, then update with custom
     attributes if they exist.
     E.g., unit_of_measurement/total increasing/etc.
@@ -503,7 +516,7 @@ def make_payload(conf: Conf, device: str, key: str, name: Optional[str] = None) 
 
     # Default configuration payload
     payload = {
-        "name": "{device} {name}",
+        "name": "{name}",
         "unique_id": f"grott_{device}_{key}",  # Generate a unique device ID
         "state_topic": f"homeassistant/grott/{device}/state",
         "device": {
@@ -520,10 +533,6 @@ def make_payload(conf: Conf, device: str, key: str, name: Optional[str] = None) 
             # convert the mapping to a dict
             key_mapping = to_dict(key_mapping)
         payload.update(key_mapping)
-
-    if not payload["name"].startswith("{device} "):
-        # Prepend the {device} template, prevent repeating
-        payload["name"] = "{device} " + payload["name"]
 
     # Generate the name of the key, with all the param available
     payload["name"] = payload["name"].format(device=device, name=name, key=key)
@@ -556,11 +565,11 @@ class MqttStateHandler:
     client_name = "Grott - HA"
 
     @classmethod
-    def is_configured(cls, serial: str):
+    def is_configured(cls: "MqttStateHandler", serial: str) -> bool:
         return cls.__pv_config.get(serial, False)
 
     @classmethod
-    def set_configured(cls, serial: str):
+    def set_configured(cls: "MqttStateHandler", serial: str):
         cls.__pv_config[serial] = True
 
 
@@ -569,7 +578,7 @@ def process_conf(conf: Conf):
         MQTT_HOST_CONF_KEY,
         MQTT_PORT_CONF_KEY,
     ]
-    if not all([param in conf.extvar for param in required_params]):
+    if not all(param in conf.extvar for param in required_params):
         print("Missing configuration for ha_mqtt")
         raise AttributeError
 
@@ -600,9 +609,10 @@ def publish_single(conf: Conf, topic, payload, retain=False):
 
 def publish_multiple(conf: Conf, msgs):
     conf = process_conf(conf)
+    print(conf)
     return multiple(msgs, **conf)
 
-
+# Must be defined. This allows grott to call the function as a plugin
 def grottext(conf: Conf, data: str, jsonmsg: str):
     """Allow pushing to HA MQTT bus, with auto discovery"""
 
@@ -730,6 +740,7 @@ test_key = "pvpowerout"
 test_layout = "test"
 
 
+# Used to simulate a Conf object from grott
 class FakeConf:
     def __init__(self):
         self.recorddict = {
@@ -745,7 +756,7 @@ class FakeConf:
 
 
 def test_generate_payload():
-    "Test that an auto-generated payload for MQTT configuration"
+    """Test that an auto-generated payload for MQTT configuration"""
     conf = FakeConf()
     # Override the divider
     conf.recorddict["test"][test_key]["divide"] = 10
@@ -753,7 +764,7 @@ def test_generate_payload():
     print(payload)
     # The default divider for pvpowerout is 10
     assert payload["value_template"] == "{{ value_json.pvpowerout | float / 10 }}"
-    assert payload["name"] == "NCO7410 PV Output (Actual)"
+    assert payload["name"] == "PV Output (Actual)"
     assert payload["unique_id"] == "grott_NCO7410_pvpowerout"
     assert payload["state_class"] == "measurement"
     assert payload["device_class"] == "power"
@@ -767,7 +778,7 @@ def test_generate_payload_without_divider():
     print(payload)
     # The default divider for pvpowerout is 10
     assert payload["value_template"] == "{{ value_json.pvpowerout | float / 1 }}"
-    assert payload["name"] == "NCO7410 PV Output (Actual)"
+    assert payload["name"] == "PV Output (Actual)"
     assert payload["unique_id"] == "grott_NCO7410_pvpowerout"
     assert payload["state_class"] == "measurement"
     assert payload["device_class"] == "power"
@@ -782,7 +793,7 @@ def test_is_valid_mqtt_topic():
 def test_to_dict():
     # test the to_dict function
     res = to_dict(
-        MeasurementSensor(
+        BaseSensor(
             "Grott last data push",
             device_class="timestamp",
             value_template="{{value_json.grott_last_push}}",
@@ -791,6 +802,7 @@ def test_to_dict():
     assert res["name"] == "Grott last data push"
     assert res["device_class"] == "timestamp"
     assert res["value_template"] == "{{value_json.grott_last_push}}"
+    assert len(res.keys()) == 3
     # Even if present in the dataclass should not be serialized
     assert "unit_of_measurement" not in res
 
@@ -836,7 +848,7 @@ def test_name_generation():
     # test date {"value" :76, "length" : 10, "type" : "text"},
     payload = make_payload(conf, test_serial, test_key)
 
-    assert payload["name"] == "NCO7410 PV Output (Actual)"
+    assert payload["name"] == "PV Output (Actual)"
 
 
 def test_name_generation_non_mapped():
@@ -847,4 +859,4 @@ def test_name_generation_non_mapped():
     # test date {"value" :76, "length" : 10, "type" : "text"},
     payload = make_payload(conf, test_serial, "duck")
 
-    assert payload["name"] == "NCO7410 duck"
+    assert payload["name"] == "duck"
