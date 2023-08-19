@@ -15,9 +15,9 @@ The purpose of Grott is to read, parse and forward the *raw metrics as they are 
 * Added first MIN support (2.8.2)
 
 ### New in Version 2.7  
-* Added first beta of grottserver to act as destination for inverter/datalogger data (remove need to cummunicate with internet).
-  - grottserver version 0.0.5 is able to sent read/write register commands to inverter and datalogger.
-  - see discussions (#98) for more information: https://github.com/johanmeijer/grott/discussions/98
+* Added first beta of **grottserver** to act as destination for inverter/datalogger data (remove need to cummunicate with internet).
+  - - grottserver is able to sent read/write register commands to inverter and datalogger.
+  - see https://github.com/johanmeijer/grott/wiki/Grottserver and discussions https://github.com/johanmeijer/grott/discussions/98 for more information: 
 * Support for SDM630/Raillog connected (see issue #88)
 * Support for SDM630/Inverter (modbus) connected 3 phases support
 * Export to CSV file (see issue #79, pull request #91). 
