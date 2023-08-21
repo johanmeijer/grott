@@ -8,7 +8,7 @@ from paho.mqtt.publish import single, multiple
 
 from grottconf import Conf
 
-__version__ = "0.0.8"
+__version__ = "0.0.8a"
 
 """A pluging for grott
 This plugin allow to have autodiscovery of the device in HA
@@ -43,83 +43,83 @@ state_topic = "homeassistant/grott/{device}/state"
 
 mapping = {
     "datalogserial": {
-        "name": "{device} Datalogger serial",
+        "name": "Datalogger serial",
     },
-    "pvserial": {"name": "{device} Serial"},
+    "pvserial": {"name": "Serial"},
     "ppv1": {
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} PV1 Watt",
+        "name": "PV1 Watt",
         "unit_of_measurement": "W",
         "value_template": "{{value_json.ppv1| float / 10 }}",
     },
     "vpv1": {
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "{device} PV1 Voltage",
+        "name": "PV1 Voltage",
         "unit_of_measurement": "V",
         "value_template": "{{value_json.vpv1| float / 10 }}",
     },
     "buck1curr": {
         "state_class": "measurement",
         "device_class": "current",
-        "name": "{device} PV1 Current",
+        "name": "PV1 Current",
         "unit_of_measurement": "A",
         "value_template": "{{value_json.buck1curr| float / 10 }}",
     },
     "ppv2": {
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} PV2 Watt",
+        "name": "PV2 Watt",
         "unit_of_measurement": "W",
         "value_template": "{{value_json.ppv2| float / 10 }}",
     },
     "vpv2": {
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "{device} PV2 Voltage",
+        "name": "PV2 Voltage",
         "unit_of_measurement": "V",
         "value_template": "{{value_json.vpv2| float / 10 }}",
     },
     "buck2curr": {
         "state_class": "measurement",
         "device_class": "current",
-        "name": "{device} PV2 Current",
+        "name": "PV2 Current",
         "unit_of_measurement": "A",
         "value_template": "{{value_json.buck2curr| float / 10 }}",
     },
     "OP_Curr": {
         "state_class": "measurement",
         "device_class": "current",
-        "name": "{device} Output Current",
+        "name": "Output Current",
         "unit_of_measurement": "A",
         "value_template": "{{value_json.OP_Curr| float / 10 }}",
     },
     "AC_InWatt": {
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} AC Input kiloWatt (Actual)",
+        "name": "AC Input kiloWatt (Actual)",
         "unit_of_measurement": "W",
         "value_template": "{{value_json.AC_InWatt| float / 10 }}",
     },
     "op_watt": {
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} Output kiloWatt (Actual)",
+        "name": "Output kiloWatt (Actual)",
         "unit_of_measurement": "W",
         "value_template": "{{value_json.op_watt| float / 10 }}",
     },
     "op_va": {
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} Output VA (Actual)",
+        "name": "Output VA (Actual)",
         "unit_of_measurement": "VA",
         "value_template": "{{value_json.op_va| float / 10 }}",
     },
     "line_freq": {
         "state_class": "measurement",
         "device_class": "frequency",
-        "name": "{device} Grid frequency",
+        "name": "Grid frequency",
         "unit_of_measurement": "Hz",
         "value_template": "{{value_json.line_freq| float / 100 }}",
         "icon": "mdi:waveform",
@@ -127,7 +127,7 @@ mapping = {
     "outputfreq": {
         "state_class": "measurement",
         "device_class": "frequency",
-        "name": "{device} Output frequency",
+        "name": "Output frequency",
         "unit_of_measurement": "Hz",
         "value_template": "{{value_json.outputfreq| float / 100 }}",
         "icon": "mdi:waveform",
@@ -135,14 +135,14 @@ mapping = {
     "outputvolt": {
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "{device} Grid voltage",
+        "name": "Grid voltage",
         "unit_of_measurement": "V",
         "value_template": "{{value_json.outputvolt| float / 10 }}",
     },
     "loadpercent": {
         "state_class": "measurement",
         "device_class": "load",
-        "name": "{device} Inverter Load",
+        "name": "Inverter Load",
         "unit_of_measurement": "%",
         "value_template": "{{value_json.loadpercent| float / 10 }}",
     },
@@ -150,63 +150,63 @@ mapping = {
     "grid_volt": {
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "{device} Grid voltage",
+        "name": "Grid voltage",
         "unit_of_measurement": "V",
         "value_template": "{{value_json.grid_volt| float / 10 }}",
     },
     "acchr_watt": {
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} AC Charger Watts",
+        "name": "AC Charger Watts",
         "unit_of_measurement": "W",
         "value_template": "{{value_json.acchr_watt| float / 10 }}",
     },
     "ACDischarWatt": {
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} AC Discharge Watts",
+        "name": "AC Discharge Watts",
         "unit_of_measurement": "W",
         "value_template": "{{value_json.ACDischarWatt| float / 10 }}",
     },
     "acchr_VA": {
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} AC Charger VA",
+        "name": "AC Charger VA",
         "unit_of_measurement": "VA",
         "value_template": "{{value_json.acchr_VA| float / 10 }}",
     },
     "ACDischarVA": {
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} AC Discharge VA",
+        "name": "AC Discharge VA",
         "unit_of_measurement": "VA",
         "value_template": "{{value_json.ACDischarVA| float / 10 }}",
     },
     "AC_InVA": {
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} AC Input VA",
+        "name": "AC Input VA",
         "unit_of_measurement": "VA",
         "value_template": "{{value_json.ACDischarVA| float / 10 }}",
     },
     "bus_volt": {
         "state_class": "measurement",
         "device_class": "voltage",
-        "name": "{device} Bus voltage",
+        "name": "Bus voltage",
         "unit_of_measurement": "V",
         "value_template": "{{value_json.bus_volt| float / 10 }}",
     },
     "Inv_Curr": {
         "state_class": "measurement",
         "device_class": "current",
-        "name": "{device} Grid current",
+        "name": "Grid current",
         "unit_of_measurement": "A",
         "value_template": "{{value_json.Inv_Curr| float / 10 }}",
     },
     "ACCharCurr": {
         "state_class": "measurement",
         "device_class": "current",
-        "name": "{device} AC charger current",
+        "name": "AC charger current",
         "unit_of_measurement": "A",
         "value_template": "{{value_json.ACCharCurr| float / 10 }}",
     },
@@ -214,7 +214,7 @@ mapping = {
     "epv1tod": {
         "state_class": "total",
         "device_class": "energy",
-        "name": "{device} PV1 Generated energy (Today)",
+        "name": "PV1 Generated energy (Today)",
         "unit_of_measurement": "kWh",
         "value_template": "{{value_json.epv1tod| float / 10 }}",
         "icon": "mdi:solar-power",
@@ -222,34 +222,34 @@ mapping = {
     "epv2tod": {
         "state_class": "total",
         "device_class": "energy",
-        "name": "{device} PV2 Generated energy (Today)",
+        "name": "PV2 Generated energy (Today)",
         "unit_of_measurement": "kWh",
         "value_template": "{{value_json.epv2tod| float / 10 }}",
         "icon": "mdi:solar-power",
     },
     "pvstatus": {
-        "name": "{device} Status",
+        "name": "Status",
         "icon": "mdi:power-settings",
     },
     
     "invtemp": {
         "state_class": "measurement",
         "device_class": "temperature",
-        "name": "{device} Inverter temperature",
+        "name": "Inverter temperature",
         "unit_of_measurement": "°C",
         "value_template": "{{value_json.invtemp| float / 10 }}",
     },
     "dcdctemp": {
         "state_class": "measurement",
         "device_class": "temperature",
-        "name": "{device} DC to DC temperature",
+        "name": "DC to DC temperature",
         "unit_of_measurement": "°C",
         "value_template": "{{value_json.dcdctemp| float / 10 }}",
     },
     
     "epv1today": {
         "device_class": "energy",
-        "name": "{device} Solar production (Today)",
+        "name": "Solar production (Today)",
         "unit_of_measurement": "kWh",
         "value_template": "{{value_json.epv1today| float / 10 }}",
         "icon": "mdi:solar-power",
@@ -257,7 +257,7 @@ mapping = {
     },
     "epv1total": {
         "device_class": "energy",
-        "name": "{device} Solar production (Total)",
+        "name": "Solar production (Total)",
         "unit_of_measurement": "kWh",
         "value_template": "{{value_json.epv1total| float / 10 }}",
         "icon": "mdi:solar-power",
@@ -265,7 +265,7 @@ mapping = {
     },
     "epv2today": {
         "device_class": "energy",
-        "name": "{device} Solar PV2 production (Today)",
+        "name": "Solar PV2 production (Today)",
         "unit_of_measurement": "kWh",
         "value_template": "{{value_json.epv2today| float / 10 }}",
         "icon": "mdi:solar-power",
@@ -273,7 +273,7 @@ mapping = {
     },
     "epv2total": {
         "device_class": "energy",
-        "name": "{device} Solar PV2 production (Total)",
+        "name": "Solar PV2 production (Total)",
         "unit_of_measurement": "kWh",
         "value_template": "{{value_json.epv2total| float / 10 }}",
         "icon": "mdi:solar-power",
@@ -281,16 +281,16 @@ mapping = {
     },
     "grott_last_push": {
         "device_class": "timestamp",
-        "name": "{device} Grott last data push",
+        "name": "Grott last data push",
         "value_template": "{{value_json.grott_last_push}}",
     },
     "grott_last_measure": {
         "device_class": "timestamp",
-        "name": "{device} Last measure",
+        "name": "Last measure",
     },
     "eacDischarToday": {
         "device_class": "energy",
-        "name": "{device} Discharge from AC (Today)",
+        "name": "Discharge from AC (Today)",
         "unit_of_measurement": "kWh",
         "value_template": "{{value_json.eacDischarToday| float / 10 }}",
         "icon": "mdi:battery-arrow-up",
@@ -298,7 +298,7 @@ mapping = {
     },
     "eacDischarTotal": {
         "device_class": "energy",
-        "name": "{device} Discharge from AC (Total)",
+        "name": "Discharge from AC (Total)",
         "unit_of_measurement": "kWh",
         "value_template": "{{value_json.eacDischarTotal| float / 10 }}",
         "icon": "mdi:battery-arrow-up",
@@ -307,7 +307,7 @@ mapping = {
     # batteries
     "eacCharToday": {
         "device_class": "energy",
-        "name": "{device} Battery charge from AC (Today)",
+        "name": "Battery charge from AC (Today)",
         "unit_of_measurement": "kWh",
         "value_template": "{{value_json.eacCharToday| float / 10 }}",
         "icon": "mdi:battery-arrow-up",
@@ -315,7 +315,7 @@ mapping = {
     },
     "eacCharTotal": {
         "device_class": "energy",
-        "name": "{device} Battery charge from AC (Total)",
+        "name": "Battery charge from AC (Total)",
         "unit_of_measurement": "kWh",
         "value_template": "{{value_json.eacCharTotal| float / 10 }}",
         "icon": "mdi:solar-power",
@@ -325,11 +325,11 @@ mapping = {
         "state_class": "measurement",
         "device_class": "voltage",
         "value_template": "{{value_json.bat_Volt| float / 100 }}",
-        "name": "{device} Battery voltage",
+        "name": "Battery voltage",
         "unit_of_measurement": "V",
     },
     "batterySoc": {
-        "name": "{device} Battery charge",
+        "name": "Battery charge",
         "device_class": "battery",
         "state_class": "measurement",
         "unit_of_measurement": "%",
@@ -338,26 +338,26 @@ mapping = {
     "BatDischarWatt": {
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} Battery Discharge Watts",
+        "name": "Battery Discharge Watts",
         "unit_of_measurement": "W",
         "value_template": "{{value_json.BatDischarWatt| float / 10 }}",
     },
     "BatWatt": {
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} Battery Energy",
+        "name": "Battery Energy",
         "unit_of_measurement": "W",
         "value_template": "{{value_json.BatWatt| float / 10 * -1 }}",
     },
     "BatDischarVA": {
         "state_class": "measurement",
         "device_class": "power",
-        "name": "{device} Battery Discharge VA",
+        "name": "Battery Discharge VA",
         "unit_of_measurement": "VA",
         "value_template": "{{value_json.BatDischarVA| float / 10 }}",
     },
     "ebatDischarToday": {
-        "name": "{device} Battery discharge (Today)",
+        "name": "Battery discharge (Today)",
         "device_class": "energy",
         "state_class": "total",
         "value_template": "{{value_json.ebatDischarToday| float / 10 }}",
@@ -365,7 +365,7 @@ mapping = {
         "icon": "mdi:battery-arrow-down",
     },
     "ebatDischarTotal": {
-        "name": "{device} Battery discharge (Total)",
+        "name": "Battery discharge (Total)",
         "device_class": "energy",
         "state_class": "total_increasing",
         "value_template": "{{value_json.ebatDischarTotal| float / 10 }}",
@@ -385,23 +385,19 @@ MQTT_RETAIN_CONF_KEY = "ha_mqtt_retain"
 def make_payload(conf: Conf, device: str, name: str, key: str, unit: str = None):
     # Default configuration payload
     payload = {
-        "name": "{device} {name}",
+        "name": "{name}",
         "unique_id": f"grott_{device}_{key}",  # Generate a unique device ID
         "state_topic": f"homeassistant/grott/{device}/state",
         "device": {
             "identifiers": [device],  # Group under a device
             "name": device,
-            "manufacturer": "GrowWatt",
+            "manufacturer": "Growatt",
         },
     }
 
     # If there's a custom mapping add the new values
     if key in mapping:
         payload.update(mapping[key])
-
-    if not payload["name"].startswith("{device} "):
-        # Prepend the {device} template, prevent repeating
-        payload["name"] = "{device} " + payload["name"]
 
     # Generate the name of the key, with all the param available
     payload["name"] = payload["name"].format(device=device, name=name, key=key)
