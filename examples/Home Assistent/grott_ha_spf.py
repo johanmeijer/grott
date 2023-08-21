@@ -8,7 +8,7 @@ from paho.mqtt.publish import single, multiple
 
 from grottconf import Conf
 
-__version__ = "0.0.8a"
+__version__ = "0.0.9"
 
 """A pluging for grott
 This plugin allow to have autodiscovery of the device in HA
@@ -111,7 +111,7 @@ mapping = {
     },
     "op_va": {
         "state_class": "measurement",
-        "device_class": "power",
+        "device_class": "apparent_power",
         "name": "Output VA (Actual)",
         "unit_of_measurement": "VA",
         "value_template": "{{value_json.op_va| float / 10 }}",
@@ -170,21 +170,21 @@ mapping = {
     },
     "acchr_VA": {
         "state_class": "measurement",
-        "device_class": "power",
+        "device_class": "apparent_power",
         "name": "AC Charger VA",
         "unit_of_measurement": "VA",
         "value_template": "{{value_json.acchr_VA| float / 10 }}",
     },
     "ACDischarVA": {
         "state_class": "measurement",
-        "device_class": "power",
+        "device_class": "apparent_power",
         "name": "AC Discharge VA",
         "unit_of_measurement": "VA",
         "value_template": "{{value_json.ACDischarVA| float / 10 }}",
     },
     "AC_InVA": {
         "state_class": "measurement",
-        "device_class": "power",
+        "device_class": "apparent_power",
         "name": "AC Input VA",
         "unit_of_measurement": "VA",
         "value_template": "{{value_json.ACDischarVA| float / 10 }}",
@@ -351,7 +351,7 @@ mapping = {
     },
     "BatDischarVA": {
         "state_class": "measurement",
-        "device_class": "power",
+        "device_class": "apparent_power",
         "name": "Battery Discharge VA",
         "unit_of_measurement": "VA",
         "value_template": "{{value_json.BatDischarVA| float / 10 }}",
