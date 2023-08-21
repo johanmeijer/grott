@@ -8,7 +8,7 @@ from paho.mqtt.publish import single, multiple
 
 from grottconf import Conf
 
-__version__ = "0.0.9"
+__version__ = "0.0.8"
 
 """A pluging for grott
 This plugin allow to have autodiscovery of the device in HA
@@ -17,6 +17,7 @@ Should be able to support multiples inverters
 
 Version 0.0.8
   - Changed mapping to be compatible with SPF inverter, in this case specifically, SPFXX00ES.
+  - Updated sensor names to fall in line with HA guidelines.
   
 Config:
     - ha_mqtt_host (required): The host of the MQTT broker user by HA (often the IP of HA)
