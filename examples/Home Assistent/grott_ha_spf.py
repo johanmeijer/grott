@@ -141,7 +141,6 @@ mapping = {
     },
     "loadpercent": {
         "state_class": "measurement",
-        "device_class": "load",
         "name": "Inverter Load",
         "unit_of_measurement": "%",
         "value_template": "{{value_json.loadpercent| float / 10 }}",
