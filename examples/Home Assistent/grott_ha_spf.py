@@ -229,6 +229,7 @@ mapping = {
     "pvstatus": {
         "name": "Status",
         "icon": "mdi:power-settings",
+        "value_template": "{{value_json.pvstatus| int }}",
     },
     
     "invtemp": {
