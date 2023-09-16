@@ -8,7 +8,7 @@ from paho.mqtt.publish import multiple, single
 
 from grottconf import Conf
 
-__version__ = "0.0.7-RC9"
+__version__ = "0.0.7"
 __author__ = "Etienne G."
 
 """A plugin for grott
@@ -612,6 +612,7 @@ def publish_multiple(conf: Conf, msgs):
     print(conf)
     return multiple(msgs, **conf)
 
+
 # Must be defined. This allows grott to call the function as a plugin
 def grottext(conf: Conf, data: str, jsonmsg: str):
     """Allow pushing to HA MQTT bus, with auto discovery"""
@@ -788,6 +789,10 @@ def test_generate_payload_without_divider():
 def test_is_valid_mqtt_topic():
     assert is_valid_mqtt_topic("plocaloadr") is True
     assert is_valid_mqtt_topic("#nbusvolt") is False
+    assert is_valid_mqtt_topic("/test") is False
+    assert is_valid_mqtt_topic("test/") is False
+    assert is_valid_mqtt_topic("+test") is False
+    assert is_valid_mqtt_topic("$test") is False  # System topic
 
 
 def test_to_dict():
