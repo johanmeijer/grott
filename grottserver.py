@@ -14,9 +14,9 @@ from urllib.parse import urlparse, parse_qs, parse_qsl
 from collections import defaultdict
 
 # grottserver.py emulates the server.growatt.com website and is initial developed for debugging and testing grott.
-# Updated: 2023-09-04
+# Updated: 2023-09-19
 # Version:
-verrel = "0.0.14d"
+verrel = "0.0.14e"
 
 # Declare Variables (to be moved to config file later)
 serverhost = "0.0.0.0"
