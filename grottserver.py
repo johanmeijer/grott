@@ -313,7 +313,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                     # test if register is specified and set reg value. 
                     if command == "register":
                         #test if valid reg is applied
-                        if int(urlquery["register"][0]) >= 0 and int(urlquery["register"][0]) < 1125 : 
+                        if int(urlquery["register"][0]) >= 0 and int(urlquery["register"][0]) < 4096 : 
                             register = urlquery["register"][0]
                         else: 
                             responsetxt = b'invalid reg value specified'
@@ -549,7 +549,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
 
                     if command == "register":
                         #test if valid reg is applied
-                        if int(urlquery["register"][0]) >= 0 and int(urlquery["register"][0]) < 1024 : 
+                        if int(urlquery["register"][0]) >= 0 and int(urlquery["register"][0]) < 4096 : 
                             register = urlquery["register"][0]
                         else: 
                             responsetxt = b'invalid reg value specified'
@@ -581,7 +581,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                         # TODO: Too much copy/paste here. Refactor into methods.
 
                         # Check for valid start register
-                        if int(urlquery["startregister"][0]) >= 0 and int(urlquery["startregister"][0]) < 1125 :
+                        if int(urlquery["startregister"][0]) >= 0 and int(urlquery["startregister"][0]) < 4096 :
                             startregister = urlquery["startregister"][0]
                         else:
                             responsetxt = b'invalid start register value specified'
@@ -591,7 +591,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                             return
 
                         # Check for valid end register
-                        if int(urlquery["endregister"][0]) >= 0 and int(urlquery["endregister"][0]) < 1125 :
+                        if int(urlquery["endregister"][0]) >= 0 and int(urlquery["endregister"][0]) < 4096 :
                             endregister = urlquery["endregister"][0]
                         else:
                             responsetxt = b'invalid end register value specified'
