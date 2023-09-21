@@ -787,7 +787,9 @@ class Conf :
             "pvtemperature"     : {"value" :530, "length" : 2, "type" : "num", "divide" : 10},                 
             "pvipmtemperature"  : {"value" :546, "length" : 2, "type" : "num", "divide" : 10},          
             "pbusvolt"          : {"value" :550, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                  
-            "nbusvolt"          : {"value" :554, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"}    
+            "nbusvolt"          : {"value" :554, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},
+            "battery1soc"       : {"value" :852, "length" : 1, "type" : "num", "divide" : 1}
+   
             } }     
 
         self.recorddict6 = {"T06NNNNXSPH": {
