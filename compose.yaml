@@ -8,9 +8,9 @@ services:
         restart: unless-stopped
         ports:
             - "5279:5279"
-        volumes:
-            #- /opt/grott/grottstub.ini:/app/grott.ini
-            #- /opt/grott/grottstub.py:/app/grottext.py
+        # volumes:
+        #   - /opt/grott/grottstub.ini:/app/grott.ini
+        #   - /opt/grott/grottstub.py:/app/grottext.py
         environment:
             - gblockcmd=False 
             - gnomqtt=False
