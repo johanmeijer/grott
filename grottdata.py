@@ -540,7 +540,9 @@ def procdata(conf,data):
                     "t"     : pvotime,
                 #2.7.1    "v1"    : definedkey["pvenergytoday"]*100,
                     "v2"    : definedkey["pvpowerout"]/10,
-                    "v6"    : definedkey["pvgridvoltage"]/10
+                    "v6"    : definedkey["pvgridvoltage"]/10,
+                    "v7"    : definedkey["pv1voltage"]/10,
+                    "v8"    : definedkey["pvfrequentie"]/100
                     }
                 if not conf.pvdisv1 :
                     pvdata["v1"] = definedkey["pvenergytoday"]*100
@@ -557,7 +559,7 @@ def procdata(conf,data):
                 if conf.verbose :  print("\t - " + "Grott PVOutput response: ") 
                 if conf.verbose : print("\t\t - ", reqret.text)
             else: 
-                # send smat monitor data c1 = 3 indiates v3 is lifetime energy (day wil be calculated), n=1 indicates is net data (import /export)
+                # send smart monitor data c1 = 3 indiates v3 is lifetime energy (day wil be calculated), n=1 indicates is net data (import /export)
                 # value seprated because it is not allowed to sent combination at once
                 pvdata1 = { 
                     "d"     : pvodate,
