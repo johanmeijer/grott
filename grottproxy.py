@@ -119,29 +119,35 @@ class Proxy:
             print("IP and port information not available") 
 
         self.server.listen(200)
-        self.forward_to = (conf.growattip, conf.growattport)
-        
+        self.forward_to = (conf.growattip, conf.growattport)       
+        self.socketState = 0  # Initialize socket state to 0 (no timeout recovery on startup)   
+    
     def main(self,conf):
         self.input_list.append(self.server)
         while 1:
             time.sleep(delay)
             ss = select.select
-            inputready, outputready, exceptready = ss(self.input_list, [], [])
-            for self.s in inputready:
-                if self.s == self.server:
-                    self.on_accept(conf)
-                    break
-                try: 
-                    self.data, self.addr = self.s.recvfrom(buffer_size)
-                except: 
-                    if conf.verbose : print("\t - Grott connection error") 
-                    self.on_close(conf)   
-                    break
-                if len(self.data) == 0:
-                    self.on_close(conf)
-                    break
-                else:
-                    self.on_recv(conf)
+            # 300 : timeout in seconds, since the default is 5 minutes, we can expect some data every 5 minutes, if not, retry later.
+            inputready, outputready, exceptready = ss(self.input_list, [], [], 300)
+            if not inputready:
+                if conf.verbose : self.handle_socket_timeout()
+            else:
+                if conf.verbose : self.handle_socket_reconnect()
+                for self.s in inputready:
+                    if self.s == self.server:
+                        self.on_accept(conf)
+                        break
+                    try: 
+                        self.data, self.addr = self.s.recvfrom(buffer_size)
+                    except: 
+                        if conf.verbose : print("\t - Grott connection error") 
+                        self.on_close(conf)   
+                        break
+                    if len(self.data) == 0:
+                        self.on_close(conf)
+                        break
+                    else:
+                        self.on_recv(conf)
 
     def on_accept(self,conf):
         forward = Forward().start(self.forward_to[0], self.forward_to[1])
@@ -238,4 +244,18 @@ class Proxy:
             procdata(conf,data)    
         else:     
             if conf.verbose: print("\t - " + 'Data less then minimum record length, data not processed') 
-                
+
+    def handle_socket_timeout(self):
+        if self.socketState == 0:
+            self.socketState = 1
+            print("\t - Grott proxy socket timeout occurred")
+        elif self.socketState == 1:
+            self.socketState = 2
+            print("\t - Grott inverter seems to be asleep, goodnight")
+
+    def handle_socket_reconnect(self):
+        if self.socketState == 1:            
+            print("\t - Grott proxy socket reconnected after timeout")
+        elif self.socketState == 2:
+            print("\t - Grott inverter woke up, good morning")
+        self.socketState = 0    
