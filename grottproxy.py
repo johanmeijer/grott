@@ -104,6 +104,11 @@ class Proxy:
         ## to resolve errno 32: broken pipe issue (Linux only)
         if sys.platform != 'win32':
             signal(SIGPIPE, SIG_DFL) 
+            
+        self.create_proxy(conf)
+
+    def create_proxy(self, conf):
+        print(f"Creating socket on {conf.grottport}") 
         ## 
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -122,13 +127,29 @@ class Proxy:
         self.forward_to = (conf.growattip, conf.growattport)       
         self.socketState = 0  # Initialize socket state to 0 (no timeout recovery on startup)   
     
+    def restart_proxy(self, conf):        
+        # Close the socket if it's in the list
+        if self.server in self.input_list:
+            self.input_list.remove(self.server)
+            self.server.close()
+        
+        self.create_proxy(conf)
+    
     def main(self,conf):
         self.input_list.append(self.server)
         while 1:
             time.sleep(delay)
-            ss = select.select
             # 300 : timeout in seconds, since the default is 5 minutes, we can expect some data every 5 minutes, if not, retry later.
-            inputready, outputready, exceptready = ss(self.input_list, [], [], 300)
+            inputready, outputready, exceptready = select.select(self.input_list, [], [], 300)
+            
+            # Handle the socket exceptions
+            for self.s in exceptready:
+                try:
+                    print("\t - Socket Exception received, closing it."),
+                    restart_proxy(conf)
+                except socket.error as e:
+                    print(f"\t Error while handling exception for Socket, exception: {e}")
+
             if not inputready:
                 if conf.verbose : self.handle_socket_timeout()
             else:
