@@ -3,7 +3,7 @@
 # Updated: 2022-08-27
 
 #import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from os import times_result
 #import pytz
 import time
@@ -589,33 +589,14 @@ def procdata(conf,data):
             if conf.verbose : print("\t - " + "Grott Send data to PVOutput disabled ") 
 
     # influxDB processing 
-    if conf.influx:      
+    if conf.influx:
         if conf.verbose :  print("\t - " + "Grott InfluxDB publihing started")
-        try:  
-            import  pytz             
-        except: 
-            if conf.verbose :  print("\t - " + "Grott PYTZ Library not installed in Python, influx processing disabled")    
-            conf.inlyx = False
-            return
-        try: 
-            local = pytz.timezone(conf.tmzone) 
-        except : 
-            if conf.verbose :  
-                if conf.tmzone ==  "local":  print("\t - " + "Timezone local specified default timezone used")
-                else : print("\t - " + "Grott unknown timezone : ",conf.tmzone,", default timezone used")
-            conf.tmzone = "local"
-            local = int(time.timezone/3600)
-            #print(local)
 
-        if conf.tmzone == "local": 
-           curtz = time.timezone 
-           utc_dt = datetime.strptime (jsondate, "%Y-%m-%dT%H:%M:%S") + timedelta(seconds=curtz) 
-        else :      
-            naive = datetime.strptime (jsondate, "%Y-%m-%dT%H:%M:%S")
-            local_dt = local.localize(naive, is_dst=None)
-            utc_dt = local_dt.astimezone(pytz.utc)
-        
-        ifdt = utc_dt.strftime ("%Y-%m-%dT%H:%M:%S")
+        #TODO: make use of the conf.tmzone configuration instead of assuming local
+        local_time = datetime.strptime (jsondate, "%Y-%m-%dT%H:%M:%S")
+        utc_time = local_time.astimezone(timezone.utc)
+        ifdt = utc_time.strftime ("%Y-%m-%dT%H:%M:%S")
+
         if conf.verbose :  print("\t - " + "Grott original time : ",jsondate,"adjusted UTC time for influx : ",ifdt)
     
         # prepare influx jsonmsg dictionary    
