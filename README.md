@@ -14,11 +14,12 @@ The purpose of Grott is to read, parse and forward the *raw metrics as they are 
 ### New in Version 2.8
 * Added first SPA support (2.8.1)
 * Added first MIN support (2.8.2)
+* Merged with master (2.8.3)
 
-### New in Version 2.7  
-* Added first beta of **grottserver** to act as destination for inverter/datalogger data (remove need to cummunicate with internet).
-  - grottserver is able to sent read/write register commands to inverter and datalogger.
-  - see https://github.com/johanmeijer/grott/wiki/Grottserver and discussions https://github.com/johanmeijer/grott/discussions/98 for more information: 
+### New in Version 2.7.8  
+* Added first beta of grottserver to act as destination for inverter/datalogger data (remove need to cummunicate with internet).
+  - grottserver version 0.0.5 is able to sent read/write register commands to inverter and datalogger.
+  - see discussions (#98) for more information: https://github.com/johanmeijer/grott/discussions/98
 * Support for SDM630/Raillog connected (see issue #88)
 * Support for SDM630/Inverter (modbus) connected 3 phases support
 * Export to CSV file (see issue #79, pull request #91). 
@@ -41,12 +42,7 @@ The purpose of Grott is to read, parse and forward the *raw metrics as they are 
 * Added option to add inverter serial to MQTT topic (thanks to @ebosveld)
   - Add mqttinverterintopic = True to MQTT section of grott.ini or use  qmqttinverterintopic = "True" environmental (e.g. docker).
 
-### planned in Version 2.7.x (not commited yet)
-* Auto detect for SPF, SPH, TL3 inverters
-* Improved / configurable PVOutput support 
-* MQTT Retain message support      
-* Enhanced record layout for SPH 
-* tbd
+### For all changes see: https://github.com/johanmeijer/grott/blob/Master-(2.7.8)/Version_history.txt
 
 ### Two modes of metric data retrieval
 Grott can intercept the inverter metrics in two distinct modes:
