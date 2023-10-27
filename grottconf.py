@@ -162,7 +162,7 @@ class Conf :
                     raise SystemExit("Grott Influxdb initialisation error")
 
                 #self.influxclient = InfluxDBClient(url='192.168.0.211:8086',org=self.iforg, token=self.iftoken)
-                self.influxclient = InfluxDBClient(url="{}:{}".format(self.ifip, self.ifport),org=self.iforg, token=self.iftoken)
+                self.influxclient = InfluxDBClient(url="http://{}:{}".format(self.ifip, self.ifport),org=self.iforg, token=self.iftoken)
                 self.ifbucket_api = self.influxclient.buckets_api()
                 self.iforganization_api = self.influxclient.organizations_api()              
                 self.ifwrite_api = self.influxclient.write_api(write_options=SYNCHRONOUS)  
