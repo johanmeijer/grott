@@ -40,5 +40,3 @@ def grottext(conf,data,jsonmsg) :
 
     #print(r.text)  
     return resultcode
-
-    
