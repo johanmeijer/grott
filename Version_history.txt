@@ -250,3 +250,7 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - added some field to SPA layout 
 - fix bug with gverbose environment (see pr: #304)
 - fix bug in devider for batery SOC (see pr: #305)
+2.8.3 
+- Removed space at the end of epvtotal and epv1today keywords in min layout (#481)
+- Changed bms_batterycurr in MIN layout to numx (issue #362)
+- Add gpvuplimit environmental for limiting pvoutpy writes in docker container (#346), be ware need new docker image 2.8.3 (will be created in next gen)
