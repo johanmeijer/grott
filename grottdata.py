@@ -12,7 +12,7 @@ import struct
 import textwrap
 from itertools import cycle # to support "cycling" the iterator
 import json, codecs
-from typing import Dict
+from typing import Dict, Optional
 # requests
 
 #import mqtt                       
@@ -78,6 +78,23 @@ def str2bool(defstr):
     if 'defret' in locals():
         return(defret)
     else : return()
+
+def is_message_valid(definedkey:dict) -> Optional[str]:
+    # TODO : this test is a too arbitrary. We just assume that no Growatt inverter can handle more than 12000W of input solar power.
+    if 'ppv1' in definedkey:
+        if definedkey['ppv1'] > 12000:
+            return 'ppv1'
+    
+    if 'ppv2' in definedkey:
+        if definedkey['ppv2'] > 12000:
+            return 'ppv2'
+
+    # TODO : this test is a too arbitrary. We just assume that no Growatt inverter can produce more than 200kWh of energy in a single day.
+    if 'epvtoday' in definedkey:
+        if definedkey['epvtoday'] > 200:
+            return 'epvtoday'
+    
+    return None
 
 def procdata(conf,data):    
     if conf.verbose: 
@@ -377,55 +394,59 @@ def procdata(conf,data):
             if conf.trace: 
                 print("\t - "+ 'Growatt unprocessed Data:')
                 print(format_multi_line("\t\t - ", result_string))  
-        
+
+    # print data to the standard output if verbose is set
+    if dataprocessed and conf.verbose: 
+        if conf.compat :
+            #print in compatibility mode
+            definedkey["pvserial"] = codecs.decode(definedkey["pvserial"], "hex").decode('utf-8') 
+            print("\t - " + "Grott values retrieved:")
+            print("\t\t - " + "pvserial:         ", definedkey["pvserial"])
+            print("\t\t - " + "pvstatus:         ", definedkey["pvstatus"]) 
+            print("\t\t - " + "pvpowerin:        ", definedkey["pvpowerin"]/10)
+            print("\t\t - " + "pvpowerout:       ", definedkey["pvpowerout"]/10)
+            print("\t\t - " + "pvenergytoday:    ", definedkey["pvenergytoday"]/10)
+            print("\t\t - " + "pvenergytotal:    ", definedkey["pvenergytotal"]/10)
+            print("\t\t - " + "pv1watt:          ", definedkey["pv1watt"]/10)
+            print("\t\t - " + "pv2watt:          ", definedkey["pv2watt"]/10)
+            print("\t\t - " + "pvfrequentie:     ", definedkey["pvfrequentie"]/100)
+            print("\t\t - " + "pvgridvoltage:    ", definedkey["pvgridvoltage"]/10)
+            print("\t\t - " + "pv1voltage:       ", definedkey["pv1voltage"]/10)
+            print("\t\t - " + "pv1current:       ", definedkey["pv1current"]/10)
+            print("\t\t - " + "pv2voltage:       ", definedkey["pv2voltage"]/10)
+            print("\t\t - " + "pv2current:       ", definedkey["pv2current"]/10)
+            print("\t\t - " + "pvtemperature:    ", definedkey["pvtemperature"]/10)
+            print("\t\t - " + "pvipmtemperature: ", definedkey["pvipmtemperature"]/10)      
+        else: 
+            #dynamic print 
+            print("\t - " + "Grott values retrieved:")
+            for key in definedkey : 
+                # test if there is an divide factor is specifed 
+                try:  
+                    #print(keyword)
+                    keydivide =  conf.recorddict[layout][key]["divide"]
+                    #print(keydivide)
+                except:
+                    #print("error")
+                    keydivide = 1  
+
+                if type(definedkey[key]) != type(str()) and keydivide != 1 :
+                    printkey = "{:.1f}".format(definedkey[key]/keydivide)          
+                else :
+                    printkey = definedkey[key]
+                print("\t\t - ",key.ljust(20) + " : ",printkey) 
+
+    # check if data is valid
+    # @KevinEeckman : sometime my SPF6000T DVM MPV sends inconsistent data, which must be discared (see unit tests for examples of corrupted data)
+    invalid_key = is_message_valid(definedkey)
+    if  invalid_key is not None:
+        if conf.verbose: print(f"\t - " + 'Growatt data not consistent ({invalid_key}), processing stopped')
+        return
+
     if dataprocessed: 
         # only sendout data to MQTT if it is processed. 
-        
-        # Print values 
-        if conf.verbose: 
-            if conf.compat :
-                #print in compatibility mode
-                definedkey["pvserial"] = codecs.decode(definedkey["pvserial"], "hex").decode('utf-8') 
-                print("\t - " + "Grott values retrieved:")
-                print("\t\t - " + "pvserial:         ", definedkey["pvserial"])
-                print("\t\t - " + "pvstatus:         ", definedkey["pvstatus"]) 
-                print("\t\t - " + "pvpowerin:        ", definedkey["pvpowerin"]/10)
-                print("\t\t - " + "pvpowerout:       ", definedkey["pvpowerout"]/10)
-                print("\t\t - " + "pvenergytoday:    ", definedkey["pvenergytoday"]/10)
-                print("\t\t - " + "pvenergytotal:    ", definedkey["pvenergytotal"]/10)
-                print("\t\t - " + "pv1watt:          ", definedkey["pv1watt"]/10)
-                print("\t\t - " + "pv2watt:          ", definedkey["pv2watt"]/10)
-                print("\t\t - " + "pvfrequentie:     ", definedkey["pvfrequentie"]/100)
-                print("\t\t - " + "pvgridvoltage:    ", definedkey["pvgridvoltage"]/10)
-                print("\t\t - " + "pv1voltage:       ", definedkey["pv1voltage"]/10)
-                print("\t\t - " + "pv1current:       ", definedkey["pv1current"]/10)
-                print("\t\t - " + "pv2voltage:       ", definedkey["pv2voltage"]/10)
-                print("\t\t - " + "pv2current:       ", definedkey["pv2current"]/10)
-                print("\t\t - " + "pvtemperature:    ", definedkey["pvtemperature"]/10)
-                print("\t\t - " + "pvipmtemperature: ", definedkey["pvipmtemperature"]/10)      
-            else: 
-                #dynamic print 
-                print("\t - " + "Grott values retrieved:")
-                for key in definedkey : 
-                    # test if there is an divide factor is specifed 
-                    try:  
-                        #print(keyword)
-                        keydivide =  conf.recorddict[layout][key]["divide"]
-                        #print(keydivide)
-                    except:
-                        #print("error")
-                        keydivide = 1  
-        
-                    if type(definedkey[key]) != type(str()) and keydivide != 1 :
-                        printkey = "{:.1f}".format(definedkey[key]/keydivide)          
-                    else :
-                        printkey = definedkey[key]
-                    print("\t\t - ",key.ljust(20) + " : ",printkey)              
+        #create JSON message  (first create obj dict and then convert to a JSON message)                      
 
-        #create JSON message  (first create obj dict and then convert to a JSON message)                   
-
-        
-       
         # filter invalid 0120 record (0 < voltage_l1 > 500 ) 
         if header[14:16] == "20" :
             if (definedkey["voltage_l1"]/10 > 500) or (definedkey["voltage_l1"]/10 < 0) :
@@ -452,16 +473,9 @@ def procdata(conf,data):
                         "values" : {}
                     }
 
-        for key in definedkey : 
-
-            #if key != "pvserial" : 
-                #if conf.recorddict[layout][key]["type"] == "num" : 
-                # only add int values to the json object 
-                #print(definedkey[key])
-                #print(type(definedkey[key]))                                 
-                #if type(definedkey[key]) == type(1) :                                                                     
-                #    jsonobj["values"][key] = definedkey[key]
-            jsonobj["values"][key] = definedkey[key]
+        for key in definedkey :
+            divider = conf.get_recdivider(key)
+            jsonobj["values"][key] = definedkey[key]/divider if conf.mqttapplydividers and divider is not None else definedkey[key]
                      
         jsonmsg = json.dumps(jsonobj) 
         
@@ -590,7 +604,7 @@ def procdata(conf,data):
 
     # influxDB processing 
     if conf.influx:      
-        if conf.verbose :  print("\t - " + "Grott InfluxDB publihing started")
+        if conf.verbose :  print("\t - " + "Grott InfluxDB publishing started")
         try:  
             import  pytz             
         except: 
@@ -635,8 +649,9 @@ def procdata(conf,data):
                     }    
 
         for key in definedkey : 
-            if key != "date" : 
-                ifobj["fields"][key] = definedkey[key]
+            if key != "date" :
+                divider = conf.get_recdivider(key)
+                ifobj["fields"][key] = definedkey[key]/divider if conf.ifapplydividers and divider is not None else definedkey[key] 
         
         #Create list for influx
         ifjson = [ifobj]
