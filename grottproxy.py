@@ -181,8 +181,10 @@ class Proxy:
     def on_recv(self,conf):
         data = self.data      
         print("")
-        print("\t - " + "Growatt packet received:") 
-        print("\t\t ", self.channel[self.s])
+        
+        if conf.verbose:
+            print("\t - " + "Growatt packet received:") 
+            print("\t\t ", self.channel[self.s])
         
         #test if record is not corrupted
         vdata = "".join("{:02x}".format(n) for n in data)

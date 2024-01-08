@@ -492,7 +492,7 @@ def procdata(conf,data):
             try:
                 #v2.7.1 add retrain variable  
                 publish.single(mqtttopic, payload=jsonmsg, qos=0, retain=conf.mqttretain, hostname=conf.mqttip,port=conf.mqttport, client_id=conf.inverterid, keepalive=60, auth=conf.pubauth)
-                if conf.verbose: print("\t - " + 'MQTT message message sent') 
+                print("\t - " + 'MQTT message message sent') 
             except TimeoutError:     
                 if conf.verbose: print("\t - " + 'MQTT connection time out error') 
             except ConnectionRefusedError:     
@@ -523,7 +523,7 @@ def procdata(conf,data):
             if not pvout_limit.ok_send(definedkey["pvserial"], conf):
                 # Will print a line for the refusal in verbose mode (see GrottPvOutLimit at the top)
                 return
-            if conf.verbose : print("\t - " + "Grott send data to PVOutput systemid: ", pvssid, "for inverter: ", definedkey["pvserial"]) 
+            print("\t - " + "Grott send data to PVOutput systemid: ", pvssid, "for inverter: ", definedkey["pvserial"]) 
             pvheader = { 
                 "X-Pvoutput-Apikey"     : conf.pvapikey,
                 "X-Pvoutput-SystemId"   : pvssid
