@@ -7,9 +7,14 @@ Use it with care and be aware it might damage your devices. Changing the registe
 | Reg  | Name              | Description      | Write | Value   |Unit |Initial| Note                                                               |
 | ---- | ----------------- | ---------------- |-------|---------|-----|-------| -------------------------------------------------------------------| 
 |4|Interval|update interval|W||Ascii|| e.g 5 or 1 or 0.5|
-|31|datetime|current date-time|W||Ascii||e.g 2022-05-17 21:01:50|
+|16|DataLogger MAC Address|||Ascii||e.g. 00:00:00:00:00:00|
 |17| growatt_ip|Growatt server ip addres|W||Ascii||set for redirection to Grott e.g. 192.168.0.206|
 |18| growatt_port|Growatt server Port|W||Num||set for redirection to Grott e.g. 5279|
+|25|Netmask|||||Asci||e.g. 255.255.25.5.0|
+|31|datetime|current date-time|W||Ascii||e.g 2022-05-17 21:01:50|
+|56|Wi-Fi SSID|
+|57|Wi-Fi Password|
+
 
 ## inverter
 
