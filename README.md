@@ -11,13 +11,13 @@ The purpose of Grott is to read, parse and forward the *raw metrics as they are 
 ### Please see: https://github.com/johanmeijer/grott/wiki/@Statement-of-use-and-limitations before using Grott.
 
 ### New in Version 2.7.8
-* Added first beta of grottserver to act as destination for inverter/datalogger data (remove need to cummunicate with internet).
+* Added first beta of grottserver to act as destination for inverter/datalogger data (remove need to communicate with internet).
   - grottserver is able to sent read/write register commands to inverter and datalogger.
   - see https://github.com/johanmeijer/grott/wiki/Grottserver and discussions https://github.com/johanmeijer/grott/discussions/98 for more information: 
 * Support for SDM630/Raillog connected (see issue #88)
 * Support for SDM630/Inverter (modbus) connected 3 phases support
 * Export to CSV file (see issue #79, pull request #91). 
-  - Also avaialble in 2.6.1 (master) 
+  - Also available in 2.6.1 (master) 
   - More information can be found in the wiki: https://github.com/johanmeijer/grott/wiki/Extensions
 * Add parameter to enable message retain in MQTT (#84)
   - .ini [MQTT section] retain = True
@@ -122,7 +122,7 @@ Mulitiple inverter (multiple system id's) support in PVOutput.org
 <br> 
 see: https://github.com/johanmeijer/grott/wiki/PVOutput.org-support 
 
-#### Be aware: Wiith this release the default grott.ini moved to examples directory 
+#### Be aware: With this release the default grott.ini moved to examples directory 
 This file is deleted from the grott default directory to simply github installation (not overwrite your settings). 
 It is advised to copy this file into the Grott default directory (and customise it) during first time installation 
 
@@ -168,7 +168,7 @@ Pro / Cons:
     + Blocking / Filtering of commands from the outside is possible
     - If Grott is not running no data will be sent to the Growatt server
 
-The adivse is to use the proxy mode. This mode is strategic and will be used for enhanced features like automatic protocol detection and command blocking filtering.  
+The advise is to use the proxy mode. This mode is strategic and will be used for enhanced features like automatic protocol detection and command blocking filtering.  
 <br>
 Sniff mode is not supported under Windows
 <br>
