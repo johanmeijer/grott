@@ -522,7 +522,7 @@ def make_payload(conf: Conf, device: str, key: str, name: Optional[str] = None) 
         "device": {
             "identifiers": [device],  # Group under a device
             "name": device,
-            "manufacturer": "GrowWatt",
+            "manufacturer": "Growatt",
         },
     }
 
