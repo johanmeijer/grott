@@ -941,7 +941,7 @@ class Conf :
             "BatDischarWatt"    : {"value" :378, "length" : 4, "type" : "num", "divide" : 10},  
             "BatDischarVA"      : {"value" :386, "length" : 4, "type" : "num", "divide" : 10},  
             "BatWatt"           : {"value" :394, "length" : 4, "type" : "numx", "divide" : 10},   
-            "invFanSpeed"       : {"value" :414, "length" : 2, "type" : "num", "divide" : 1}                                              
+            "invfanspeed"       : {"value" :414, "length" : 2, "type" : "num", "divide" : 1}                                              
         } }            
 
         self.recorddict8 = {"T06NNNNSPF": {
@@ -1000,7 +1000,7 @@ class Conf :
             "BatDischarWatt"    : {"value" :458, "length" : 4, "type" : "num", "divide" : 10},  
             "BatDischarVA"      : {"value" :466, "length" : 4, "type" : "num", "divide" : 10},  
             "BatWatt"           : {"value" :474, "length" : 4, "type" : "numx", "divide" : 10},                                                
-            "invFanSpeed"       : {"value" :494, "length" : 2, "type" : "num", "divide" : 1}
+            "invfanspeed"       : {"value" :494, "length" : 2, "type" : "num", "divide" : 1}
         }}
 
         self.recorddict9 = {"T06NNNNXTL3": {
