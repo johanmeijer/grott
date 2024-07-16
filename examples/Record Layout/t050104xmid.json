@@ -1,0 +1,86 @@
+{"T050104XMID": {
+
+    "decrypt"            : {"value" :"True"},
+    "loggerserial"       : {"value" :16, "length" : 10, "type" : "text", "divide" : 10},
+    "pvserial"           : {"value" :36, "length" : 10, "type" : "text", "divide" : 10},
+    "date"               : {"value" :56, "divide" : 10},
+
+    "pvstatus"           : {"value" :78, "length" : 2, "type" : "num"},
+    "pvpower_in"         : {"value" :82, "length" : 4, "type" : "numx", "divide" : 10},
+    
+    "pv1_voltage"        : {"value" :90, "length" : 2, "type" : "num", "divide" : 10},
+    "pv1_current"        : {"value" :94, "length" : 2, "type" : "num", "divide" : 10},                     
+    "pv1_watt"           : {"value" :98, "length" : 4, "type" : "numx", "divide" : 10},
+
+    "pv2_voltage"        : {"value" :106, "length" : 2, "type" : "num", "divide" : 10},
+    "pv2_current"        : {"value" :110, "length" : 2, "type" : "num", "divide" : 10},               
+    "pv2_watt"           : {"value" :114, "length" : 4, "type" : "numx", "divide" : 10},
+
+    "pv3_voltage"        : {"value" :122, "length" : 2, "type" : "num", "divide" : 10},
+    "pv3_current"        : {"value" :126, "length" : 2, "type" : "num", "divide" : 10},
+    "pv3_watt"           : {"value" :130, "length" : 4, "type" : "numx", "divide" : 10},
+    
+    "pv4_voltage"        : {"value" :138, "length" : 2, "type" : "num", "divide" : 10},
+    "pv4_current"        : {"value" :142, "length" : 2, "type" : "num", "divide" : 10},
+    "pv4_watt"           : {"value" :146, "length" : 4, "type" : "numx", "divide" : 10},
+
+    "pvpower_out"        : {"value" :218, "length" : 4, "type" : "numx", "divide" : 10},
+    "pvgrid_frequency"   : {"value" :226, "length" : 2, "type" : "num", "divide" : 100},
+
+    "pvgrid_voltage"     : {"value" :230, "length" : 2, "type" : "num", "divide" : 10},
+    "pvgrid_out_current" : {"value" :234, "length" : 2, "type" : "num", "divide" : 10},
+    "pvgrid_out_power"   : {"value" :238, "length" : 4, "type" : "numx", "divide" : 10},
+
+    "pvgrid_voltage2"    : {"value" :246, "length" : 2, "type" : "num", "divide" : 10},
+    "pvgrid_out_current2": {"value" :250, "length" : 2, "type" : "num", "divide" : 10},
+    "pvgrid_out_power2"  : {"value" :254, "length" : 4, "type" : "numx", "divide" : 10},
+
+    "pvgrid_voltage3"    : {"value" :262, "length" : 2, "type" : "num", "divide" : 10},                
+    "pvgrid_out_current3": {"value" :266, "length" : 2, "type" : "num", "divide" : 10},                
+    "pvgrid_out_power3"  : {"value" :270, "length" : 4, "type" : "numx", "divide" : 10},
+
+    "V_RS"               : {"value" :278, "length" : 2, "type" : "num", "divide" : 10},
+    "V_ST"               : {"value" :282, "length" : 2, "type" : "num", "divide" : 10},
+    "V_TR"               : {"value" :286, "length" : 2, "type" : "num", "divide" : 10},
+    
+    "eactoday"           : {"value" :290, "length" : 4, "type" : "numx", "divide" : 10},
+    "eactotal"           : {"value" :298, "length" : 4, "type" : "numx", "divide" : 10},
+    "totworktime"        : {"value" :306, "length" : 4, "type" : "numx", "divide" : 14400},
+
+    "epv1_today"         : {"value" :314, "length" : 4, "type" : "numx", "divide" : 10},
+    "epv1_total"         : {"value" :322, "length" : 4, "type" : "numx", "divide" : 10},
+    
+    "epv2_today"         : {"value" :330, "length" : 4, "type" : "numx", "divide" : 10},
+    "epv2_total"         : {"value" :338, "length" : 4, "type" : "numx", "divide" : 10},
+    
+    "epv3_today"         : {"value" :346, "length" : 4, "type" : "numx", "divide" : 10},                
+    "epv3_total"         : {"value" :354, "length" : 4, "type" : "numx", "divide" : 10}, 
+    
+    "epv4_today"         : {"value" :362, "length" : 4, "type" : "numx", "divide" : 10},                
+    "epv4_total"         : {"value" :370, "length" : 4, "type" : "numx", "divide" : 10}, 
+
+    "pvtemperature"      : {"value" :450, "length" : 2, "type" : "num", "divide" : 10},                 
+    "pvipmtemperature"   : {"value" :454, "length" : 2, "type" : "num", "divide" : 10}, 
+    "pvboosttemp"        : {"value" :462, "length" : 2, "type" : "num", "divide" : 10},                   
+    
+    "bat_dsp"            : {"value" :466, "length" : 2, "type" : "num", "divide" : 10},
+    "pbus_inside_volt"   : {"value" :470, "length" : 2, "type" : "num", "divide" : 10},                  
+    "nbus_inside_volt"   : {"value" :474, "length" : 2, "type" : "num", "divide" : 10},  
+    "inverter_out_pf"    : {"value" :478, "length" : 2, "type" : "num", "divide" : 20000},
+    "real_out_pwr_pct"   : {"value" :482, "length" : 2, "type" : "num", "divide" : 100}, 
+    "out_maxpwr_limit"   : {"value" :486, "length" : 4, "type" : "numx", "divide" : 10},
+
+    "deratingmode"      : {"value" :494, "length" : 2, "type" : "num", "divide" : 1},
+
+
+    "pviso"               : {"value" :886, "length": 2, "type": "num", "divide": 1},
+    "r_dci_current"       : {"value" :890, "length": 2, "type": "num", "divide": 10},
+    "s_dci_current"       : {"value" :894, "length": 2, "type": "num", "divide": 10},
+    "t_dci_current"       : {"value" :898, "length": 2, "type": "num", "divide": 10},
+    "pid_bus_voltage"     : {"value" :902, "length": 2, "type": "num", "divide": 10},
+
+    "out_apparent_pwr"  : {"value" :1006, "length": 4, "type": "numx", "divide": 10},
+
+
+    }
+}

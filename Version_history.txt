@@ -170,5 +170,88 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - Filter (ignore) invalid 0120 smart meter record
 2.6.1c
 - Bugfix when sendbuf = False now only buffered records are filtered.  In the pase if specified also non buffered records were filtered. 
-  Be aware: Buffered records with invalid time (time from server) are also filtered. 
-- Added pvinverters = 2 to grott.ini example (updated wiki). This tells Grott the amount of inverters to process 
+- Be aware: Buffered records with invalid time (time from server) are also filtered.
+2.6.1d
+-Added statement to [pvoutput] section: pvinverter = 2 [This specifies # inverters to be processed, See also issue #53]
+-Change grott home directory from Growatt in Grott [see issue #71]
+2.6.1e
+- Merge pull request #57 from redthor/2.6-print-env
+2.6.1f
+- bugfix for spf3000 fields pvenergytoday, pvenergytotal (and add duplicate fields as called in growatt xls/csv reports epvToday, epvTotal)
+2.6.1g
+- add support for TL3-X inverters. Please specify invtype=tl3 in the [Generic] section of the .ini file (or env variable : -e ginvtype=tl3 for docker run)
+2.7.0
+- SDM630/Raillog connect support
+- SDM630/Inverter connected 3 phases support
+- (a) added support for seperate topic for smart meter 
+    - by default noting changes topic name will be energy/growatt (unless overidden in .ini: topic = <topic> in MQTT section or environmental variable gmqtttopic = "<topic>" )
+    - if mtopic = True in .ini [MQTT section] (or gmqttmtopic = "True" environmental) the smart meter topic will be: energy/meter 
+    - smartmeter topic name can be overridden by: 
+      - mtopicname = <topicname> in .ini [MQTT] 
+      - gmqttmtopicname = "<topicname" environmental 
+- (b) fix MQTT message is not sent
+2.7.1
+- Add coding from Pull req #91 (csv export exentsion)
+  Add a CSV export extension in the examples/extensions dir. Closes #76
+
+  One CSV file per day is saved.
+
+  extvar configuration:
+  "outpath": path where to save CSV files, default: "/home/pi/grottlog"
+  "csvheader": comma separated string with fields to store, defaults to all available fields
+- Add parameter to enable message retain in MQTT (#84)
+  - .ini [MQTT section] retain = True
+  - environmental gmqttretain = "True" (docker: -e gmqttretain = "True") 
+- Add parameter to enable sent inverter temperature as temperature value to pvoutput (not advised PVOutemp should be outside temperature) Issue #60
+  - .ini [PVOutput section] pvtemp = True
+  - environmental gpvtemp = "True" (docker: -e gpvtemp = "True")
+- Add parameter to disable sending energytoday to pvoutput (disable V1 input). This should show better avarages. Issue: #51  
+  - .ini [PVOutput section] pvdisv1 = True
+  - environmental gpvdisv1 = "True" (docker: -e gpvdisv1 = "True")  
+- Added first beta of grottserver to act as destination for inverter/datalogger data (remove need to cummunicate with internet).
+  - see discussions (#98) for more information: https://github.com/johanmeijer/grott/discussions/98
+2.7.2
+- added support for  SPH5000 T05nnnnXSPH data record 
+2.7.3
+- Added detail data record trace information when command is blocked (blockkcmd = True) to be able to analyse command given from growatt website (inverter / data logger setting).
+- New version of grottserver (0.0.4) which supports datalogger/inverter read/write commands. 
+- added new version of grottserver (0.0.5) with improve error handling (stability)
+- added new version of grottserver (0.0.6) with additional error handling improvements (stability)
+2.7.4
+- improve error handling at disconnect of inverter (grottproxy)
+- added new version of grottserver (0.0.7) with additional error handling improvements (stability)
+2.7.5
+- Add record validation (length and CRC) to eliminate invalid records, 
+  be aware for full validation (including CRC) python libscrc libary needs to be installed (pip3 install libscrc)
+- new version of grottserver (0.0.9)
+  - Improve error handling (stability)    
+  - Add record validation (length and CRC) to eliminate invalid records
+2.7.6
+- Improve error handling (stability) for grottserver (0.0.10) (thanks to tabascoz)
+- Option to add inverter serial to MQTT topic (thanks to @ebosveld) 
+  Add  self.mqttinverterintopic = True to MQTT section of grott.ini or use  qmqttinverterintopic = "False" environmental (e.g. docker). 
+2.7.7 (not fully validated/tested and documented yet!)
+- Fixed some message typo's  (thanks to @markt-asf, see PR #190)
+- Add support for setting multiple register (thanks to @markt-asf, see PR #191), 
+- Add an inverter serial <-> inverter type map thanks to @markt-asf, see PR #169)
+  Be aware should only be used if no Energy Meter is used and only with new (updated) inverter/datalogger types! Will be available for everbody in a next release!
+- Add Extension plugin for HA native integration (thanks to @egguy, see PR #203)
+- Do not run the Grott service as root (thanks to phavekes, see PR #195)
+  Needs some additional documentation !!!!!!
+ - Add PvOutput limit to limit Configurable (via grott.ini) PvOut upload limit (in minutes) (thanks to @githubDante, see PR 202/237) 
+2.7.8 (promoted to master)
+- grottserver 0.0.12. Fixes to support "older" inverter/datalogger configurations (using "02" protocol). 
+2.8.0 (New beta, 2.7.8. promoted to master)
+2.8.1 
+- added first SPA support 
+- increase hardcoded register limit from 1024 to 4096
+2.8.2 
+- added first MIN support 
+- added some field to SPA layout 
+- fix bug with gverbose environment (see pr: #304)
+- fix bug in devider for batery SOC (see pr: #305)
+2.8.3 
+- Removed space at the end of epvtotal and epv1today keywords in min layout (#481)
+- Changed bms_batterycurr in MIN layout to numx (issue #362)
+- Add gpvuplimit environmental for limiting pvoutpy writes in docker container (#346), be ware need new docker image 2.8.3 (will be created in next gen)
+- add invfanspeed to SPF layout 

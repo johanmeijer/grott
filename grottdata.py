@@ -1,20 +1,46 @@
 # grottdata.py processing data  functions
-# Updated: 2021-09-04
-# Version 2.6.1b
+# Version 2.7.6
+# Updated: 2022-08-27
 
 #import time
 from datetime import datetime, timedelta
+from os import times_result
 #import pytz
 import time
 import sys
 import struct
 import textwrap
 from itertools import cycle # to support "cycling" the iterator
-import json, codecs 
+import json, codecs
+from typing import Dict
 # requests
 
 #import mqtt                       
 import paho.mqtt.publish as publish
+
+
+class GrottPvOutLimit:
+
+    def __init__(self):
+        self.register: Dict[str, int] = {}
+
+    def ok_send(self, pvserial: str, conf) -> bool:
+        now = time.perf_counter()
+        ok = False
+        if self.register.get(pvserial):
+            ok = True if self.register.get(pvserial) + conf.pvuplimit * 60 < now else False
+            if ok:
+                self.register[pvserial] = int(now)
+            else:
+                if conf.verbose: print(f'\t - PVOut: Update refused for {pvserial} due to time limitation')
+        else:
+            self.register.update({pvserial: int(now)})
+            ok = True
+        return ok
+
+
+pvout_limit = GrottPvOutLimit()
+
 
 # Formats multi-line data
 def format_multi_line(prefix, string, size=80):
@@ -61,7 +87,8 @@ def procdata(conf,data):
     header = "".join("{:02x}".format(n) for n in data[0:8])
     ndata = len(data)
     buffered = "nodetect"                                               # set buffer detection to nodetect (for compat mode), wil in auto detection changed to no or yes        
-   
+    is_smart_meter = header[14:16] in ("20","1b")
+
     # automatic detect protocol (decryption and protocol) only if compat = False!
     novalidrec = False
     if conf.compat is False : 
@@ -70,10 +97,12 @@ def procdata(conf,data):
             print("\t - " + "Grott data record length", ndata)
         #print(header)
         layout = "T" + header[6:8] + header[12:14] + header[14:16]
-        if ndata > 375:  layout = layout + "X"
+        #v270 add X for extended except for smart monitor records
+        if ((ndata > 375) and not is_smart_meter) :  layout = layout + "X"
 
-        if conf.invtype != "default" :
-            layout = layout + conf.invtype.upper()
+        #v270 no invtype added to layout for smart monitor records
+        if (conf.invtype != "default") and not is_smart_meter :
+                layout = layout + conf.invtype.upper()
 
         if header[14:16] == "50" : buffered = "yes"
         else: buffered = "no" 
@@ -98,6 +127,7 @@ def procdata(conf,data):
             else:         
                 novalidrec = True     
     
+        conf.layout = layout
         if conf.verbose : print("\t - " + "Record layout used : ", layout)
     
     #Decrypt 
@@ -118,7 +148,8 @@ def procdata(conf,data):
                                                         
     if conf.verbose: 
         print("\t - " + 'Growatt plain data:')
-        print(format_multi_line("\t\t ", result_string)) 
+        print(format_multi_line("\t\t ", result_string))
+        #debug only: print(result_string)
 
     # test position : 
     # print(result_string.find('0074' ))
@@ -136,18 +167,59 @@ def procdata(conf,data):
 
 
     if conf.compat is False: 
-        # new method if compat = False (autoatic detection):  
+        # new method if compat = False (automatic detection):  
        
+        if (conf.invtype == "default") :
+            # Handle systems with mixed invtype
+            if (ndata > 50) and not is_smart_meter:
+                # There is enough data for an inverter serial number
+                inverterType = "default"
+
+                inverterSerial = None
+                try:
+                    inverterSerial = codecs.decode(result_string[76:96], "hex").decode('ASCII')
+                    if conf.verbose:
+                        print("\t - Possible Inverter serial", inverterSerial)
+                except UnicodeDecodeError:
+                    # In case of problem (eg: new record type with different serial placement)
+                    pass
+
+                if inverterSerial:
+                    # Lookup inverter type based on inverter serial
+                    try:
+                        inverterType = conf.invtypemap[inverterSerial]
+                        print("\t - Matched inverter serial to inverter type", inverterType)
+                    except:
+                        inverterType = "default"
+                        print("\t - Inverter serial not recognised - using inverter type", inverterType)
+
+                if (inverterType != "default") :
+                    layout = layout + inverterType.upper()
+                    # Update the conf.layout like done earlier
+                    conf.layout = layout
+
         if conf.verbose: 
            print("\t - " + 'Growatt new layout processing')
            print("\t\t - " + "decrypt       : ",conf.decrypt)
            print("\t\t - " + "offset        : ", conf.offset)
            print("\t\t - " + "record layout : ", layout)
-           print() 
+           print()
 
+        
+        
+        try:
+            #v270 try if logstart and log fields are defined, if yes prepare log fields 
+            logstart = conf.recorddict[layout]["logstart"]["value"] 
+            logdict = {}
+            logdict = bytes.fromhex(result_string[conf.recorddict[layout]["logstart"]["value"]:len(result_string)-4]).decode("ASCII").split(",")
+        except:
+            pass
+
+        #v270 log data record processing (SDM630 smart monitor with railog 
+        #if rectype == "data" : 
         for keyword in  conf.recorddict[layout].keys() :
             
-            if keyword not in ("decrypt","date") :  
+            if keyword not in ("decrypt","date","logstart","device") :  
                 #try if keyword should be included 
                 include=True
                 try:
@@ -158,32 +230,57 @@ def procdata(conf,data):
                     #no include statement keyword should be process, set include to prevent except errors
                     include = True
                 #process only keyword needs to be included (default):     
-                if ((include) or (conf.includeall)): 
-                    try:
-                        #try if key type is specified  
-                        keytype = conf.recorddict[layout][keyword]["type"]           
-                    except: 
-                        #if not default is num
-                        keytype = "num"               
-                    if keytype == "text" :
-                        definedkey[keyword] = result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)]
-                        definedkey[keyword] = codecs.decode(definedkey[keyword], "hex").decode('utf-8')
-                        #print(definedkey[keyword])
-                    if keytype == "num" :
-                    #else:                    
-                        definedkey[keyword] = int(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)],16)                                     
-                    if keytype == "numx" :
-                        #process signed integer 
-                        keybytes = bytes.fromhex(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)])
-                        definedkey[keyword] = int.from_bytes(keybytes, byteorder='big', signed=True)
-                    
-        # test if pvserial was defined, if not take inverterid from config. 
-        try: 
-            test = definedkey["pvserial"]
-        except: 
-            definedkey["pvserial"] = conf.inverterid
-            conf.recorddict[layout]["pvserial"] = {"value" : 0, "type" : "text"}
-            if conf.verbose : print("\t - pvserial not found used configuration defined invertid:", definedkey["pvserial"] ) 
+                try: 
+                    if ((include) or (conf.includeall)): 
+                        try:
+                            #try if key type is specified  
+                            keytype = conf.recorddict[layout][keyword]["type"]           
+                        except: 
+                            #if not default is num
+                            keytype = "num"               
+                        if keytype == "text" :
+                            definedkey[keyword] = result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)]
+                            definedkey[keyword] = codecs.decode(definedkey[keyword], "hex").decode('utf-8')
+                            #print(definedkey[keyword])
+                        if keytype == "num" :
+                        #else:                    
+                            definedkey[keyword] = int(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)],16)                                     
+                        if keytype == "numx" :
+                            #process signed integer 
+                            keybytes = bytes.fromhex(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)])
+                            definedkey[keyword] = int.from_bytes(keybytes, byteorder='big', signed=True)
+                        if keytype == "log" :
+                            # Proces log fields
+                            definedkey[keyword] = logdict[conf.recorddict[layout][keyword]["pos"]-1]
+                        if keytype == "logpos" :
+                        #only display this field if positive    
+                            # Proces log fields
+                            if float(logdict[conf.recorddict[layout][keyword]["pos"]-1]) > 0 : 
+                                definedkey[keyword] = logdict[conf.recorddict[layout][keyword]["pos"]-1]
+                            else : definedkey[keyword] = 0
+                        if keytype == "logneg" :
+                        #only display this field if negative    
+                            # Proces log fields
+                            if float(logdict[conf.recorddict[layout][keyword]["pos"]-1]) < 0 : 
+                                definedkey[keyword] = logdict[conf.recorddict[layout][keyword]["pos"]-1]    
+                            else : definedkey[keyword] = 0
+                except: 
+                    if conf.verbose : print("\t - grottdata - error in keyword processing : ", keyword + " ,data processing stopped") 
+                    return(8) 
+                                 
+        # test if pvserial was defined, if not take inverterid from config.
+        device_defined = False 
+        try:    
+            definedkey["device"] = conf.recorddict[layout]["device"]["value"]
+            device_defined = True
+        except:         
+            # test if pvserial was defined, if not take inverterid from config.     
+            try: 
+                test = definedkey["pvserial"]
+            except: 
+                definedkey["pvserial"] = conf.inverterid
+                conf.recorddict[layout]["pvserial"] = {"value" : 0, "type" : "text"}
+                if conf.verbose : print("\t - pvserial not found and device not specified used configuration defined invertid:", definedkey["pvserial"] ) 
      
         # test if dateoffset is defined, if not take set to 0 (no futher date retrieval processing) . 
         try: 
@@ -238,6 +335,7 @@ def procdata(conf,data):
         dataprocessed = True
 
     else:
+        # old data processing only here for compatibility 
         serialfound = False 
         if(result_string.find(conf.SN) > -1):
             serialfound = True   
@@ -278,9 +376,7 @@ def procdata(conf,data):
             if conf.verbose: print("\t - "+ 'No Growatt data processed or SN not found:')
             if conf.trace: 
                 print("\t - "+ 'Growatt unprocessed Data:')
-                print(format_multi_line("\t\t - ", result_string))
-    
-    
+                print(format_multi_line("\t\t - ", result_string))  
         
     if dataprocessed: 
         # only sendout data to MQTT if it is processed. 
@@ -328,35 +424,44 @@ def procdata(conf,data):
 
         #create JSON message  (first create obj dict and then convert to a JSON message)                   
 
-        # if record is a smart monitor record use datalogserial as device (to distinguish from solar record) 
-        # and filter if invalid record (0 < voltage_l1 > 500 )
-        if header[14:16] != "20" :
-            jsonobj = {
-                        "device" : definedkey["pvserial"],
+        
+       
+        # filter invalid 0120 record (0 < voltage_l1 > 500 ) 
+        if header[14:16] == "20" :
+            if (definedkey["voltage_l1"]/10 > 500) or (definedkey["voltage_l1"]/10 < 0) :
+                print("\t - " + "Grott invalid 0120 record processing stopped") 
+                return 
+
+        #v270
+        #compatibility with prev releases for "20" smart monitor record!
+        #if device is not specified in layout record datalogserial is used as device (to distinguish record from inverter record)
+
+        if device_defined == True:         
+            deviceid = definedkey["device"]
+
+        else : 
+            if header[14:16] not in ("20","1b") :
+                deviceid = definedkey["pvserial"]           
+            else : 
+                deviceid = definedkey["datalogserial"]
+            
+        jsonobj = {
+                        "device" : deviceid,
                         "time" : jsondate, 
                         "buffered" : buffered,
                         "values" : {}
                     }
-        else : 
-                # filter if invalid 0120 record (0 < voltage_l1 > 500 ) 
-                if (definedkey["voltage_l1"]/10 > 500) or (definedkey["voltage_l1"]/10 < 0) :
-                    print("\t - " + "Grott invalid 0120 record processing stopped") 
-                    return 
-
-                jsonobj = {
-                        "device" : definedkey["datalogserial"],
-                        "time" : jsondate, 
-                        "buffered" : buffered,
-                        "values" : {}
-                    }            
 
         for key in definedkey : 
 
-            if key != "pvserial" : 
+            #if key != "pvserial" : 
                 #if conf.recorddict[layout][key]["type"] == "num" : 
-                # only add int values to the json object                  
-                if type(definedkey[key]) == type(1) :                                                                     
-                     jsonobj["values"][key] = definedkey[key]
+                # only add int values to the json object 
+                #print(definedkey[key])
+                #print(type(definedkey[key]))                                 
+                #if type(definedkey[key]) == type(1) :                                                                     
+                #    jsonobj["values"][key] = definedkey[key]
+            jsonobj["values"][key] = definedkey[key]
                      
         jsonmsg = json.dumps(jsonobj) 
         
@@ -364,14 +469,29 @@ def procdata(conf,data):
             print("\t - " + "MQTT jsonmsg: ")        
             print(format_multi_line("\t\t\t ", jsonmsg))   
 
-        #do net invalid records (e.g. buffered records with time from server) or buffered records if sendbuf = False
-        if (conf.sendbuf == False) or (buffered == "yes" and timefromserver == True) :
-            if conf.verbose: print("\t - " + 'Buffered record not sent: sendbuf = False or invalid date/time format')  
-            return
+        #do not process invalid records (e.g. buffered records with time from server) or buffered records if sendbuf = False
+        if (buffered == "yes") : 
+            if (conf.sendbuf == False) or (timefromserver == True) :
+                if conf.verbose: print("\t - " + 'Buffered record not sent: sendbuf = False or invalid date/time format')  
+                return
 
         if conf.nomqtt != True:
-            try: 
-                publish.single(conf.mqtttopic, payload=jsonmsg, qos=0, retain=False, hostname=conf.mqttip,port=conf.mqttport, client_id=conf.inverterid, keepalive=60, auth=conf.pubauth)
+            #if meter data use mqtttopicname topic
+            if (header[14:16] in ("20","1b")) and (conf.mqttmtopic == True) :
+                mqtttopic = conf.mqttmtopicname 
+            else : 
+                #test if invertid needs to be added to topic
+                if conf.mqttinverterintopic : 
+                    mqtttopic = conf.mqtttopic + "/" + deviceid    
+                else: mqtttopic = conf.mqtttopic    
+            print("\t - " + 'Grott MQTT topic used : ' + mqtttopic)   
+            
+            if conf.mqttretain:
+               if conf.verbose: print("\t - " + 'Grott MQTT message retain enabled')  
+
+            try:
+                #v2.7.1 add retrain variable  
+                publish.single(mqtttopic, payload=jsonmsg, qos=0, retain=conf.mqttretain, hostname=conf.mqttip,port=conf.mqttport, client_id=conf.inverterid, keepalive=60, auth=conf.pubauth)
                 if conf.verbose: print("\t - " + 'MQTT message message sent') 
             except TimeoutError:     
                 if conf.verbose: print("\t - " + 'MQTT connection time out error') 
@@ -399,7 +519,10 @@ def procdata(conf,data):
  
             if not pvidfound:
                 if conf.verbose : print("\t - " + "pvsystemid not found for inverter : ", definedkey["pvserial"])   
-                return                       
+                return
+            if not pvout_limit.ok_send(definedkey["pvserial"], conf):
+                # Will print a line for the refusal in verbose mode (see GrottPvOutLimit at the top)
+                return
             if conf.verbose : print("\t - " + "Grott send data to PVOutput systemid: ", pvssid, "for inverter: ", definedkey["pvserial"]) 
             pvheader = { 
                 "X-Pvoutput-Apikey"     : conf.pvapikey,
@@ -415,11 +538,19 @@ def procdata(conf,data):
                 pvdata = { 
                     "d"     : pvodate,
                     "t"     : pvotime,
-                    "v1"    : definedkey["pvenergytoday"]*100,
+                #2.7.1    "v1"    : definedkey["pvenergytoday"]*100,
                     "v2"    : definedkey["pvpowerout"]/10,
                     "v6"    : definedkey["pvgridvoltage"]/10
                     }
-                #print(pvheader)
+                if not conf.pvdisv1 :
+                    pvdata["v1"] = definedkey["pvenergytoday"]*100
+                else:   
+                    if conf.verbose :  print("\t - " + "Grott PVOutput send V1 disabled") 
+    
+                if conf.pvtemp :
+                    pvdata["v5"] = definedkey["pvtemperature"]/10
+                
+                #print(pvdata)
                 if conf.verbose : print("\t\t - ", pvheader)
                 if conf.verbose : print("\t\t - ", pvdata)
                 reqret = requests.post(conf.pvurl, data = pvdata, headers = pvheader)
@@ -541,16 +672,23 @@ def procdata(conf,data):
         except :
             if conf.verbose : print("\t - " + "Grott import extension failed:", conf.extname)      
             return
+
         try:
             ext_result = module.grottext(conf,result_string,jsonmsg) 
+            if conf.verbose :  
+                print("\t - " + "Grott extension processing ended : ", ext_result)
         except Exception as e:
-            print("\t - " + "Grott extension processing error ")
-            print(e) 
-            return
+            print("\t - " + "Grott extension processing error:", repr(e))
+            if conf.verbose:
+                import traceback
+                print("\t - " + traceback.format_exc())
+            #print("\t - " + "Grott extension processing error ")
+            #print(e) 
+            #return
 
-        if conf.verbose :  
-            print("\t - " + "Grott extension processing ended : ", ext_result)
-            #print("\t -", ext_result)
+        #if conf.verbose :  
+            #print("\t - " + "Grott extension processing ended : ", ext_result)
+            ##print("\t -", ext_result)
     else: 
             if conf.verbose : print("\t - " + "Grott extension processing disabled ")      
-            
+

@@ -73,15 +73,15 @@
 
 - platform: mqtt
   state_topic: energy/growatt
-  value_template: "{{ value_json['values']['pv1watt'] | int / 10 }}" 
+  value_template: "{{ value_json['values']['pv1watt'] | float / 10000 }}" 
   unique_id: growatt_string1_watt
   device_class: power
-  unit_of_measurement: "W"
-  name: Growatt - String 1 (Watt)
+  unit_of_measurement: "kW"
+  name: Growatt - String 1 (kiloWatt)
 
 - platform: mqtt
   state_topic: energy/growatt
-  value_template: "{{ value_json['values']['pv1voltage'] | int / 10 }}" 
+  value_template: "{{ value_json['values']['pv1voltage'] | float / 10 }}" 
   unique_id: growatt_string1_voltage
   device_class: voltage
   unit_of_measurement: "V"
@@ -89,7 +89,7 @@
 
 - platform: mqtt
   state_topic: energy/growatt
-  value_template: "{{ value_json['values']['pv1current'] | int / 10 }}" 
+  value_template: "{{ value_json['values']['pv1current'] | float / 10 }}" 
   unique_id: growatt_string1_current
   device_class: current
   unit_of_measurement: "A"
@@ -97,15 +97,15 @@
 
 - platform: mqtt
   state_topic: energy/growatt
-  value_template: "{{ value_json['values']['pv2watt'] | int / 10 }}" 
+  value_template: "{{ value_json['values']['pv2watt'] | float / 10000 }}" 
   unique_id: growatt_string2_watt
   device_class: power
-  unit_of_measurement: "W"
-  name: Growatt - String 2 (Watt)
+  unit_of_measurement: "kW"
+  name: Growatt - String 2 (kiloWatt)
 
 - platform: mqtt
   state_topic: energy/growatt
-  value_template: "{{ value_json['values']['pv2voltage'] | int / 10 }}" 
+  value_template: "{{ value_json['values']['pv2voltage'] | float / 10 }}" 
   unique_id: growatt_string2_voltage
   device_class: voltage
   unit_of_measurement: "V"
@@ -113,7 +113,7 @@
 
 - platform: mqtt
   state_topic: energy/growatt
-  value_template: "{{ value_json['values']['pv2current'] | int / 10 }}" 
+  value_template: "{{ value_json['values']['pv2current'] | float / 10 }}" 
   unique_id: growatt_string2_current
   device_class: current
   unit_of_measurement: "A"
@@ -121,23 +121,23 @@
 
 - platform: mqtt
   state_topic: energy/growatt
-  value_template: "{{ value_json['values']['pvpowerin'] | int / 10 }}" 
+  value_template: "{{ value_json['values']['pvpowerin'] | float / 10000 }}" 
   unique_id: growatt_actual_input_power
   device_class: power
-  unit_of_measurement: "W"
+  unit_of_measurement: "kW"
   name: Growatt - Input wattage (Actueel)
 
 - platform: mqtt
   state_topic: energy/growatt
-  value_template: "{{ value_json['values']['pvpowerout'] | int / 10 }}" 
+  value_template: "{{ value_json['values']['pvpowerout'] | float / 10000 }}" 
   unique_id: growatt_actual_output_power
   device_class: power
-  unit_of_measurement: "W"
+  unit_of_measurement: "kW"
   name: Growatt - Output wattage (Actueel)
 
 - platform: mqtt
   state_topic: energy/growatt
-  value_template: "{{ value_json['values']['pvfrequentie'] | int / 100 }}" 
+  value_template: "{{ value_json['values']['pvfrequentie'] | float / 100 }}" 
   unique_id: growatt_grid_frequency
   unit_of_measurement: "Hz"
   name: Growatt - Gridfrequentie
@@ -145,7 +145,7 @@
 
 - platform: mqtt
   state_topic: energy/growatt
-  value_template: "{{ value_json['values']['pvgridvoltage'] | int / 10 }}" 
+  value_template: "{{ value_json['values']['pvgridvoltage'] | float / 10 }}" 
   unique_id: growatt_phase_voltage
   device_class: voltage
   unit_of_measurement: "V"
@@ -153,7 +153,7 @@
 
 - platform: mqtt
   state_topic: energy/growatt
-  value_template: "{{ value_json['values']['pvenergytoday'] | int / 10 }}" 
+  value_template: "{{ value_json['values']['pvenergytoday'] | float / 10 }}" 
   unique_id: growatt_generated_energy_today
   device_class: energy
   unit_of_measurement: "kWh"
@@ -162,16 +162,17 @@
 
 - platform: mqtt
   state_topic: energy/growatt
-  value_template: "{{ value_json['values']['pvenergytotal'] | int / 10 }}" 
+  value_template: "{{ value_json['values']['pvenergytotal'] | float / 10 }}" 
   unique_id: growatt_generated_energy_total
   device_class: energy
+  state_class: total_increasing
   unit_of_measurement: "kWh"
   name: Growatt - Opgewekte energie (Totaal)
   icon: mdi:solar-power
 
 - platform: mqtt
   state_topic: energy/growatt
-  value_template: "{{ value_json['values']['pvtemperature'] | int / 10 }}" 
+  value_template: "{{ value_json['values']['pvtemperature'] | float / 10 }}" 
   unique_id: growatt_inverer_temperature
   device_class: temperature
   unit_of_measurement: "°C"
@@ -181,7 +182,7 @@
 
 - platform: mqtt
   state_topic: energy/growatt
-  value_template: "{{ value_json['values']['pvipmtemperature'] | int / 10 }}" 
+  value_template: "{{ value_json['values']['pvipmtemperature'] | float / 10 }}" 
   unique_id: growatt_ipm_temperature
   device_class: temperature
   unit_of_measurement: "°C"

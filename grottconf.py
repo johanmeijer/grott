@@ -1,7 +1,7 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2021-09-01 
-# Version 2.6.1a
+# Updated: 2023-12-04 
+# Version 2.8.3
 
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -21,6 +21,7 @@ class Conf :
         self.decrypt = True
         self.compat = False
         self.invtype = "default"                                                                    #specify sepcial invertype default (spf, sph)
+        self.invtypemap = {}
         self.includeall = False                                                                      #Include all defined keys from layout (also incl = no)
         self.blockcmd = False                                                                       #Block Inverter and Shine configure commands                
         self.noipf = False                                                                          #Allow IP change if needed
@@ -42,10 +43,14 @@ class Conf :
         self.mqttip = "localhost"
         self.mqttport = 1883
         self.mqtttopic= "energy/growatt"
+        self.mqttmtopic = "False"
+        self.mqttmtopicname= "energy/meter"
+        self.mqttinverterintopic = False
         self.nomqtt = False                                                                          #not in ini file, can only be changed via start parms
         self.mqttauth = False
         self.mqttuser = "grott"
         self.mqttpsw = "growatt2020"
+        self.mqttretain = False
 
         #pvoutput default 
         self.pvoutput = False
@@ -56,6 +61,9 @@ class Conf :
         self.pvinverterid = {}
         self.pvsystemid[1] = "systemid1"
         self.pvinverterid[1] = "inverter1"
+        self.pvdisv1 = False
+        self.pvtemp = False
+        self.pvuplimit = 5
         
         #influxdb default 
         self.influx = False
@@ -155,11 +163,10 @@ class Conf :
 
                 #self.influxclient = InfluxDBClient(url='192.168.0.211:8086',org=self.iforg, token=self.iftoken)
                 self.influxclient = InfluxDBClient(url="{}:{}".format(self.ifip, self.ifport),org=self.iforg, token=self.iftoken)
-                
                 self.ifbucket_api = self.influxclient.buckets_api()
                 self.iforganization_api = self.influxclient.organizations_api()              
-                self.ifwrite_api = self.influxclient.write_api(write_options=SYNCHRONOUS)
-                
+                self.ifwrite_api = self.influxclient.write_api(write_options=SYNCHRONOUS)  
+
                 try:
                     buckets = self.ifbucket_api.find_bucket_by_name(self.ifbucket)
                     organizations = self.iforganization_api.find_organizations()  
@@ -187,67 +194,74 @@ class Conf :
     def print(self): 
         print("\nGrott settings:\n")
         print("_Generic:")
-        print("\tversion:     \t",self.verrel)
-        print("\tverbose:     \t",self.verbose)
-        print("\ttrace:       \t",self.trace)
-        print("\tconfig file: \t",self.cfgfile)
-        print("\tminrecl:     \t",self.minrecl)
-        print("\tdecrypt:     \t",self.decrypt)
-        print("\tcompat:      \t",self.compat)
-        print("\tinvtype:     \t",self.invtype)
-        print("\tinclude_all: \t",self.includeall)
-        print("\tblockcmd:    \t",self.blockcmd)
-        print("\tnoipf:       \t",self.noipf)
-        print("\ttime:        \t",self.gtime)
-        print("\tsendbuf:     \t",self.sendbuf)
-        print("\ttimezone:    \t",self.tmzone)
-        print("\tvalueoffset: \t",self.valueoffset)
-        print("\toffset:      \t",self.offset)
-        print("\tinverterid:  \t",self.inverterid)
-        print("\tmode:        \t",self.mode)
-        print("\tgrottip      \t",self.grottip)
-        print("\tgrottport    \t",self.grottport)
+        print("\tversion:             \t",self.verrel)
+        print("\tverbose:             \t",self.verbose)
+        print("\ttrace:               \t",self.trace)
+        print("\tconfig file:         \t",self.cfgfile)
+        print("\tminrecl:             \t",self.minrecl)
+        print("\tdecrypt:             \t",self.decrypt)
+        print("\tcompat:              \t",self.compat)
+        print("\tinvtype:             \t",self.invtype)
+        print("\tinvtypemap:          \t",self.invtypemap)
+        print("\tinclude_all:         \t",self.includeall)
+        print("\tblockcmd:            \t",self.blockcmd)
+        print("\tnoipf:               \t",self.noipf)
+        print("\ttime:                \t",self.gtime)
+        print("\tsendbuf:             \t",self.sendbuf)
+        print("\ttimezone:            \t",self.tmzone)
+        print("\tvalueoffset:         \t",self.valueoffset)
+        print("\toffset:              \t",self.offset)
+        print("\tinverterid:          \t",self.inverterid)
+        print("\tmode:                \t",self.mode)
+        print("\tgrottip              \t",self.grottip)
+        print("\tgrottport            \t",self.grottport)
         #print("\tSN           \t",self.SN)
         print("_MQTT:")
-        print("\tnomqtt       \t",self.nomqtt)
-        print("\tmqttip:      \t",self.mqttip)
-        print("\tmqttport:    \t",self.mqttport)
-        print("\tmqtttopic:   \t",self.mqtttopic)
-        print("\tmqtttauth:   \t",self.mqttauth)
-        print("\tmqttuser:    \t",self.mqttuser)
-        print("\tmqttpsw:     \t","**secret**")                       #scramble output if tested!
+        print("\tnomqtt               \t",self.nomqtt)
+        print("\tmqttip:              \t",self.mqttip)
+        print("\tmqttport:            \t",self.mqttport)
+        print("\tmqtttopic:           \t",self.mqtttopic)
+        print("\tmqttmtopic:          \t",self.mqttmtopic)
+        print("\tmqttmtopicname:      \t",self.mqttmtopicname)
+        print("\tmqttinverterintopic: \t",self.mqttinverterintopic)
+        print("\tmqtttretain:         \t",self.mqttretain)
+        print("\tmqtttauth:           \t",self.mqttauth)
+        print("\tmqttuser:            \t",self.mqttuser)
+        print("\tmqttpsw:             \t","**secret**")                       #scramble output if tested!
         #print("\tmqttpsw:     \t",self.mqttpsw)                       #scramble output if tested!
         print("_Growatt server:")
-        print("\tgrowattip:   \t",self.growattip)
-        print("\tgrowattport: \t",self.growattport)
+        print("\tgrowattip:           \t",self.growattip)
+        print("\tgrowattport:         \t",self.growattport)
         print("_PVOutput:")
-        print("\tpvoutput:    \t",self.pvoutput)
-        print("\tpvurl:       \t",self.pvurl)
-        print("\tpvapikey:    \t",self.pvapikey)                
-        print("\tpvinverters: \t",self.pvinverters)
+        print("\tpvoutput:            \t",self.pvoutput)
+        print("\tpvdisv1:             \t",self.pvdisv1)
+        print("\tpvtemp:              \t",self.pvtemp)   
+        print("\tpvurl:               \t",self.pvurl)
+        print("\tpvapikey:            \t",self.pvapikey)                
+        print("\tpvinverters:         \t",self.pvinverters)
         if self.pvinverters == 1 :
-            print("\tpvsystemid:  \t",self.pvsystemid[1])
+            print("\tpvsystemid:          \t",self.pvsystemid[1])
         else: 
-            print("\tpvsystemid:  \t",self.pvsystemid)
-            print("\tpvinvertid:  \t",self.pvinverterid)
+            print("\tpvsystemid:          \t",self.pvsystemid)
+            print("\tpvinvertid:          \t",self.pvinverterid)
         print("_Influxdb:")
-        print("\tinflux:      \t",self.influx)
-        print("\tinflux2:     \t",self.influx2)
-        print("\tdatabase:    \t",self.ifdbname)
-        print("\tip:          \t",self.ifip)
-        print("\tport:        \t",self.ifport)
-        print("\tuser:        \t",self.ifuser)        
-        print("\tpassword:    \t","**secret**")
+        print("\tinflux:             \t",self.influx)
+        print("\tinflux2:            \t",self.influx2)
+        print("\tdatabase:           \t",self.ifdbname)
+        print("\tip:                 \t",self.ifip)
+        print("\tport:               \t",self.ifport)
+        print("\tuser:               \t",self.ifuser)        
+        print("\tpassword:           \t","**secret**")
         #print("\tpassword:    \t",self.ifpsw)
-        print("\torganization:\t",self.iforg ) 
-        print("\tbucket:      \t",self.ifbucket) 
-        print("\ttoken:       \t","**secret**")
+        print("\torganization:       \t",self.iforg ) 
+        print("\tbucket:             \t",self.ifbucket) 
+        print("\ttoken:              \t","**secret**")
         #print("\ttoken:       \t",self.iftoken)  
         
         print("_Extension:")
-        print("\textension:   \t",self.extension) 
-        print("\textname:     \t",self.extname)  
-        print("\textvar:      \t",self.extvar) 
+        print("\textension:          \t",self.extension) 
+        print("\textname:            \t",self.extname)  
+        print("\textvar:             \t",self.extvar) 
          
         print()
 
@@ -325,9 +339,16 @@ class Conf :
         self.blockcmd = str2bool(self.blockcmd)     
         self.noipf = str2bool(self.noipf) 
         self.sendbuf = str2bool(self.sendbuf)      
-        self.pvoutput = str2bool(self.pvoutput)
+        #
         self.nomqtt = str2bool(self.nomqtt)        
+        self.mqttmtopic = str2bool(self.mqttmtopic)        
         self.mqttauth = str2bool(self.mqttauth)
+        self.mqttretain = str2bool(self.mqttretain)
+        #
+        self.pvoutput = str2bool(self.pvoutput)
+        self.pvdisv1 = str2bool(self.pvdisv1)
+        self.pvtemp = str2bool(self.pvtemp)
+        # 
         self.influx = str2bool(self.influx)
         self.influx2 = str2bool(self.influx2)
         self.extension = str2bool(self.extension)
@@ -342,6 +363,7 @@ class Conf :
         if config.has_option("Generic","compat"): self.compat = config.getboolean("Generic","compat")
         if config.has_option("Generic","includeall"): self.includeall = config.getboolean("Generic","includeall")
         if config.has_option("Generic","invtype"): self.invtype = config.get("Generic","invtype")
+        if config.has_option("Generic","invtypemap"): self.invtypemap = eval(config.get("Generic","invtypemap"))
         if config.has_option("Generic","inverterid"): self.inverterid = config.get("Generic","inverterid")
         if config.has_option("Generic","blockcmd"): self.blockcmd = config.get("Generic","blockcmd")
         if config.has_option("Generic","noipf"): self.noipf = config.get("Generic","noipf")
@@ -358,12 +380,19 @@ class Conf :
         if config.has_option("MQTT","ip"): self.mqttip = config.get("MQTT","ip")
         if config.has_option("MQTT","port"): self.mqttport = config.getint("MQTT","port")
         if config.has_option("MQTT","topic"): self.mqtttopic = config.get("MQTT","topic")
+        if config.has_option("MQTT","mtopic"): self.mqttmtopic = config.get("MQTT","mtopic")
+        if config.has_option("MQTT","mtopicname"): self.mqttmtopicname = config.get("MQTT","mtopicname")
+        if config.has_option("MQTT","inverterintopic"): self.mqttinverterintopic = config.getboolean("MQTT","inverterintopic")
+        if config.has_option("MQTT","retain"): self.mqttretain = config.getboolean("MQTT","retain")
         if config.has_option("MQTT","auth"): self.mqttauth = config.getboolean("MQTT","auth")
         if config.has_option("MQTT","user"): self.mqttuser = config.get("MQTT","user")
         if config.has_option("MQTT","password"): self.mqttpsw = config.get("MQTT","password")
         if config.has_option("PVOutput","pvoutput"): self.pvoutput = config.get("PVOutput","pvoutput")
+        if config.has_option("PVOutput","pvtemp"): self.pvtemp = config.get("PVOutput","pvtemp")
+        if config.has_option("PVOutput","pvdisv1"): self.pvdisv1 = config.get("PVOutput","pvdisv1")
         if config.has_option("PVOutput","pvinverters"): self.pvinverters = config.getint("PVOutput","pvinverters")
         if config.has_option("PVOutput","apikey"): self.pvapikey = config.get("PVOutput","apikey")
+        if config.has_option("PVOutput", "pvuplimit"): self.pvuplimit = config.getint("PVOutput", "pvuplimit")
         # if more inverter are installed at the same interface (shinelink) get systemids
         #if self.pvinverters > 1 : 
         for x in range(self.pvinverters+1) : 
@@ -385,111 +414,138 @@ class Conf :
         #extensionINFLUX
         if config.has_option("extension","extension"): self.extension = config.get("extension","extension") 
         if config.has_option("extension","extname"): self.extname = config.get("extension","extname") 
-        if config.has_option("extension","extvar"): self.extvar = eval(config.get("extension","extvar")) 
-        
+        if config.has_option("extension","extvar"): self.extvar = eval(config.get("extension","extvar"))
+
+    def getenv(self, envvar):
+        envval = os.getenv(envvar)
+
+        if self.verbose: print(f"\n\tPulled '{envvar}={envval}' from the environment")
+        return envval
+
     def procenv(self): 
         print("\nGrott process environmental variables")
-        if os.getenv('gmode') in ("sniff", "proxy") :  self.mode = os.getenv('gmode')
-        if os.getenv('gverbose') != None :  self.verbose = os.getenv('verbose')
+        if os.getenv('gmode') in ("sniff", "proxy") :  self.mode = self.getenv('gmode')
+        if os.getenv('gverbose') != None :  self.verbose = self.getenv('gverbose')
         if os.getenv('gminrecl') != None : 
-            if 0 <= int(os.getenv('gminrecl')) <= 255  :     self.minrecl = os.getenv('gminrecl')
-        if os.getenv('gdecrypt') != None : self.decrypt = os.getenv('gdecrypt') 
-        if os.getenv('gcompat') != None :  self.compat = os.getenv('gcompat')
-        if os.getenv('gincludeall') != None :  self.includeall = os.getenv('gincludeall')
-        if os.getenv('ginvtype') != None :  self.invtype = os.getenv('ginvtype')
-        if os.getenv('gblockcmd') != None : self.blockcmd = os.getenv('gblockcmd')
-        if os.getenv('gnoipf') != None : self.noipf = os.getenv('gnoipf')     
-        if os.getenv('gtime') in ("auto", "server") : self.gtime = os.getenv('gtime')   
-        if os.getenv('gtimezone') != None : self.tmzone = os.getenv('gtimezone')   
-        if os.getenv('gsendbuf') != None : self.sendbuf = os.getenv('gsendbuf')   
-        if os.getenv('ginverterid') != None :  self.inverterid = os.getenv('ginverterid')
+            if 0 <= int(os.getenv('gminrecl')) <= 255  :     self.minrecl = self.getenv('gminrecl')
+        if os.getenv('gdecrypt') != None : self.decrypt = self.getenv('gdecrypt')
+        if os.getenv('gcompat') != None :  self.compat = self.getenv('gcompat')
+        if os.getenv('gincludeall') != None :  self.includeall = self.getenv('gincludeall')
+        if os.getenv('ginvtype') != None :  self.invtype = self.getenv('ginvtype')
+        if os.getenv('ginvtypemap') != None :  self.invtypemap = eval(self.getenv('ginvtypemap'))
+        if os.getenv('gblockcmd') != None : self.blockcmd = self.getenv('gblockcmd')
+        if os.getenv('gnoipf') != None : self.noipf = self.getenv('gnoipf')
+        if os.getenv('gtime') in ("auto", "server") : self.gtime = self.getenv('gtime')
+        if os.getenv('gtimezone') != None : self.tmzone = self.getenv('gtimezone')
+        if os.getenv('gsendbuf') != None : self.sendbuf = self.getenv('gsendbuf')
+        if os.getenv('ginverterid') != None :  self.inverterid = self.getenv('ginverterid')
         if os.getenv('ggrottip') != None : 
             try: 
                 ipaddress.ip_address(os.getenv('ggrottip'))
-                self.grottip = os.getenv('ggrottip') 
+                self.grottip = self.getenv('ggrottip')
             except: 
                 if self.verbose : print("\nGrott IP address env invalid")
         if os.getenv('ggrottport') != None : 
-            if 0 <= int(os.getenv('ggrottport')) <= 65535  :  self.grottport = os.getenv('ggrottport')
+            if 0 <= int(os.getenv('ggrottport')) <= 65535  :  self.grottport = self.getenv('ggrottport')
         if os.getenv('gvalueoffset') != None :     
-            if 0 <= int(os.getenv('gvalueoffset')) <= 255  :  self.valueoffset = os.getenv('gvalueoffset')
+            if 0 <= int(os.getenv('gvalueoffset')) <= 255  :  self.valueoffset = self.getenv('gvalueoffset')
         if os.getenv('ggrowattip') != None :    
             try: 
                 ipaddress.ip_address(os.getenv('ggrowattip'))
-                self.growattip = os.getenv('ggrowattip') 
+                self.growattip = self.getenv('ggrowattip')
             except: 
                 if self.verbose : print("\nGrott Growatt server IP address env invalid")
         if os.getenv('ggrowattport') != None :     
-            if 0 <= int(os.getenv('ggrowattport')) <= 65535  :  self.growattport = int(os.getenv('ggrowattport'))
+            if 0 <= int(os.getenv('ggrowattport')) <= 65535  :  self.growattport = int(self.getenv('ggrowattport'))
             else : 
                if self.verbose : print("\nGrott Growatt server Port address env invalid")   
         #handle mqtt environmentals    
-        if os.getenv('gnomqtt') != None :  self.nomqtt = os.getenv('gnomqtt')    
+        if os.getenv('gnomqtt') != None :  self.nomqtt = self.getenv('gnomqtt')
         if os.getenv('gmqttip') != None :    
             try: 
                 ipaddress.ip_address(os.getenv('gmqttip'))
-                self.mqttip = os.getenv('gmqttip') 
+                self.mqttip = self.getenv('gmqttip')
             except: 
                 if self.verbose : print("\nGrott MQTT server IP address env invalid")
         if os.getenv('gmqttport') != None :     
-            if 0 <= int(os.getenv('gmqttport')) <= 65535  :  self.mqttport = int(os.getenv('gmqttport'))
+            if 0 <= int(os.getenv('gmqttport')) <= 65535  :  self.mqttport = int(self.getenv('gmqttport'))
             else : 
                 if self.verbose : print("\nGrott MQTT server Port address env invalid")
-        if os.getenv('gmqttauth') != None :  self.mqttauth = os.getenv('gmqttauth')
-        if os.getenv('gmqtttopic') != None :  self.mqtttopic = os.getenv('gmqtttopic')
-        if os.getenv('gmqttuser') != None :  self.mqttuser = os.getenv('gmqttuser')
-        if os.getenv('gmqttpassword') != None : self.mqttpsw = os.getenv('gmqttpassword')
+        
+        if os.getenv('gmqtttopic') != None :  self.mqtttopic = self.getenv('gmqtttopic')
+        if os.getenv('gmqttinverterintopic') != None : self.mqttinverterintopic = self.getenv('gmqttinverterintopic')
+        if os.getenv('gmqttmtopic') != None :  self.mqttmtopic = self.getenv('gmqttmtopic')
+        if os.getenv('gmqttmtopicname') != None :  self.mqttmtopicname = self.getenv('gmqttmtopicname')
+        if os.getenv('gmqttretain') != None :  self.mqttretain = self.getenv('gmqttretain')
+        if os.getenv('gmqttauth') != None :  self.mqttauth = self.getenv('gmqttauth')
+        if os.getenv('gmqttuser') != None :  self.mqttuser = self.getenv('gmqttuser')
+        if os.getenv('gmqttpassword') != None : self.mqttpsw = self.getenv('gmqttpassword')
         #Handle PVOutput variables
-        if os.getenv('gpvoutput') != None :  self.pvoutput = os.getenv('gpvoutput') 
-        if os.getenv('gpvapikey') != None :  self.pvapikey = os.getenv('gpvapikey')   
-        if os.getenv('gpvinverters') != None :  self.pvinverters = int(os.getenv('gpvinverters'))    
+        if os.getenv('gpvoutput') != None :  self.pvoutput = self.getenv('gpvoutput')
+        if os.getenv('gpvtemp') != None :  self.pvtemp = self.getenv('gpvtemp')
+        if os.getenv('gpvdisv1') != None :  self.pvdisv1 = self.getenv('gpvdisv1')
+        if os.getenv('gpvapikey') != None :  self.pvapikey = self.getenv('gpvapikey')
+        if os.getenv('gpvinverters') != None :  self.pvinverters = int(self.getenv('gpvinverters'))
         for x in range(self.pvinverters+1) : 
-                if os.getenv('gpvsystemid'+str(x)) != None :  self.pvsystemid[x] = os.getenv('gpvsystemid'+ str(x))
-                if os.getenv('gpvinverterid'+str(x)) != None :  self.pvinverterid[x] = os.getenv('gpvinverterid'+ str(x))
+                if os.getenv('gpvsystemid'+str(x)) != None :  self.pvsystemid[x] = self.getenv('gpvsystemid'+ str(x))
+                if os.getenv('gpvinverterid'+str(x)) != None :  self.pvinverterid[x] = self.getenv('gpvinverterid'+ str(x))
         if self.pvinverters == 1 : 
-            if os.getenv('gpvsystemid') != None :  self.pvsystemid[1] = os.getenv('gpvsystemid')   
+            if os.getenv('gpvsystemid') != None :  self.pvsystemid[1] = self.getenv('gpvsystemid')
+        if os.getenv('pvuplimit') != None :  self.pvuplimit = int(self.getenv('pvuplimit'))
         #Handle Influx
-        if os.getenv('ginflux') != None :  self.influx = os.getenv('ginflux') 
-        if os.getenv('ginflux2') != None :  self.influx2 = os.getenv('ginflux2') 
-        if os.getenv('gifdbname') != None :  self.ifdbname = os.getenv('gifdbname') 
+        if os.getenv('ginflux') != None :  self.influx = self.getenv('ginflux')
+        if os.getenv('ginflux2') != None :  self.influx2 = self.getenv('ginflux2')
+        if os.getenv('gifdbname') != None :  self.ifdbname = self.getenv('gifdbname')
         if os.getenv('gifip') != None :    
             try: 
                 ipaddress.ip_address(os.getenv('gifip'))
-                self.ifip = os.getenv('gifip') 
+                self.ifip = self.getenv('gifip')
             except: 
                 if self.verbose : print("\nGrott InfluxDB server IP address env invalid")
         if os.getenv('gifport') != None :     
-            if 0 <= int(os.getenv('gifport')) <= 65535  :  self.ifport = int(os.getenv('gifport'))
+            if 0 <= int(os.getenv('gifport')) <= 65535  :  self.ifport = int(self.getenv('gifport'))
             else : 
                 if self.verbose : print("\nGrott InfluxDB server Port address env invalid")      
-        if os.getenv('gifuser') != None :  self.ifuser = os.getenv('gifuser') 
-        if os.getenv('gifpassword') != None :  self.ifpsw = os.getenv('gifpassword') 
-        if os.getenv('giforg') != None :  self.iforg = os.getenv('giforg') 
-        if os.getenv('gifbucket') != None :  self.ifbucket = os.getenv('gifbucket') 
-        if os.getenv('giftoken') != None :  self.iftoken = os.getenv('giftoken') 
+        if os.getenv('gifuser') != None :  self.ifuser = self.getenv('gifuser')
+        if os.getenv('gifpassword') != None :  self.ifpsw = self.getenv('gifpassword')
+        if os.getenv('giforg') != None :  self.iforg = self.getenv('giforg')
+        if os.getenv('gifbucket') != None :  self.ifbucket = self.getenv('gifbucket')
+        if os.getenv('giftoken') != None :  self.iftoken = self.getenv('giftoken')
         #Handle Extension
-        if os.getenv('gextension') != None :  self.extension = os.getenv('gextension') 
-        if os.getenv('gextname') != None :  self.extname = os.getenv('gextname') 
-        if os.getenv('gextvar') != None :  self.extvar = eval(os.getenv('gextvar'))
+        if os.getenv('gextension') != None :  self.extension = self.getenv('gextension')
+        if os.getenv('gextname') != None :  self.extname = self.getenv('gextname')
+        if os.getenv('gextvar') != None :  self.extvar = eval(self.getenv('gextvar'))
         
     def set_recwl(self):    
         #define record that will not be blocked or inspected if blockcmd is specified
         self.recwl = {"0103",                                    #announce record
                          "0104",                                    #data record    
                          "0116",                                    #ping    
-                         "0119",                                    #identify                       
+                         "0105",                                    #identify/display inverter config
+                         "0119",                                    #identify/display datalogger config
                          "0120",                                    #Smart Monitor Record
                          "0150",                                    #Archived record
                          "5003",                                    #announce record
                          "5004",                                    #data record    
                          "5016",                                    #ping    
-                         "5019",                                    #identify
+                         "5005",                                    #identify/display inverter config
+                         "5019",                                    #identify/display datalogger config 
+                         "501b",                                    #SDM630 with Raillog
                          "5050",                                    #Archived record
                          "5103",                                    #announce record
                          "5104",                                    #data record                          
                          "5116",                                    #ping    
-                         "5119",                                    #identify
-                         "5150"                                     #Archived record
+                         "5105",                                    #identify/display inverter config
+                         "5119",                                    #identify/display datalogger config
+                         "5129",                                    #announce record
+                         "5150",                                    #Archived record
+                         "5103",                                    #announce record
+                         "5104",                                    #data record                          
+                         "5216",                                    #ping    
+                         "5105",                                    #identify/display inverter config
+                         "5219",                                    #identify/display datalogger config
+                         "5229",                                    #announce record
+                         "5250"                                     #Archived record
                          
         } 
 
@@ -507,7 +563,8 @@ class Conf :
         
         self.recorddict1 = {"T02NNNN": {
             "decrypt"           : {"value" :"False"},
-            "pvserial"          : {"value" :36, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "incl" : "yes"},
+            "pvserial"          : {"value" :36, "length" : 10, "type" : "text"},
             "date"              : {"value" :56, "divide" : 10}, 
             "recortype1"        : {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
             "recortype2"        : {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
@@ -557,7 +614,8 @@ class Conf :
 
         self.recorddict2 = {"T05NNNN": {
             "decrypt"           : {"value" :"True"},
-            "pvserial"          : {"value" :36, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "incl" : "yes"},
+            "pvserial"          : {"value" :36, "length" : 10, "type" : "text"},
             "date"              : {"value" :56, "divide" : 10}, 
             "recortype1"        : {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
             "recortype2"        : {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
@@ -607,7 +665,8 @@ class Conf :
         
         self.recorddict4 = {"T05NNNNX": {
             "decrypt"           : {"value" :"True"},
-            "pvserial"          : {"value" :36, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "incl" : "yes"},
+            "pvserial"          : {"value" :36, "length" : 10, "type" : "text"},
             "date"              : {"value" :56, "divide" : 10}, 
             "recortype1"        : {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
             "recortype2"        : {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
@@ -646,7 +705,8 @@ class Conf :
             
         self.recorddict3 = {"T06NNNN": {
             "decrypt"           : {"value" :"True"},
-            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text","incl" : "yes"},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text"},
             "date"              : {"value" :136, "divide" : 10}, 
             "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
             "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
@@ -693,8 +753,8 @@ class Conf :
 
         self.recorddict5 = {"T06NNNNX": {
             "decrypt"           : {"value" :"True"},
-            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10,"incl" : "no"},
-            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text","incl" : "yes"},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text"},
             "date"              : {"value" :136, "divide" : 10}, 
             "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
             "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
@@ -734,7 +794,8 @@ class Conf :
 
         self.recorddict6 = {"T06NNNNXSPH": {
             "decrypt"           : {"value" :"True"},
-            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text","incl" : "yes"},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text"},
             "date"              : {"value" :136, "divide" : 10}, 
             "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
             "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
@@ -791,7 +852,7 @@ class Conf :
             "pdischarge1"        : {"value" :702, "length" : 4, "type" : "num", "divide" : 10}, 
             "p1charge1"          : {"value" :710, "length" : 4, "type" : "num", "divide" : 10}, 
             "vbat"               : {"value" :718, "length" : 2, "type" : "num", "divide" : 10}, 
-            "SOC"                : {"value" :722, "length" : 2, "type" : "num", "divide" : 100}, 
+            "SOC"                : {"value" :722, "length" : 2, "type" : "num", "divide" : 1}, 
             "pactouserr"         : {"value" :726, "length" : 4, "type" : "num", "divide" : 10}, 
             "#pactousers"        : {"value" :734, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
             "#pactousert"        : {"value" :742, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
@@ -822,8 +883,8 @@ class Conf :
 
         self.recorddict7 = {"T05NNNNSPF": {
             "decrypt"           : {"value" :"True"},
-            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10,"incl" : "no"},
-            "pvserial"          : {"value" :36, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10,"incl" : "yes"},
+            "pvserial"          : {"value" :36, "length" : 10, "type" : "text"},
             "date"              : {"value" :56, "divide" : 10}, 
             "recortype1"        : {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
             "recortype2"        : {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
@@ -861,9 +922,14 @@ class Conf :
             "faultValue"        : {"value" :246, "length" : 2, "type" : "num", "divide" : 1},                
             "warningValue"      : {"value" :250, "length" : 2, "type" : "num", "divide" : 1},                
             "constantPowerOK"   : {"value" :266, "length" : 2, "type" : "num", "divide" : 1},                
-            "epvtoday"          : {"value" :274, "length" : 4, "type" : "num", "divide" : 10},                
-            "pvenergytoday"     : {"value" :274, "length" : 4, "type" : "num", "divide" : 10}, 
-            "epvtotal"          : {"value" :282, "length" : 4, "type" : "num", "divide" : 10}, 
+            "epv1tod"           : {"value" :270, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},                
+            "epv1tot"           : {"value" :278, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "epvToday"          : {"value" :278, "length" : 4, "type" : "num", "divide" : 10}, 
+            "pvenergytoday"     : {"value" :278, "length" : 4, "type" : "num", "divide" : 10}, 
+            "epv2tod"           : {"value" :286, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},                
+            "epvTotal"          : {"value" :286, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvenergytotal"     : {"value" :286, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv2tot"           : {"value" :294, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},              
             "eacCharToday"      : {"value" :310, "length" : 4, "type" : "num", "divide" : 10},    
             "eacCharTotal"      : {"value" :318, "length" : 4, "type" : "num", "divide" : 10},  
             "ebatDischarToday"  : {"value" :326, "length" : 4, "type" : "num", "divide" : 10},  
@@ -875,13 +941,14 @@ class Conf :
             "ACDischarVA"       : {"value" :370, "length" : 4, "type" : "num", "divide" : 10},  
             "BatDischarWatt"    : {"value" :378, "length" : 4, "type" : "num", "divide" : 10},  
             "BatDischarVA"      : {"value" :386, "length" : 4, "type" : "num", "divide" : 10},  
-            "BatWatt"           : {"value" :394, "length" : 4, "type" : "numx", "divide" : 10}                                                 
+            "BatWatt"           : {"value" :394, "length" : 4, "type" : "numx", "divide" : 10},   
+            "invfanspeed"       : {"value" :414, "length" : 2, "type" : "num", "divide" : 1}                                              
         } }            
 
         self.recorddict8 = {"T06NNNNSPF": {
             "decrypt"           : {"value" :"True"},
-            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10},
-            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text","incl" : "yes"},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text"},
             "date"              : {"value" :136, "divide" : 10}, 
             "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
             "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
@@ -933,42 +1000,92 @@ class Conf :
             "ACDischarVA"       : {"value" :450, "length" : 4, "type" : "num", "divide" : 10},  
             "BatDischarWatt"    : {"value" :458, "length" : 4, "type" : "num", "divide" : 10},  
             "BatDischarVA"      : {"value" :466, "length" : 4, "type" : "num", "divide" : 10},  
-            "BatWatt"           : {"value" :474, "length" : 4, "type" : "numx", "divide" : 10}                                                 
+            "BatWatt"           : {"value" :474, "length" : 4, "type" : "numx", "divide" : 10},                                                
+            "invfanspeed"       : {"value" :494, "length" : 2, "type" : "num", "divide" : 1}
         }}
 
-        self.recorddict9 = {"T060120": {
+        self.recorddict9 = {"T06NNNNXTL3": {
             "decrypt"           : {"value" :"True"},
-            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "divide" : 10},
-            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text", "incl" : "yes"},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text"},
+            "date"              : {"value" :136, "divide" : 10}, 
+            "recortype1"        : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype2"        : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
+            "pvstatus"          : {"value" :158, "length" : 2, "type" : "num"},  
+            "pvpowerin"         : {"value" :162, "length" : 4, "type" : "num", "divide" : 10},        
+            "pv1voltage"        : {"value" :170, "length" : 2, "type" : "num", "divide" : 10},        
+            "pv1current"        : {"value" :174, "length" : 2, "type" : "num", "divide" : 10},                        
+            "pv1watt"           : {"value" :178, "length" : 4, "type" : "num", "divide" : 10},                      
+            "pv2voltage"        : {"value" :186, "length" : 2, "type" : "num", "divide" : 10},                
+            "pv2current"        : {"value" :190, "length" : 2, "type" : "num", "divide" : 10},                
+            "pv2watt"           : {"value" :194, "length" : 4, "type" : "num", "divide" : 10},
+            "pv3voltage"        : {"value" :202, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                
+            "pv3current"        : {"value" :206, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                
+            "pv3watt"           : {"value" :210, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},                    
+            "pvpowerout"        : {"value" :298, "length" : 4, "type" : "numx", "divide" : 10},                
+            "pvfrequentie"      : {"value" :306, "length" : 2, "type" : "num", "divide" : 100},                
+            "pvgridvoltage"     : {"value" :310, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent"     : {"value" :314, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower"       : {"value" :318, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvgridvoltage2"    : {"value" :326, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent2"    : {"value" :330, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower2"      : {"value" :334, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvgridvoltage3"    : {"value" :342, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent3"    : {"value" :346, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower3"      : {"value" :350, "length" : 4, "type" : "num", "divide" : 10},  
+            "Vac_RS"            : {"value" :358, "length" : 2, "type" : "num", "divide" : 10},                
+            "Vac_ST"            : {"value" :362, "length" : 2, "type" : "num", "divide" : 10},                
+            "Vac_TR"            : {"value" :366, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvenergytoday"     : {"value" :370, "length" : 4, "type" : "num", "divide" : 10},                  
+            "pvenergytotal"     : {"value" :378, "length" : 4, "type" : "num", "divide" : 10},
+            "totworktime"       : {"value" :386, "length" : 4, "type" : "num", "divide" : 7200},
+            "epv1today"         : {"value" :394, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv1total"         : {"value" :402, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv2today"         : {"value" :410, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv2total"         : {"value" :418, "length" : 4, "type" : "num", "divide" : 10},
+            "epvtotal"          : {"value" :522, "length" : 4, "type" : "num", "divide" : 10},                           
+            "pvtemperature"     : {"value" :530, "length" : 2, "type" : "num", "divide" : 10},                 
+            "pvipmtemperature"  : {"value" :534, "length" : 2, "type" : "num", "divide" : 10},          
+            "pvboottemperature" : {"value" :538, "length" : 2, "type" : "num", "divide" : 10},          
+            "temp4"             : {"value" :542, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},          
+            "uwBatVolt_DSP"     : {"value" :546, "length" : 2, "type" : "num", "divide" : 10},          
+            "pbusvolt"          : {"value" :550, "length" : 2, "type" : "num", "divide" : 1},                  
+            "nbusvolt"          : {"value" :554, "length" : 2, "type" : "num", "divide" : 1}     
+        }}
+
+        self.recorddict10 = {"T060120": {
+            "decrypt"           : {"value" :"True"},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text","incl" : "yes"},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text"},
             "date"              : {"value" :136, "divide" : 10}, 
             "voltage_l1"        : {"value" :160, "length" : 4, "type" : "num", "divide" : 10},  
-            "voltage_l2"        : {"value" :168, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},  
-            "voltage_l3"        : {"value" :176, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},  
+            "voltage_l2"        : {"value" :168, "length" : 4, "type" : "num", "divide" : 10,"incl" : "yes"},  
+            "voltage_l3"        : {"value" :176, "length" : 4, "type" : "num", "divide" : 10,"incl" : "yes"},  
             "Current_l1"        : {"value" :184, "length" : 4, "type" : "num", "divide" : 10},
-            "Current_l2"        : {"value" :192, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},
-            "Current_l3"        : {"value" :200, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},            
+            "Current_l2"        : {"value" :192, "length" : 4, "type" : "num", "divide" : 10,"incl" : "yes"},
+            "Current_l3"        : {"value" :200, "length" : 4, "type" : "num", "divide" : 10,"incl" : "yes"},            
             "act_power_l1"      : {"value" :208, "length" : 4, "type" : "numx", "divide" : 10},        
-            "act_power_l2"      : {"value" :216, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},        
-            "act_power_l3"      : {"value" :224, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},        
+            "act_power_l2"      : {"value" :216, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "yes"},        
+            "act_power_l3"      : {"value" :224, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "yes"},        
             "app_power_l1"      : {"value" :232, "length" : 4, "type" : "numx", "divide" : 10},        
-            "app_power_l2"      : {"value" :240, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},        
-            "app_power_l3"      : {"value" :248, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},        
+            "app_power_l2"      : {"value" :240, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "yes"},        
+            "app_power_l3"      : {"value" :248, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "yes"},        
             "react_power_l1"    : {"value" :256, "length" : 4, "type" : "numx","divide" : 10},        
-            "react_power_l2"    : {"value" :264, "length" : 4, "type" : "numx","divide" : 10,"incl" : "no"},        
-            "react_power_l3"    : {"value" :272, "length" : 4, "type" : "numx","divide" : 10,"incl" : "no"},        
+            "react_power_l2"    : {"value" :264, "length" : 4, "type" : "numx","divide" : 10,"incl" : "yes"},        
+            "react_power_l3"    : {"value" :272, "length" : 4, "type" : "numx","divide" : 10,"incl" : "yes"},        
             "powerfactor_l1"    : {"value" :280, "length" : 4, "type" : "numx", "divide" : 1000},                      
-            "powerfactor_l2"    : {"value" :288, "length" : 4, "type" : "numx", "divide" : 1000,"incl" : "no"},                      
-            "powerfactor_l3"    : {"value" :296, "length" : 4, "type" : "numx", "divide" : 1000,"incl" : "no"},                      
+            "powerfactor_l2"    : {"value" :288, "length" : 4, "type" : "numx", "divide" : 1000,"incl" : "yes"},                      
+            "powerfactor_l3"    : {"value" :296, "length" : 4, "type" : "numx", "divide" : 1000,"incl" : "yes"},                      
             "pos_rev_act_power" : {"value" :304, "length" : 4, "type" : "numx", "divide" : 10}, 
-            "pos_act_power"     : {"value" :304, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"}, 
-            "rev_act_power"     : {"value" :304, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},
+            "pos_act_power"     : {"value" :304, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "yes"}, 
+            "rev_act_power"     : {"value" :304, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "yes"},
             "app_power"         : {"value" :312, "length" : 4, "type" : "numx", "divide" : 10}, 
             "react_power"       : {"value" :320, "length" : 4, "type" : "numx", "divide" : 10}, 
             "powerfactor"       : {"value" :328, "length" : 4, "type" : "numx", "divide" : 1000},   
             "frequency"         : {"value" :336, "length" : 4, "type" : "num", "divide" : 10},   
-            "L1-2_voltage"      : {"value" :344, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
-            "L2-3_voltage"      : {"value" :352, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},   
-            "L3-1_voltage"      : {"value" :360, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},   
+            "L1-2_voltage"      : {"value" :344, "length" : 4, "type" : "num", "divide" : 10,"incl" : "yes"}, 
+            "L2-3_voltage"      : {"value" :352, "length" : 4, "type" : "num", "divide" : 10,"incl" : "yes"},   
+            "L3-1_voltage"      : {"value" :360, "length" : 4, "type" : "num", "divide" : 10,"incl" : "yes"},   
             "pos_act_energy"    : {"value" :368, "length" : 4, "type" : "numx", "divide" : 10},  
             "rev_act_energy"    : {"value" :376, "length" : 4, "type" : "numx", "divide" : 10},   
             "pos_act_energy_kvar" : {"value" :384, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"},    
@@ -978,6 +1095,481 @@ class Conf :
             "react_energy_kvar" : {"value" :416, "length" : 4, "type" : "numx", "divide" : 10,"incl" : "no"}   
         }}
 
+        self.recorddict11 = {"T06501b": {
+            "decrypt"           	: {"value" :"True"},
+            #"rectype"		    	: {"value": "log","type" : "text","incl" : "no"}, 
+            "datalogserial"         : {"value" :16, "length" : 10, "type" : "text","incl" : "yes"},
+            "device"                : {"value": "SDM630","type" : "def","incl" : "no"}, 
+            #"pvserial"          	: {"value" :36, "length" : 10, "type" : "text"},
+            #"recortype1"        	: {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
+            #"recortype2"        	: {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
+            "logstart"            	: {"value" :96,"type" : "def","incl" : "no"}, 
+            "active_energy"     	: {"pos" :1, "type" : "log"},
+            "reactive_energy"    	: {"pos" :2, "type" : "log"},
+            "activePowerL1"     	: {"pos" :3, "type" : "log"},
+            "activePowerL2"     	: {"pos" :4, "type" : "log"},
+            "activePowerL3"     	: {"pos" :5, "type" : "log"},
+            "reactivePowerL1"   	: {"pos" :6, "type" : "log"},
+            "reactivePowerL2"   	: {"pos" :7, "type" : "log"},
+            "reactivePowerL3"   	: {"pos" :8, "type" : "log"},
+            "apperentPowerL1"   	: {"pos" :9, "type" : "log"},
+            "apperentPowerL2"     	: {"pos" :10, "type" : "log"},
+            "apperentPowerL3"     	: {"pos" :11, "type" : "log"},
+            "powerFactorL1"     	: {"pos" :12, "type" : "log"},
+            "powerFactorL2"     	: {"pos" :13, "type" : "log"},
+            "powerFactorL3"    		: {"pos" :14, "type" : "log"},
+            "voltageL1"           	: {"pos" :15, "type" : "log"},
+            "voltageL2"            	: {"pos" :16, "type" : "log"},
+            "voltageL3"            	: {"pos" :17, "type" : "log"},
+            "currentL1"            	: {"pos" :18, "type" : "log"},
+            "currentL2"            	: {"pos" :19, "type" : "log"},
+            "currentL3"            	: {"pos" :20, "type" : "log"},
+            "power"             	: {"pos" :21, "type" : "log"},
+            "active_power"         	: {"pos" :21, "type" : "logpos"},
+            "reverse_active_power" 	: {"pos" :21, "type" : "logneg"},
+            "apparent_power"       	: {"pos" :22, "type" : "log"},
+            "reactive_power"       	: {"pos" :23, "type" : "log"},
+            "power_factor"         	: {"pos" :24, "type" : "log"},
+            "frequency"            	: {"pos" :25, "type" : "log"},
+            "posiActivePower"      	: {"pos" :26, "type" : "log"},
+            "reverActivePower"     	: {"pos" :27, "type" : "log"},
+            "posiReactivePower"    	: {"pos" :28, "type" : "log"},
+            "reverReactivePower"   	: {"pos" :29, "type" : "log"},
+            "apparentEnergy"       	: {"pos" :30, "type" : "log"},
+            "totalActiveEnergyL1"	: {"pos" :31, "type" : "log"},
+            "totalActiveEnergyL2"  	: {"pos" :32, "type" : "log"},
+            "totalActiveEnergyL3"  	: {"pos" :33, "type" : "log"},
+            "totalRectiveEnergyL1" 	: {"pos" :34, "type" : "log"},
+            "totalRectiveEnergyL2" 	: {"pos" :35, "type" : "log"},
+            "totalRectiveEnergyL3" 	: {"pos" :36, "type" : "log"},
+            "total_energy"     		: {"pos" :37, "type" : "log"},
+            "l1Voltage2"     		: {"pos" :38, "type" : "log"},
+            "l2Voltage3"     		: {"pos" :39, "type" : "log"},
+            "l3Voltage1"     		: {"pos" :40, "type" : "log"},
+            "pos41"    				: {"pos" :41, "type" : "log","incl" : "no"},
+            "pos42"     			: {"pos" :42, "type" : "log","incl" : "no"},
+            "pos43"     			: {"pos" :43, "type" : "log","incl" : "no"},
+            "pos44"     			: {"pos" :44, "type" : "log","incl" : "no"},
+            "pos45"     			: {"pos" :45, "type" : "log","incl" : "no"},
+            "pos46"     			: {"pos" :46, "type" : "log","incl" : "no"},
+            "pos47"     			: {"pos" :47, "type" : "log","incl" : "no"},
+            "pos48"     			: {"pos" :48, "type" : "log","incl" : "no"},
+            "pos49"     			: {"pos" :49, "type" : "log","incl" : "no"},
+            "pos50"     			: {"pos" :50, "type" : "log","incl" : "no"},
+            "pos51"     			: {"pos" :51, "type" : "log","incl" : "no"},
+            "pos52"     			: {"pos" :52, "type" : "log","incl" : "no"},
+            "pos53"     			: {"pos" :53, "type" : "log","incl" : "no"},
+            "pos54"     			: {"pos" :54, "type" : "log","incl" : "no"},
+            "pos55"     			: {"pos" :55, "type" : "log","incl" : "no"},
+            "pos56"     			: {"pos" :56, "type" : "log","incl" : "no"},
+            "pos57"     			: {"pos" :57, "type" : "log","incl" : "no"},
+            "pos58"     			: {"pos" :58, "type" : "log","incl" : "no"},
+            "pos59"					: {"pos" :59, "type" : "log","incl" : "no"},
+            "pos60" 			    : {"pos" :60, "type" : "log","incl" : "no"},
+            "pos61"     			: {"pos" :61, "type" : "log","incl" : "no"},
+            "pos62"     			: {"pos" :62, "type" : "log","incl" : "no"},
+            "pos63"     			: {"pos" :63, "type" : "log","incl" : "no"},
+            "pos64"     			: {"pos" :64, "type" : "log","incl" : "no"},
+            "pos65"     			: {"pos" :65, "type" : "log","incl" : "no"},
+            "pos66"     			: {"pos" :66, "type" : "log","incl" : "no"}
+        }}
+
+        self.recorddict12 = {"T05NNNNXSPH": {
+            "decrypt"           : {"value" :"True"},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text","incl" : "yes"},
+            "pvserial"          : {"value" :36, "length" : 10, "type" : "text"},
+            "date"              : {"value" :56, "divide" : 10}, 
+            "recortype1"        : {"value" :70, "length" : 2, "type" : "num","incl" : "no"}, 
+            "recortype2"        : {"value" :74, "length" : 2, "type" : "num","incl" : "no"}, 
+            "pvstatus"          : {"value" :78, "length" : 2, "type" : "num"},  
+            "pvpowerin"         : {"value" :82, "length" : 4, "type" : "num", "divide" : 10},        
+            "pv1voltage"        : {"value" :90, "length" : 2, "type" : "num", "divide" : 10},        
+            "pv1current"        : {"value" :94, "length" : 2, "type" : "num", "divide" : 10},                        
+            "pv1watt"           : {"value" :98, "length" : 4, "type" : "num", "divide" : 10},                      
+            "pv2voltage"        : {"value" :106, "length" : 2, "type" : "num", "divide" : 10},                
+            "pv2current"        : {"value" :110, "length" : 2, "type" : "num", "divide" : 10},                
+            "pv2watt"           : {"value" :114, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvpowerout"        : {"value" :218, "length" : 4, "type" : "numx", "divide" : 10},                
+            "pvfrequentie"      : {"value" :226, "length" : 2, "type" : "num", "divide" : 100},                
+            "pvgridvoltage"     : {"value" :230, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent"     : {"value" :234, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower"       : {"value" :238, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvgridvoltage2"    : {"value" :246, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent2"    : {"value" :250, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower2"      : {"value" :254, "length" : 4, "type" : "num", "divide" : 10},                
+            "pvgridvoltage3"    : {"value" :262, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridcurrent3"    : {"value" :266, "length" : 2, "type" : "num", "divide" : 10},                
+            "pvgridpower3"      : {"value" :270, "length" : 4, "type" : "num", "divide" : 10},  
+            "totworktime"       : {"value" :306, "length" : 4, "type" : "num", "divide" : 7200},
+            "eactoday"          : {"value" :290, "length" : 4, "type" : "num", "divide" : 10}, 
+            "pvenergytoday"     : {"value" :290, "length" : 4, "type" : "num", "divide" : 10},                  
+            "eactotal"          : {"value" :298, "length" : 4, "type" : "num", "divide" : 10},
+            "epvtotal"          : {"value" :442, "length" : 4, "type" : "num", "divide" : 10},
+            "epv1today"         : {"value" :314, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv1total"         : {"value" :322, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv2today"         : {"value" :330, "length" : 4, "type" : "num", "divide" : 10},                
+            "epv2total"         : {"value" :338, "length" : 4, "type" : "num", "divide" : 10},                           
+            "pvtemperature"     : {"value" :450, "length" : 2, "type" : "num", "divide" : 10},                 
+            "pvipmtemperature"  : {"value" :454, "length" : 2, "type" : "num", "divide" : 10}, 
+            "pvboosttemp"       : {"value" :458, "length" : 2, "type" : "num", "divide" : 10},                   
+            "bat_dsp"           : {"value" :466, "length" : 2, "type" : "num", "divide" : 10},
+            "pbusvolt"          : {"value" :470, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                  
+            "#nbusvolt"          : {"value" :474, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},  
+            "#ipf"               : {"value" :478, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},
+            "#realoppercent"     : {"value" :482, "length" : 2, "type" : "num", "divide" : 100,"incl" : "no"}, 
+            "#opfullwatt"        : {"value" :486, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"},
+            "#deratingmode"      : {"value" :494, "length" : 2, "type" : "num", "divide" : 1,"incl" : "no"},
+            "eacharge_today"     : {"value" :526, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eacharge_total"     : {"value" :534, "length" : 4, "type" : "num", "divide" : 10}, 
+            "batterytype"        : {"value" :554, "length" : 2, "type" : "num", "divide" : 1}, 
+            "uwsysworkmode"      : {"value" :586, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword0"   : {"value" :590, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword1"   : {"value" :594, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword2"   : {"value" :588, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword3"   : {"value" :602, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword4"   : {"value" :606, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword5"   : {"value" :610, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword6"   : {"value" :614, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword7"   : {"value" :618, "length" : 2, "type" : "num", "divide" : 1},
+            "pdischarge1"        : {"value" :622, "length" : 4, "type" : "num", "divide" : 10}, 
+            "p1charge1"          : {"value" :630, "length" : 4, "type" : "num", "divide" : 10}, 
+            "vbat"               : {"value" :738, "length" : 2, "type" : "num", "divide" : 10}, 
+            "SOC"                : {"value" :742, "length" : 2, "type" : "num", "divide" : 1}, 
+            "pactouserr"         : {"value" :746, "length" : 4, "type" : "num", "divide" : 10},     
+            "#pactousers"        : {"value" :654, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "#pactousert"        : {"value" :662, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "pactousertot"       : {"value" :670, "length" : 4, "type" : "num", "divide" : 10},
+            "pactogridr"         : {"value" :678, "length" : 4, "type" : "num", "divide" : 10}, 
+            "#pactogrids"        : {"value" :686, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "#pactogridt"        : {"value" :694, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "pactogridtot"       : {"value" :702, "length" : 4, "type" : "num", "divide" : 10}, 
+            "plocaloadr"         : {"value" :710, "length" : 4, "type" : "num", "divide" : 10}, 
+            "#plocaloads"        : {"value" :718, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "#plocaloadt"        : {"value" :726, "length" : 4, "type" : "num", "divide" : 10,"incl" : "no"}, 
+            "plocaloadtot"       : {"value" :734, "length" : 4, "type" : "num", "divide" : 10},   
+            "#ipm"               : {"value" :742, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},   
+            "#battemp"           : {"value" :746, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},   
+            "spdspstatus"        : {"value" :750, "length" : 2, "type" : "num", "divide" : 10},   
+            "spbusvolt"          : {"value" :754, "length" : 2, "type" : "num", "divide" : 10},
+            "etouser_tod"        : {"value" :762, "length" : 4, "type" : "num", "divide" : 10}, 
+            "etouser_tot"        : {"value" :770, "length" : 4, "type" : "num", "divide" : 10}, 
+            "etogrid_tod"        : {"value" :778, "length" : 4, "type" : "num", "divide" : 10}, 
+            "etogrid_tot"      : {"value" :786, "length" : 4, "type" : "num", "divide" : 10},
+            "edischarge1_tod"  : {"value" :794, "length" : 4, "type" : "num", "divide" : 10}, 
+            "edischarge1_tot"  : {"value" :802, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eharge1_tod"      : {"value" :810, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eharge1_tot"      : {"value" :818, "length" : 4, "type" : "num", "divide" : 10}, 
+            "elocalload_tod"  : {"value" :826, "length" : 4, "type" : "num", "divide" : 10}, 
+            "elocalload_tot"  : {"value" :834, "length" : 4, "type" : "num", "divide" : 10} 
+        } }
+
+        self.recorddict13 = {"T06NNNNXSPA": {
+            "decrypt"           : {"value" :"True"},
+            "datalogserial"     : {"value" :16, "length" : 10, "type" : "text","incl" : "yes"},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text"},
+            "date"              : {"value" :136, "divide" : 10}, 
+            "group1start"         : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
+            "group1end"           : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
+            "pvstatus"           : {"value" :158, "length" : 2, "type" : "num"},   
+            "uwsysworkmode"      : {"value" :666, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword0"   : {"value" :162, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword1"   : {"value" :166, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword2"   : {"value" :170, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword3"   : {"value" :174, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword4"   : {"value" :178, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword5"   : {"value" :182, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword6"   : {"value" :186, "length" : 2, "type" : "num", "divide" : 1},
+            "systemfaultword7"   : {"value" :190, "length" : 2, "type" : "num", "divide" : 1},
+            "pdischarge1"        : {"value" :194, "length" : 4, "type" : "num", "divide" : 10}, 
+            "pcharge1"           : {"value" :202, "length" : 4, "type" : "num", "divide" : 10}, 
+            "vbat"               : {"value" :210, "length" : 2, "type" : "num", "divide" : 10}, 
+            "SOC"                : {"value" :214, "length" : 2, "type" : "num", "divide" : 1}, 
+            "pactouserr"         : {"value" :218, "length" : 4, "type" : "num", "divide" : 10}, 
+            "pactousers"         : {"value" :226, "length" : 4, "type" : "num", "divide" : 10}, 
+            "pactousert"         : {"value" :234, "length" : 4, "type" : "num", "divide" : 10}, 
+            "pactousertot"       : {"value" :242, "length" : 4, "type" : "num", "divide" : 10},
+            "pactogridr"         : {"value" :250, "length" : 4, "type" : "num", "divide" : 10}, 
+            "pactogrids "        : {"value" :258, "length" : 4, "type" : "num", "divide" : 10}, 
+            "pactogrid t"        : {"value" :266, "length" : 4, "type" : "num", "divide" : 10}, 
+            "pactogridtot"       : {"value" :274, "length" : 4, "type" : "num", "divide" : 10}, 
+            "plocaloadr"         : {"value" :282, "length" : 4, "type" : "num", "divide" : 10}, 
+            "plocaloads"        : {"value" :290, "length" : 4, "type" : "num", "divide" : 10}, 
+            "plocaloadt"        : {"value" :298, "length" : 4, "type" : "num", "divide" : 10}, 
+            "plocaloadtot"       : {"value" :306, "length" : 4, "type" : "num", "divide" : 10},   
+            "ipm"                : {"value" :314, "length" : 2, "type" : "num", "divide" : 10},   
+            "battemp "           : {"value" :318, "length" : 2, "type" : "num", "divide" : 10},   
+            "spdspstatus"        : {"value" :322, "length" : 2, "type" : "num", "divide" : 10},   
+            "spbusvolt"          : {"value" :328, "length" : 2, "type" : "num", "divide" : 10},
+            "etouser_tod"        : {"value" :334, "length" : 4, "type" : "num", "divide" : 10}, 
+            "etouser_tot"        : {"value" :342, "length" : 4, "type" : "num", "divide" : 10}, 
+            "etogrid_tod"        : {"value" :350, "length" : 4, "type" : "num", "divide" : 10}, 
+            "etogrid_tot"        : {"value" :358, "length" : 4, "type" : "num", "divide" : 10},
+            "edischarge1_tod"    : {"value" :366, "length" : 4, "type" : "num", "divide" : 10}, 
+            "edischarge1_tot"    : {"value" :374, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eharge1_tod"        : {"value" :382, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eharge1_tot"        : {"value" :390, "length" : 4, "type" : "num", "divide" : 10}, 
+            "elocalload_tod"     : {"value" :398, "length" : 4, "type" : "num", "divide" : 10}, 
+            "elocalload_tot"     : {"value" :406, "length" : 4, "type" : "num", "divide" : 10}, 
+            "dwexportlimitap"    : {"value" :414, "length" : 4, "type" : "num", "divide" : 10}, 
+            "epsfac"             : {"value" :426, "length" : 2, "type" : "num", "divide" : 100}, 
+            "epsvac1"            : {"value" :430, "length" : 2, "type" : "num", "divide" : 10}, 
+            "epsiac1"            : {"value" :434, "length" : 2, "type" : "num", "divide" : 10}, 
+            "epspac1"            : {"value" :438, "length" : 4, "type" : "num", "divide" : 10}, 
+            "epsvac2"            : {"value" :446, "length" : 2, "type" : "num", "divide" : 10}, 
+            "epsiac2"            : {"value" :450, "length" : 2, "type" : "num", "divide" : 10}, 
+            "epspac2"            : {"value" :454, "length" : 4, "type" : "num", "divide" : 10}, 
+            "epsvac3"            : {"value" :462, "length" : 2, "type" : "num", "divide" : 10}, 
+            "epsiac3"            : {"value" :466, "length" : 2, "type" : "num", "divide" : 10}, 
+            "epspac3"            : {"value" :470, "length" : 4, "type" : "num", "divide" : 10}, 
+            "loadpercent"        : {"value" :478, "length" : 2, "type" : "num", "divide" : 1}, 
+            "pf"                 : {"value" :482, "length" : 2, "type" : "num", "divide" : 10}, 
+            "bmsstatusold"       : {"value" :486, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmsstatus"          : {"value" :490, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmserrorold"        : {"value" :494, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmserror"           : {"value" :498, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmssoc"             : {"value" :502, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmsbatteryvolt"     : {"value" :506, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmsbatterycurr"     : {"value" :510, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmsbatterytemp"     : {"value" :514, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmsmaxcurr"         : {"value" :518, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmsgaugerm"         : {"value" :522, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmsgaugefcc"        : {"value" :526, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmsfw"              : {"value" :530, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmsdeltavolt"       : {"value" :534, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmscyclecnt"        : {"value" :538, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmssoh"             : {"value" :542, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmsconstantvolt"    : {"value" :546, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmswarninfoold"     : {"value" :550, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmswarninfo"        : {"value" :554, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmsgaugeiccurr"     : {"value" :558, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmsmcuversion"      : {"value" :562, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmsgaugeversion"    : {"value" :566, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmswgaugefrversionl": {"value" :570, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmswgaugefrversionh": {"value" :574, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmsbmsinfo"         : {"value" :578, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmspackinfo"        : {"value" :582, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmsusingcap"        : {"value" :586, "length" : 2, "type" : "num", "divide" : 1}, 
+            "bmscell1volt"       : {"value" :590, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmscell2volt"       : {"value" :594, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmscell3volt"       : {"value" :598, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmscell4volt"       : {"value" :602, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmscell5volt"       : {"value" :606, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmscell6volt"       : {"value" :610, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmscell7volt"       : {"value" :614, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmscell8volt"       : {"value" :618, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmscell9volt"       : {"value" :622, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmscell10volt"      : {"value" :626, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmscell11volt"      : {"value" :630, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmscell12volt"      : {"value" :634, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmscell13volt"      : {"value" :638, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmscell14volt"      : {"value" :642, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmscell15volt"      : {"value" :646, "length" : 2, "type" : "num", "divide" : 100}, 
+            "bmscell16volt"      : {"value" :650, "length" : 2, "type" : "num", "divide" : 100}, 
+            "acchargeenergytodayh": {"value" :654, "length" : 2, "type" : "num", "divide" : 10,"incl" : "no"},                 #deze is een beetjevreemd omdat de high en Low over groepem heen gedefinieerd zijn en uit elkaar liggen
+            "group2start"        : {"value" :658, "length" : 2, "type" : "num","incl" : "no"}, 
+            "group2end"          : {"value" :662, "length" : 2, "type" : "num","incl" : "no"},  
+            "acchargeenergytoday": {"value" :666, "length" : 2, "type" : "num", "divide" : 1},                                 # vooralsnog ervan uitgegaan dat low alleen genoeg is!    
+            "acchargeenergytotal": {"value" :670, "length" : 4, "type" : "num", "divide" : 1},
+            "acchargepower"      : {"value" :678,"length" : 4, "type" : "num", "divide" : 1},
+            "70%_invpoweradjust" : {"value" :686,"length" : 2, "type" : "num", "divide" : 1},
+            "extraacpowertogrid" : {"value" :690, "length" : 4, "type" : "num", "divide" : 1},
+            "eextratoday"        : {"value" :698, "length" : 4, "type" : "num", "divide" : 10},
+            "eextratotal"        : {"value" :704, "length" : 4, "type" : "num", "divide" : 10},
+            "esystemtoday"       : {"value" :712, "length" : 4, "type" : "num", "divide" : 10},
+            "esystemtotal"       : {"value" :720, "length" : 4, "type" : "num", "divide" : 10},
+            "group3start"        : {"value" :1166, "length" : 2, "type" : "num","incl" : "no"}, 
+            "group3end"          : {"value" :1170, "length" : 2, "type" : "num","incl" : "no"},
+            "inverterstatus"     : {"value" :1174, "length" : 2, "type" : "num", "divide" : 1}, 
+            "pacs"               : {"value" :1314, "length" : 4, "type" : "numx", "divide" : 10}, 
+            "fac"                : {"value" :1322, "length" : 2, "type" : "num", "divide" : 100}, 
+            "vac1"               : {"value" :1326, "length" : 2, "type" : "num", "divide" : 10}, 
+            "iac1"               : {"value" :1330, "length" : 2, "type" : "num", "divide" : 10}, 
+            "pac1"               : {"value" :1334, "length" : 4, "type" : "num", "divide" : 10},            
+            "eactoday"           : {"value" :1386, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eactot"             : {"value" :1394, "length" : 4, "type" : "num", "divide" : 10}, 
+            "timetotal"          : {"value" :1402, "length" : 4, "type" : "num", "divide" : 7200}, 
+            "Temp1"              : {"value" :1546, "length" : 2, "type" : "num", "divide" : 10}, 
+            "Temp2"              : {"value" :1550, "length" : 2, "type" : "num", "divide" : 10}, 
+            "Temp3"              : {"value" :1554, "length" : 2, "type" : "num", "divide" : 10}, 
+            "Temp4"              : {"value" :1558, "length" : 2, "type" : "num", "divide" : 10}, 
+            "uwbatvoltdsp"       : {"value" :1562, "length" : 2, "type" : "num", "divide" : 10}, 
+            "pbusvoltage"        : {"value" :1566, "length" : 2, "type" : "num", "divide" : 10}, 
+            "nbusvoltage"        : {"value" :1570, "length" : 2, "type" : "num", "divide" : 10}, 
+            "remotectrlen"       : {"value" :1574, "length" : 2, "type" : "num", "divide" : 1}, 
+            "remotectrlpower"    : {"value" :1578, "length" : 2, "type" : "num", "divide" : 1}, 
+            "extraacpowertogrid" : {"value" :1582, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eextratoday"        : {"value" :1590, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eextratotal"        : {"value" :1598, "length" : 4, "type" : "num", "divide" : 10}, 
+            "esystemtoday"       : {"value" :1606, "length" : 4, "type" : "num", "divide" : 10}, 
+            "esystemtotal"       : {"value" :1614, "length" : 4, "type" : "num", "divide" : 10}, 
+            "eacchargetoday"     : {"value" :1622, "length" : 4, "type" : "num", "divide" : 10},
+            "eacchargetotal"     : {"value" :1630, "length" : 4, "type" : "num", "divide" : 10}, 
+            "acchargepower"      : {"value" :1638, "length" : 4, "type" : "num", "divide" : 10}, 
+            "priority"           : {"value" :1646, "length" : 2, "type" : "num", "divide" : 1}, 
+            "batterytype"        : {"value" :1650, "length" : 2, "type" : "num", "divide" : 1}, 
+            "autoproofreadcmd"   : {"value" :1654, "length" : 2, "type" : "num", "divide" : 1} 
+        } }
+
+        self.recorddict14 = {"T06NNNNXMIN": {
+            "decrypt"           : {"value" :"true"},
+            "pvserial"          : {"value" :76, "length" : 10, "type" : "text", "divide" : 10},
+            "date"              : {"value" :136, "divide" : 10}, 
+            "group1start"       : {"value" :150, "length" : 2, "type" : "num","incl" : "no"}, 
+            "group1end"         : {"value" :154, "length" : 2, "type" : "num","incl" : "no"}, 
+            "pvstatus"          : {"value" : 158,"length" : 2,"type" : "num","divide" : 1},
+            "pvpowerin"         : {"value" : 162,"length" : 4,"type" : "num","divide" : 10},
+            "pv1voltage"        : {"value" : 170,"length" : 2,"type" : "num","divide" : 10},
+            "pv1current"        : {"value" : 174,"length" : 2,"type" : "num","divide" : 10},
+            "pv1watt"           : {"value" : 178,"length" : 4,"type" : "num","divide" : 10},
+            "pv2voltage"        : {"value" : 186,"length" : 2,"type" : "num","divide" : 10},
+            "pv2current"        : {"value" : 190,"length" : 2,"type" : "num","divide" : 10},
+            "pv2watt"           : {"value" : 194,"length" : 4,"type" : "num","divide" : 10},
+            "pv3voltage"        : {"value" : 202,"length" : 2,"type" : "num","divide" : 10},
+            "pv3current"        : {"value" : 206,"length" : 2,"type" : "num","divide" : 10},
+            "pv3watt"           : {"value" : 210,"length" : 4,"type" : "num","divide" : 10},
+            "pv4voltage"        : {"value" : 218,"length" : 2,"type" : "num","divide" : 10},
+            "pv4current"        : {"value" : 222,"length" : 2,"type" : "num","divide" : 10},
+            "pv4watt"           : {"value" : 226,"length" : 4,"type" : "num","divide" : 10},
+            "pvpowerout"        : {"value" : 250,"length" : 4,"type" : "num","divide" : 10},
+            "pvfrequentie"      : {"value" : 258,"length" : 2,"type" : "num","divide" : 100},
+            "pvgridvoltage"     : {"value" : 262,"length" : 2,"type" : "num","divide" : 10},
+            "pvgridcurrent"     : {"value" : 266,"length" : 2,"type" : "num","divide" : 10},
+            "pvgridpower"       : {"value" : 270,"length" : 4,"type" : "num","divide" : 10},
+            "pvgridvoltage2"    : {"value" : 278,"length" : 2,"type" : "num","divide" : 10},
+            "pvgridcurrent2"    : {"value" : 282,"length" : 2,"type" : "num","divide" : 10},
+            "pvgridpower2"      : {"value" : 286,"length" : 4,"type" : "num","divide" : 10},
+            "pvgridvoltage3"    : {"value" : 294,"length" : 2,"type" : "num","divide" : 10},
+            "pvgridcurrent3"    : {"value" : 298,"length" : 2,"type" : "num","divide" : 10},
+            "pvgridpower3"      : {"value" : 302,"length" : 4,"type" : "num","divide" : 10},
+            "vacrs"            : {"value" : 310,"length" : 2,"type" : "num","divide" : 10},
+            "vacst"            : {"value" : 314,"length" : 2,"type" : "num","divide" : 10},
+            "vactr"            : {"value" : 318,"length" : 2,"type" : "num","divide" : 10},
+            "ptousertotal"      : {"value" : 322,"length" : 4,"type" : "num","divide" : 10},
+            "ptogridtotal"      : {"value" : 330,"length" : 4,"type" : "num","divide" : 10},
+            "ptoloadtotal"      : {"value" : 338,"length" : 4,"type" : "num","divide" : 10},
+            "totworktime"       : {"value" : 346,"length" : 4,"type" : "num","divide" : 7200},
+            "pvenergytoday"     : {"value" : 354,"length" : 4,"type" : "num","divide" : 10},
+            "pvenergytotal"     : {"value" : 362,"length" : 4,"type" : "num","divide" : 10},
+            "epvtotal"          : {"value" : 370,"length" : 4,"type" : "num","divide" : 10},
+            "epv1today"         : {"value" : 378,"length" : 4,"type" : "num","divide" : 10},
+            "epv1total"         : {"value" : 386,"length" : 4,"type" : "num","divide" : 10},
+            "epv2today"         : {"value" : 394,"length" : 4,"type" : "num","divide" : 10},
+            "epv2total"         : {"value" : 402,"length" : 4,"type" : "num","divide" : 10},
+            "epv3today"         : {"value" : 410,"length" : 4,"type" : "num","divide" : 10},
+            "epv3total"         : {"value" : 418,"length" : 4,"type" : "num","divide" : 10},
+            "etousertoday"      : {"value" : 426,"length" : 4,"type" : "num","divide" : 10},
+            "etousertotal"      : {"value" : 434,"length" : 4,"type" : "num","divide" : 10},
+            "etogridtoday"      : {"value" : 442,"length" : 4,"type" : "num","divide" : 10},
+            "etogridtotal"      : {"value" : 450,"length" : 4,"type" : "num","divide" : 10},
+            "eloadtoday"        : {"value" : 458,"length" : 4,"type" : "num","divide" : 10},
+            "eloadtotal"        : {"value" : 466,"length" : 4,"type" : "num","divide" : 10},
+            "deratingmode"      : {"value" : 502,"length" : 2,"type" : "num","divide" : 1},
+            "iso"               : {"value" : 506,"length" : 2,"type" : "num","divide" : 1},
+            "dcir"              : {"value" : 510,"length" : 2,"type" : "num","divide" : 10},
+            "dcis"              : {"value" : 514,"length" : 2,"type" : "num","divide" : 10},
+            "dcit"              : {"value" : 518,"length" : 2,"type" : "num","divide" : 10},
+            "gfci"              : {"value" : 522,"length" : 4,"type" : "num","divide" : 1},
+            "pvtemperature"     : {"value" : 530,"length" : 2,"type" : "num","divide" : 10},
+            "pvipmtemperature"  : {"value" : 534,"length" : 2,"type" : "num","divide" : 10},
+            "temp3"             : {"value" : 538,"length" : 2,"type" : "num","divide" : 10},
+            "temp4"             : {"value" : 542,"length" : 2,"type" : "num","divide" : 10},
+            "temp5"             : {"value" : 546,"length" : 2,"type" : "num","divide" : 10},
+            "pbusvoltage"       : {"value" : 550,"length" : 2,"type" : "num","divide" : 10},
+            "nbusvoltage"       : {"value" : 554,"length" : 2,"type" : "num","divide" : 10},
+            "ipf"               : {"value" : 558,"length" : 2,"type" : "num","divide" : 1},
+            "realoppercent"     : {"value" : 562,"length" : 2,"type" : "num","divide" : 1},
+            "opfullwatt"        : {"value" : 566,"length" : 4,"type" : "num","divide" : 10},
+            "standbyflag"       : {"value" : 574,"length" : 2,"type" : "num","divide" : 1},
+            "faultcode"         : {"value" : 578,"length" : 2,"type" : "num","divide" : 1},
+            "warningcode"       : {"value" : 582,"length" : 2,"type" : "num","divide" : 1},
+            "systemfaultword0"  : {"value" : 586,"length" : 2,"type" : "num","divide" : 1},
+            "systemfaultword1"  : {"value" : 590,"length" : 2,"type" : "num","divide" : 1},
+            "systemfaultword2"  : {"value" : 594,"length" : 2,"type" : "num","divide" : 1},
+            "systemfaultword3"  : {"value" : 598,"length" : 2,"type" : "num","divide" : 1},
+            "systemfaultword4"  : {"value" : 602,"length" : 2,"type" : "num","divide" : 1},
+            "systemfaultword5"  : {"value" : 606,"length" : 2,"type" : "num","divide" : 1},
+            "systemfaultword6"  : {"value" : 610,"length" : 2,"type" : "num","divide" : 1},
+            "systemfaultword7"  : {"value" : 614,"length" : 2,"type" : "num","divide" : 1},
+            "invstartdelaytime" : {"value" : 618,"length" : 2,"type" : "num","divide" : 1},
+            "bdconoffstate"     : {"value" : 630,"length" : 2,"type" : "num","divide" : 1},
+            "drycontactstate"   : {"value" : 634,"length" : 2,"type" : "num","divide" : 1},
+            "group2start"       : {"value" :658, "length" : 2, "type" : "num","incl" : "no"}, 
+            "group2end"         : {"value" :662, "length" : 2, "type" : "num","incl" : "no"},
+            "edischrtoday"      : {"value" : 666,"length" : 4,"type" : "num","divide" : 10},
+            "edischrtotal"      : {"value" : 674,"length" : 4,"type" : "num","divide" : 10},
+            "echrtoday"         : {"value" : 682,"length" : 4,"type" : "num","divide" : 10},
+            "echrtotal"         : {"value" : 690,"length" : 4,"type" : "num","divide" : 10},
+            "eacchrtoday"       : {"value" : 698,"length" : 4,"type" : "num","divide" : 10},
+            "eacchrtotal"       : {"value" : 706,"length" : 4,"type" : "num","divide" : 10},
+            "priority"          : {"value" : 742,"length" : 2,"type" : "num","divide" : 1},
+            "epsfac"            : {"value" : 746,"length" : 2,"type" : "num","divide" : 100},
+            "epsvac1"           : {"value" : 750,"length" : 2,"type" : "num","divide" : 10},
+            "epsiac1"           : {"value" : 754,"length" : 2,"type" : "num","divide" : 10},
+            "epspac1"           : {"value" : 758,"length" : 4,"type" : "num","divide" : 10},
+            "epsvac2"           : {"value" : 766,"length" : 2,"type" : "num","divide" : 10},
+            "epsiac2"           : {"value" : 770,"length" : 2,"type" : "num","divide" : 10},
+            "epspac2"           : {"value" : 774,"length" : 4,"type" : "num","divide" : 10},
+            "epsvac3"           : {"value" : 782,"length" : 2,"type" : "num","divide" : 10},
+            "epsiac3"           : {"value" : 786,"length" : 2,"type" : "num","divide" : 10},
+            "epspac3"           : {"value" : 790,"length" : 4,"type" : "num","divide" : 10},
+            "epspac"            : {"value" : 798,"length" : 4,"type" : "num","divide" : 10},
+            "loadpercent"       : {"value" : 806,"length" : 2,"type" : "num","divide" : 10},
+            "pf"                : {"value" : 810,"length" : 2,"type" : "num","divide" : 10},
+            "dcv"               : {"value" : 814,"length" : 2,"type" : "num","divide" : 1},
+            "bdc1_sysstatemode" : {"value" : 830,"length" : 2,"type" : "num","divide" : 1},
+            "bdc1_faultcode"    : {"value" : 834,"length" : 2,"type" : "num","divide" : 1},
+            "bdc1_warncode"     : {"value" : 838,"length" : 2,"type" : "num","divide" : 1},
+            "bdc1_vbat"         : {"value" : 842,"length" : 2,"type" : "num","divide" : 100},
+            "bdc1_ibat"         : {"value" : 846,"length" : 2,"type" : "num","divide" : 10},
+            "bdc1_soc"          : {"value" : 850,"length" : 2,"type" : "num","divide" : 1},
+            "bdc1_vbus1"        : {"value" : 854,"length" : 2,"type" : "num","divide" : 10},
+            "bdc1_vbus2"        : {"value" : 858,"length" : 2,"type" : "num","divide" : 10},
+            "bdc1_ibb"          : {"value" : 862,"length" : 2,"type" : "num","divide" : 10},
+            "bdc1_illc"         : {"value" : 866,"length" : 2,"type" : "num","divide" : 10},
+            "bdc1_tempa"        : {"value" : 870,"length" : 2,"type" : "num","divide" : 10},
+            "bdc1_tempb"        : {"value" : 874,"length" : 2,"type" : "num","divide" : 10},
+            "bdc1_pdischr"      : {"value" : 878,"length" : 4,"type" : "num","divide" : 10},
+            "bdc1_pchr"         : {"value" : 886,"length" : 4,"type" : "num","divide" : 10},
+            "bdc1_edischrtotal" : {"value" : 894,"length" : 4,"type" : "num","divide" : 10},
+            "bdc1_echrtotal"    : {"value" : 902,"length" : 4,"type" : "num","divide" : 10},
+            "bdc1_flag"          : {"value" : 914,"length" : 2,"type" : "num","divide" : 1},
+            "bdc2_sysstatemode" : {"value" : 922,"length" : 2,"type" : "num","divide" : 1},
+            "bdc2_faultcode"    : {"value" : 926,"length" : 2,"type" : "num","divide" : 1},
+            "bdc2_warncode"     : {"value" : 930,"length" : 2,"type" : "num","divide" : 1},
+            "bdc2_vbat"         : {"value" : 934,"length" : 2,"type" : "num","divide" : 100},
+            "bdc2_ibat"         : {"value" : 938,"length" : 2,"type" : "num","divide" : 10},
+            "bdc2_soc"          : {"value" : 942,"length" : 2,"type" : "num","divide" : 1},
+            "bdc2_vbus1"        : {"value" : 946,"length" : 2,"type" : "num","divide" : 10},
+            "bdc2_vbus2"        : {"value" : 950,"length" : 2,"type" : "num","divide" : 10},
+            "bdc2_ibb"          : {"value" : 954,"length" : 2,"type" : "num","divide" : 10},
+            "bdc2_illc"         : {"value" : 958,"length" : 2,"type" : "num","divide" : 10},
+            "bdc2_tempa"        : {"value" : 962,"length" : 2,"type" : "num","divide" : 10},
+            "bdc2_tempb"        : {"value" : 966,"length" : 2,"type" : "num","divide" : 10},
+            "bdc2_pdischr"      : {"value" : 970,"length" : 4,"type" : "num","divide" : 10},
+            "bdc2_pchr"         : {"value" : 978,"length" : 4,"type" : "num","divide" : 10},
+            "bdc2_edischrtotal" : {"value" : 986,"length" : 4,"type" : "num","divide" : 10},
+            "bdc2_echrtotal"    : {"value" : 994,"length" : 4,"type" : "num","divide" : 10},
+            "bdc2_flag"          : {"value" : 1006,"length" : 4,"type" : "num","divide" : 1},
+            "bms_status"         : {"value" : 1014,"length" : 2,"type" : "num","divide" : 1},
+            "bms_error"          : {"value" : 1018,"length" : 2,"type" : "num","divide" : 1},
+            "bms_warninfo"       : {"value" : 1022,"length" : 2,"type" : "num","divide" : 1},
+            "bms_soc"            : {"value" : 1026,"length" : 2,"type" : "num","divide" : 1},
+            "bms_batteryvolt"    : {"value" : 1030,"length" : 2,"type" : "num","divide" : 100},
+            "bms_batterycurr"    : {"value" : 1034,"length" : 2,"type" : "numx","divide" : 100},
+            "bms_batterytemp"    : {"value" : 1038,"length" : 2,"type" : "num","divide" : 10},
+            "bms_maxcurr"        : {"value" : 1042,"length" : 2,"type" : "num","divide" : 100},
+            "bms_deltavolt"      : {"value" : 1046,"length" : 2,"type" : "num","divide" : 100},
+            "bms_cyclecnt"       : {"value" : 1050,"length" : 2,"type" : "num","divide" : 1},
+            "bms_soh"            : {"value" : 1054,"length" : 2,"type" : "num","divide" : 1},
+            "bms_constantvolt"   : {"value" : 1058,"length" : 2,"type" : "num","divide" : 100},
+            "bms_bms_info"        : {"value" : 1062,"length" : 2,"type" : "num","divide" : 1},
+            "bms_packinfo"       : {"value" : 1066,"length" : 2,"type" : "num","divide" : 1},
+            "bms_usingcap"       : {"value" : 1070,"length" : 2,"type" : "num","divide" : 1},
+            "bms_fw"             : {"value" : 1074,"length" : 2,"type" : "num","divide" : 1},
+            "bms_mcuversion"     : {"value" : 1078,"length" : 2,"type" : "num","divide" : 1},
+            "bms_commtype"       : {"value" : 1082,"length" : 2,"type" : "num","divide" : 1}
+	      } }
+        
         self.recorddict.update(self.recorddict1)
         self.recorddict.update(self.recorddict2)
         self.recorddict.update(self.recorddict3)
@@ -987,6 +1579,11 @@ class Conf :
         self.recorddict.update(self.recorddict7)  
         self.recorddict.update(self.recorddict8) 
         self.recorddict.update(self.recorddict9)  
+        self.recorddict.update(self.recorddict10)  
+        self.recorddict.update(self.recorddict11)
+        self.recorddict.update(self.recorddict12)                   #T05NNNNXSPH
+        self.recorddict.update(self.recorddict13)                   #T06NNNNXSPA
+        self.recorddict.update(self.recorddict14)                   #T06NNNNXMIN
 
         f = []
         print("\nGrott process json layout files")

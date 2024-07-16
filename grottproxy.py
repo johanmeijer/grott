@@ -1,7 +1,7 @@
 #Grott Growatt monitor :  Proxy 
 #       
-# Updated: 2020-10-04
-# Version 2.2.1d
+# Updated: 2022-08-07
+# Version 2.7.5
 
 import socket
 import select
@@ -15,16 +15,62 @@ import time, json, datetime, codecs
 if sys.platform != 'win32' :
    from signal import signal, SIGPIPE, SIG_DFL
 
-from grottdata import procdata, decrypt
+from grottdata import procdata, decrypt, format_multi_line
 
 #import mqtt                       
 import paho.mqtt.publish as publish
+
+#import libscrc for additional crc checking                        
+# for compat reason (generate a message in the log) also done in proxy _init_
+try:     
+    import libscrc
+except:
+    print("\t **********************************************************************************")
+    print("\t - Grott - libscrc not installed, no CRC checking only record validation on length!") 
+    print("\t **********************************************************************************")
+
 
 # Changing the buffer_size and delay, you can improve the speed and bandwidth.
 # But when buffer get to high or delay go too down, you can broke things
 buffer_size = 4096
 #buffer_size = 65535
 delay = 0.0002
+
+def validate_record(xdata): 
+    # validata data record on length and CRC (for "05" and "06" records)
+    
+    data = bytes.fromhex(xdata)
+    ldata = len(data)
+    len_orgpayload = int.from_bytes(data[4:6],"big")
+    header = "".join("{:02x}".format(n) for n in data[0:8])
+    protocol = header[6:8]
+
+    if protocol in ("05","06"):
+        lcrc = 4
+        crc = int.from_bytes(data[ldata-2:ldata],"big")
+    else: 
+        lcrc = 0
+
+    len_realpayload = (ldata*2 - 12 -lcrc) / 2
+
+    if protocol != "02" :
+                
+        try: 
+            crc_calc = libscrc.modbus(data[0:ldata-2])
+        except: 
+            #liscrc is not installed yet
+            #print("\t - Grott - Validate datarecord - libscrc not installed, only validation on record length")  
+            crc_calc = crc = 0 
+
+    if len_realpayload == len_orgpayload :
+        returncc = 0
+        if protocol != "02" and crc != crc_calc:     
+            returncc = 8    
+    else : 
+        returncc = 8
+
+    return(returncc)
+
 
 class Forward:
     def __init__(self):
@@ -35,7 +81,8 @@ class Forward:
             self.forward.connect((host, port))
             return self.forward
         except Exception as e:
-            print(e)
+            print("\t - Grott - grottproxy forward error : ", e) 
+            #print(e)
             return False  
 
 class Proxy:
@@ -44,6 +91,16 @@ class Proxy:
 
     def __init__(self, conf):
         print("\nGrott proxy mode started")
+
+        # for compatibility reasons test if libscrc is installed and send error message
+        # if not installed processing wil continue but records will only be validated on length and not on crc. 
+        try:     
+            import libscrc
+        except:
+            print("\t **********************************************************************************")
+            print("\t - Grott - libscrc not installed, no CRC checking only record validation on length!") 
+            print("\t **********************************************************************************")
+
         ## to resolve errno 32: broken pipe issue (Linux only)
         if sys.platform != 'win32':
             signal(SIGPIPE, SIG_DFL) 
@@ -77,7 +134,9 @@ class Proxy:
                 try: 
                     self.data, self.addr = self.s.recvfrom(buffer_size)
                 except: 
-                    if conf.verbose : print("\t - Grott connection error")    
+                    if conf.verbose : print("\t - Grott connection error") 
+                    self.on_close(conf)   
+                    break
                 if len(self.data) == 0:
                     self.on_close(conf)
                     break
@@ -124,10 +183,21 @@ class Proxy:
         print("")
         print("\t - " + "Growatt packet received:") 
         print("\t\t ", self.channel[self.s])
+        
+        #test if record is not corrupted
+        vdata = "".join("{:02x}".format(n) for n in data)
+        validatecc = validate_record(vdata)
+        if validatecc != 0 : 
+            print(f"\t - Grott - grottproxy - Invalid data record received, processing stopped for this record")
+            #Create response if needed? 
+            #self.send_queuereg[qname].put(response)
+            return  
+
         # FILTER!!!!!!!! Detect if configure data is sent!
         header = "".join("{:02x}".format(n) for n in data[0:8])
         if conf.blockcmd : 
             #standard everything is blocked!
+            print("\t - " + "Growatt command block checking started") 
             blockflag = True 
             #partly block configure Shine commands                   
             if header[14:16] == "18" :         
@@ -156,6 +226,9 @@ class Proxy:
 
             if blockflag : 
                 print("\t - Grott: Record blocked: ", header[12:16])
+                if header[6:8] == "05" or header[6:8] == "06" : blockeddata = decrypt(data) 
+                else :  blockeddata = data
+                print(format_multi_line("\t\t ",blockeddata))
                 return
 
         # send data to destination
