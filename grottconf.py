@@ -1,6 +1,6 @@
 #
 # grottconf  process command parameter and settings file
-# Updated: 2023-12-04 
+# Updated: 2024-07-22 
 # Version 2.8.3
 
 import configparser, sys, argparse, os, json, io
@@ -36,7 +36,8 @@ class Conf :
         self.tmzone = "local"                                                                       #set timezone (at this moment only used for influxdb)                
 
         #Growatt server default 
-        self.growattip = "47.91.67.66"
+        #self.growattip = "47.91.67.66"
+        self.growattip = "server.growatt.com"
         self.growattport = 5279
 
         #MQTT default

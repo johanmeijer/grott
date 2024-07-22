@@ -255,3 +255,6 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - Changed bms_batterycurr in MIN layout to numx (issue #362)
 - Add gpvuplimit environmental for limiting pvoutpy writes in docker container (#346), be ware need new docker image 2.8.3 (will be created in next gen)
 - add invfanspeed to SPF layout 
+2.8.3 (20240722)
+- add T06NNNNXMOD MOd type inverter layout to examples directory
+- change default growatt IP address to server.growatt.com URL, hopefully this will prevent growatt from changing IP address and the need for changing IP address in grott.ini
