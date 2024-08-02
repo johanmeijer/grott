@@ -1,7 +1,7 @@
 
 ## The Growatt Inverter Monitor 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=RQFS46F9JTESQ&item_name=Grott+&currency_code=EUR)
-
+#### Before using grott please read disclaimer: https://github.com/johanmeijer/grott/wiki/@disclaimer,-statement-of-use-and-limitations
 ### !!!! This is Beta version (2.8.x) 
 ### Be aware no changes (only hyper fixes) will be commited to 2.8.x anymore. A new version (for now 2.9.x)  is being worked on.   
 
