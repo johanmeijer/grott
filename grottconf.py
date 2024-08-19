@@ -7,10 +7,11 @@ import configparser, sys, argparse, os, json, io
 import ipaddress
 from os import walk
 from grottdata import format_multi_line, str2bool
+from typing import Optional
 
 class Conf : 
 
-    def __init__(self, vrm): 
+    def __init__(self, vrm, cmdargs=None): 
         self.verrel = vrm
 
         #Set default variables 
@@ -52,6 +53,7 @@ class Conf :
         self.mqttuser = "grott"
         self.mqttpsw = "growatt2020"
         self.mqttretain = False
+        self.mqttapplydividers = False                                                               # Apply dividers defined in the Record Layouts before sending data out to MQTT    
 
         #pvoutput default 
         self.pvoutput = False
@@ -77,6 +79,7 @@ class Conf :
         self.iftoken  = "influx_token"
         self.iforg  = "grottorg"
         self.ifbucket = "grottdb" 
+        self.ifapplydividers = False                                                                  # Apply dividers defined in the Record Layouts before sending data out to InfluxDB    
 
         #extension 
         self.extension = False
@@ -89,7 +92,7 @@ class Conf :
         #Set parm's 
         #prio: 1.Command line parms, 2.env. variables, 3.config file 4.program default
         #process command settings that set processing values (verbose, trace, output, config, nomqtt)
-        self.parserinit() 
+        self.parserinit(cmdargs) 
         
         #Process config file
         self.procconf()
@@ -217,6 +220,7 @@ class Conf :
         print("\tgrottip              \t",self.grottip)
         print("\tgrottport            \t",self.grottport)
         #print("\tSN           \t",self.SN)
+
         print("_MQTT:")
         print("\tnomqtt               \t",self.nomqtt)
         print("\tmqttip:              \t",self.mqttip)
@@ -229,6 +233,8 @@ class Conf :
         print("\tmqtttauth:           \t",self.mqttauth)
         print("\tmqttuser:            \t",self.mqttuser)
         print("\tmqttpsw:             \t","**secret**")                       #scramble output if tested!
+        print("\mqttapplydividers:     \t",self.mqttapplydividers)
+
         #print("\tmqttpsw:     \t",self.mqttpsw)                       #scramble output if tested!
         print("_Growatt server:")
         print("\tgrowattip:           \t",self.growattip)
@@ -245,6 +251,7 @@ class Conf :
         else: 
             print("\tpvsystemid:          \t",self.pvsystemid)
             print("\tpvinvertid:          \t",self.pvinverterid)
+        
         print("_Influxdb:")
         print("\tinflux:             \t",self.influx)
         print("\tinflux2:            \t",self.influx2)
@@ -257,7 +264,8 @@ class Conf :
         print("\torganization:       \t",self.iforg ) 
         print("\tbucket:             \t",self.ifbucket) 
         print("\ttoken:              \t","**secret**")
-        #print("\ttoken:       \t",self.iftoken)  
+        #print("\ttoken:       \t",self.iftoken)
+        print("\ifapplydividers:      \t",self.ifapplydividers)
         
         print("_Extension:")
         print("\textension:          \t",self.extension) 
@@ -267,7 +275,7 @@ class Conf :
         print()
 
 
-    def parserinit(self): 
+    def parserinit(self, cmdargs): 
         #Process commandline parameters init (read args, process c,v,o settings)
         parser = argparse.ArgumentParser(prog='grott')
         parser.add_argument('-v','--verbose',help="set verbose",action='store_true')
@@ -283,7 +291,7 @@ class Conf :
         parser.add_argument('-n','--noipf',help="Allow IP change from growatt website",action='store_true')
         
       
-        args, unknown = parser.parse_known_args()
+        args, unknown = parser.parse_known_args(args=cmdargs)
 
         if (args.c != None) : self.cfgfile=args.c
         #if (args.o != None) : sys.stdout = open(args.o, 'wb',0) changed to support unbuffered output in windows !!!
@@ -388,6 +396,7 @@ class Conf :
         if config.has_option("MQTT","auth"): self.mqttauth = config.getboolean("MQTT","auth")
         if config.has_option("MQTT","user"): self.mqttuser = config.get("MQTT","user")
         if config.has_option("MQTT","password"): self.mqttpsw = config.get("MQTT","password")
+        if config.has_option("MQTT","applydividers"): self.mqttapplydividers = config.getboolean("MQTT","applydividers")
         if config.has_option("PVOutput","pvoutput"): self.pvoutput = config.get("PVOutput","pvoutput")
         if config.has_option("PVOutput","pvtemp"): self.pvtemp = config.get("PVOutput","pvtemp")
         if config.has_option("PVOutput","pvdisv1"): self.pvdisv1 = config.get("PVOutput","pvdisv1")
@@ -412,6 +421,7 @@ class Conf :
         if config.has_option("influx","org"): self.iforg = config.get("influx","org")
         if config.has_option("influx","bucket"): self.ifbucket = config.get("influx","bucket")
         if config.has_option("influx","token"): self.iftoken = config.get("influx","token")
+        if config.has_option("influx","applydividers"): self.ifapplydividers = config.getboolean("influx","applydividers")
         #extensionINFLUX
         if config.has_option("extension","extension"): self.extension = config.get("extension","extension") 
         if config.has_option("extension","extname"): self.extname = config.get("extension","extname") 
@@ -1604,3 +1614,19 @@ class Conf :
             if self.verbose : print(key, " : ")
             if self.verbose : print(self.recorddict[key])  
 
+    # Get the key divider, if applicable
+    def get_recdivider(self, key) -> Optional[int]: 
+        
+        # No divider if the key doesn't exist
+        if not key in self.recorddict[self.layout]:
+            return None
+        
+        # No divider if the key is not numeric
+        if not ('type' in self.recorddict[self.layout][key] and self.recorddict[self.layout][key]['type'] in ['num', 'numx']):
+            return None
+
+        # No divider if there is no divide key
+        if not 'divide' in self.recorddict[self.layout][key]:
+            return None
+
+        return self.recorddict[self.layout][key]['divide']

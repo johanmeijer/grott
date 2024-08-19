@@ -41,12 +41,7 @@ The purpose of Grott is to read, parse and forward the *raw metrics as they are 
 * Added option to add inverter serial to MQTT topic (thanks to @ebosveld)
   - Add mqttinverterintopic = True to MQTT section of grott.ini or use  qmqttinverterintopic = "True" environmental (e.g. docker).
 
-### planned in Version 2.7.x (not commited yet)
-* Auto detect for SPF, SPH, TL3 inverters
-* Improved / configurable PVOutput support 
-* MQTT Retain message support      
-* Enhanced record layout for SPH 
-* tbd
+### For all changes see: https://github.com/johanmeijer/grott/blob/Master-(2.7.8)/Version_history.txt
 
 ### Two modes of metric data retrieval
 Grott can intercept the inverter metrics in two distinct modes:
