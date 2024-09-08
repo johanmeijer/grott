@@ -1,18 +1,23 @@
 
 ## The Growatt Inverter Monitor 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=RQFS46F9JTESQ&item_name=Grott+&currency_code=EUR)
-
-### !!!! This is Beta version (2.8.x) 
+#### Before using grott please read disclaimer: https://github.com/johanmeijer/grott/wiki/@disclaimer,-statement-of-use-and-limitations
+### From 17-05-2024 this version (2.8.3) is the new master 
 
 Growatt inverters can send performance and status metrics (log data) to the Growatt company servers. The inverters rely on either a ShineWIFI module or a ShineLAN box to relay the data to Growatt. The metrics stored on the Growatt servers then can be viewed on the Growatt website or using the ShinePhone mobile app. 
 
 The purpose of Grott is to read, parse and forward the *raw metrics as they are sent* to Growatt servers. This means other applications can consume the raw Growatt metrics without relying on the Growatt API and servers and without delay. 
 
-### Please see: https://github.com/johanmeijer/grott/wiki/@Statement-of-use-and-limitations before using Grott.
+Grottserver (under development) is emulating the Growatt server so you do not need a connection with the growatt servers anymore. Grottserver provides also an API interface to read and write Inverter and Datalogger registers.
+For more information see: https://github.com/johanmeijer/grott/wiki/Grottserver. 
+
+### Before using Grott please see: https://github.com/johanmeijer/grott/wiki/@Statement-of-use-and-limitations 
+### First time users please start with: https://github.com/johanmeijer/grott/wiki/@-First-time-installation
 
 ### New in Version 2.8
 * Added first SPA support (2.8.1)
 * Added first MIN support (2.8.2)
+* For all changes see Version_history file (https://github.com/johanmeijer/grott/blob/2.8.3/Version_history.txt)
 
 ### New in Version 2.7  
 * Added first beta of **grottserver** to act as destination for inverter/datalogger data (remove need to cummunicate with internet).
