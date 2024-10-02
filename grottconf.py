@@ -1430,7 +1430,7 @@ class Conf :
             "pv4voltage"        : {"value" : 218,"length" : 2,"type" : "num","divide" : 10},
             "pv4current"        : {"value" : 222,"length" : 2,"type" : "num","divide" : 10},
             "pv4watt"           : {"value" : 226,"length" : 4,"type" : "num","divide" : 10},
-            "pvpowerout"        : {"value" : 250,"length" : 4,"type" : "num","divide" : 10},
+            "pvpowerout"        : {"value" : 250,"length" : 4,"type" : "numx","divide" : 10},
             "pvfrequentie"      : {"value" : 258,"length" : 2,"type" : "num","divide" : 100},
             "pvgridvoltage"     : {"value" : 262,"length" : 2,"type" : "num","divide" : 10},
             "pvgridcurrent"     : {"value" : 266,"length" : 2,"type" : "num","divide" : 10},
