@@ -198,15 +198,19 @@ def procdata(conf,data):
                     # Update the conf.layout like done earlier
                     conf.layout = layout
 
+        layout_exists = layout in conf.recorddict
+
         if conf.verbose: 
            print("\t - " + 'Growatt new layout processing')
            print("\t\t - " + "decrypt       : ",conf.decrypt)
            print("\t\t - " + "offset        : ", conf.offset)
            print("\t\t - " + "record layout : ", layout)
+           print("\t\t - " + "layout exists : ", layout_exists)
            print()
 
-        
-        
+        if not layout_exists:
+            return  # No valid layout found, no further processing
+
         try:
             #v270 try if logstart and log fields are defined, if yes prepare log fields 
             logstart = conf.recorddict[layout]["logstart"]["value"] 
