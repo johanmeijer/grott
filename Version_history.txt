@@ -258,3 +258,5 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 2.8.3 (20240722)
 - add T06NNNNXMOD MOd type inverter layout to examples directory
 - change default growatt IP address to server.growatt.com URL, hopefully this will prevent growatt from changing IP address and the need for changing IP address in grott.ini
+2.8.3 (20241022)
+- Additional debug info showing data record for invalid datarecord

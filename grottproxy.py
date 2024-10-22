@@ -1,7 +1,7 @@
 #Grott Growatt monitor :  Proxy 
 #       
-# Updated: 2022-08-07
-# Version 2.7.5
+# Updated: 2024-10-22
+# Version 2.8.3_241022
 
 import socket
 import select
@@ -189,6 +189,7 @@ class Proxy:
         validatecc = validate_record(vdata)
         if validatecc != 0 : 
             print(f"\t - Grott - grottproxy - Invalid data record received, processing stopped for this record")
+            if conf.verbose : print(format_multi_line("\t\t ",data))
             #Create response if needed? 
             #self.send_queuereg[qname].put(response)
             return  
