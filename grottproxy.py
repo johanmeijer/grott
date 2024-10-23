@@ -1,7 +1,7 @@
 #Grott Growatt monitor :  Proxy 
 #       
-# Updated: 2024-10-22
-# Version 2.8.3_241022
+# Updated: 2024-10-23
+# Version 2.8.3_241023
 
 import socket
 import select
@@ -131,17 +131,52 @@ class Proxy:
                 if self.s == self.server:
                     self.on_accept(conf)
                     break
-                try: 
-                    self.data, self.addr = self.s.recvfrom(buffer_size)
-                except: 
-                    if conf.verbose : print("\t - Grott connection error") 
-                    self.on_close(conf)   
+                try:
+                    #read buffer until empty!
+                    msgbuffer = b''
+                    while True:
+                        part = self.s.recv(buffer_size)
+                        msgbuffer += part
+                        if len(part) < buffer_size:
+                        # either 0 or end of data
+                            break
+                    #self.data, self.addr = self.s.recvfrom(buffer_size)
+                except Exception as e:
+                    print("Connection error: %s",e)
+                    if conf.verbose: print("Socket info:\n\t %s",self.s)
+                    self.on_close()
                     break
-                if len(self.data) == 0:
-                    self.on_close(conf)
+                if len(msgbuffer) == 0:
+                    self.on_close()
                     break
                 else:
-                    self.on_recv(conf)
+                    #split buffer if contain multiple records
+                    self.header = "".join("{:02x}".format(n) for n in msgbuffer[0:8])
+                    self.protocol = self.header[6:8]
+                    self.datalength = int(self.header[8:12],16)
+                    #reclength = int.from_bytes(msgbuffer[4:6],"big")
+                    buflength = len(msgbuffer)
+                    #total reclength is datarec + buffer (+ crc)
+                    if self.protocol in ("05","06"):
+                        reclength = self.datalength + 8
+                    else :
+                        reclength = self.datalength + 6
+                    while reclength <= buflength:
+                        if conf.verbose: print("Received buffer:\n{0} \n".format(format_multi_line("\t",msgbuffer,120)))
+                        self.data = msgbuffer[0:reclength]
+                        self.on_recv(conf)
+                        if buflength > reclength :
+                            if conf.verbose: print("handle_readble_socket, Multiple records in buffer, process next message in buffer")
+                            msgbuffer = msgbuffer[reclength:buflength]
+                            self.header = "".join("{:02x}".format(n) for n in msgbuffer[0:8])
+                            self.protocol =self.header[6:8]
+                            self.datalength = int(self.header[8:12],16)
+                            if self.protocol in ("05","06"):
+                                reclength = self.datalength + 8
+                            else :
+                                reclength = self.datalength + 6
+                            buflength = len(msgbuffer)
+                        else: break
 
     def on_accept(self,conf):
         forward = Forward().start(self.forward_to[0], self.forward_to[1])
