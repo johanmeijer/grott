@@ -1,6 +1,6 @@
 #Grott Growatt monitor :  Proxy 
 #       
-# Updated: 2024-10-23
+# Updated: 2024-10-29
 # Version 2.8.3_241023
 
 import socket
@@ -144,10 +144,10 @@ class Proxy:
                 except Exception as e:
                     print("Connection error: %s",e)
                     if conf.verbose: print("Socket info:\n\t %s",self.s)
-                    self.on_close()
+                    self.on_close(conf)
                     break
                 if len(msgbuffer) == 0:
-                    self.on_close()
+                    self.on_close(conf)
                     break
                 else:
                     #split buffer if contain multiple records
