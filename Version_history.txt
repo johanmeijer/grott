@@ -262,3 +262,6 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - Additional debug info showing data record for invalid datarecord
 2.8.3 (20241023)
 - add capability to split stacked records to grottproxy.py
+2.8.3 (20241029)
+- Bugfixes grottproxy.py
+- Add MPPT4 (PV4) values to t06NNNNXTL3.JSON in grott/examples/Record Layout
