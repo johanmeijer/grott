@@ -28,6 +28,13 @@ Available registers per device type:
 
 | Reg  | Name              | Description      | Write | Value   |Unit |Initial| Note                                                               |
 | ---- | ----------------- | ---------------- |-------|---------|-----|-------| -------------------------------------------------------------------| 
+| 45 | Year | 	Inverter time: 4 digit year |W|yyyy|||When writing, the offset from 2000|    
+| 46 | Month | 	Inverter time: month |W|1-12||||    
+| 47 | Day | 	Inverter time: day |W|1-31||||
+| 48 | Hour | 	Inverter time: hour |W|0-23||||
+| 49 | Minute | 	Inverter time: minute |W|0-59||||
+| 60 | Second | 	Inverter time: second |W|0-59||||
+
 
 ### Current Devices 
 Available registers per device type: 
