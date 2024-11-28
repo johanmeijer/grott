@@ -33,7 +33,7 @@ Available registers per device type:
 | 47 | Day | 	Inverter time: day |W|1-31||||
 | 48 | Hour | 	Inverter time: hour |W|0-23||||
 | 49 | Minute | 	Inverter time: minute |W|0-59||||
-| 60 | Second | 	Inverter time: second |W|0-59||||
+| 50 | Second | 	Inverter time: second |W|0-59||||
 
 
 ### Current Devices 
