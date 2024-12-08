@@ -1,63 +1,63 @@
-Version history 
+Version history
 #Done in 1.0.4
-#       Clean up coding 
-#       Test with real data 
-#       implemetd mqtt 
+#       Clean up coding
+#       Test with real data
+#       implemetd mqtt
 #       implemented scrambled vs nonscrambled (needs to be tested in with old inverter)
-#       Growatt old wifi release support (needs to be tested with old inverter)           
-#       Read config file and commandline parms 
-#       Verbose vs non verbose 
-#       Enable running as a services and automatic startup after reboot 
+#       Growatt old wifi release support (needs to be tested with old inverter)
+#       Read config file and commandline parms
+#       Verbose vs non verbose
+#       Enable running as a services and automatic startup after reboot
 #       Code review by peer
 #       Added in github: https://github.com/johanmeijer/grott
 #       Document and add service example to git
 #
 #Done   in 1.0.5
-#V      Changed some verbose print output to trace ouput to keep verbose messages clean and lean 
+#V      Changed some verbose print output to trace ouput to keep verbose messages clean and lean
 #V      Add more relevant values to JSON message
 #V      Make print data unbufferd to see messages direct in journal when running as as service (python -u parm added in grott.service )
 #V      MQTT error handling improved
-#V      Process and sent values only if PVstatus is 0 or 1. Detected unexpected values while pvstatus was 257. This an quick fix. Has to look for realroot cause reason (probably not a monitor record) 
+#V      Process and sent values only if PVstatus is 0 or 1. Detected unexpected values while pvstatus was 257. This an quick fix. Has to look for realroot cause reason (probably not a monitor record)
 #V      included messages for problem detection / solving of unexpected PVSTATUS = 257 issue
 #
 #Done   in 1.0.6
-#       Resolved problem with specifing offset in .ini. Change in record by growatt (Since 23 March 2020) now need a offset of 26! 
+#       Resolved problem with specifing offset in .ini. Change in record by growatt (Since 23 March 2020) now need a offset of 26!
 #       Specify valueoffset = 26 and compat = True in ini file!
 #Done   in 1.0.7
 #       Resolved problem with unecrypted records
 #       added authentication (user / password) for MQTT, specify in MQTT section of ini auth = False (default ) or True and user = "xxxxxxx" (grott : default) password = "xxxxx" (default : growatt2020)
 #Done   in 1.0.8
 #       Really solved problem with unecrypted records
-#Done   in 1.0.9 
+#Done   in 1.0.9
 #       Fix json message for pv1watt, add pv1voltage, pv2voltage, pv1current, pv2current, pvtemp;
-#Done   in 1.1.0 
+#Done   in 1.1.0
 #       added pvipmtemperature to the json message (not used in 1500s)
-#Done   in 1.1.1 
-#       Only test version no real changes 
-#Done   in 1.1.2 
+#Done   in 1.1.1
+#       Only test version no real changes
+#Done   in 1.1.2
 #       Change MQTT publish.single keepalive =60 (default), this seem to solve disconnect error (client was always connected, is not the intention with publish.single)
 #Done   in 2.0.0
-#       Enable proxy functionality 
+#       Enable proxy functionality
 #       Streamline code
 #Done   in 2.0.1
-#       Repair mode setting in .ini 
+#       Repair mode setting in .ini
 #Done   in 2.0.2
-#       Repair Handling Growatt server IP address in ini file 
+#       Repair Handling Growatt server IP address in ini file
 #Done   in 2.0.3
 #       Repair  -c [config file] parameter processing
-#2.0.4	Not published 
+#2.0.4	Not published
 #	    Preperation for Docker support
-#2.1.0 	
+#2.1.0
 #   Automatic Protocol detection (first step)
-#	Initial Support for shinelink lan box  
+#	Initial Support for shinelink lan box
 #	Improve unscramble routine (preperation for server mode)
-#2.1.1 
-#	Enhanced docker support (more startup parms, env variable support 
+#2.1.1
+#	Enhanced docker support (more startup parms, env variable support
 #   Improve / repair automatic protocol detection
 #   enable dynamic protocol layout (override existing layout, override pre-defined values)
-#   almost all .ini keywords available as env. variables start (see wiki for more details 
-2.1.2 
-#	Direct pvoutput.org support 
+#   almost all .ini keywords available as env. variables start (see wiki for more details
+2.1.2
+#	Direct pvoutput.org support
 #       in ini file
 #           in [mqtt]       mqtt = yes (default) or no (no mqtt processing)
 #           in [pvoutput]   pvoutput = no (default) or yes (send to pvoutput)
@@ -68,24 +68,24 @@ Version history
 #                           gpvapikey
 #                           gpvsystemid
 #       new grott command parm: -p (enables transmit pvoutput )
-2.1.3 (Not published, internal test only) 
-#	Changed automatic protocol conversion for wifi-x, growatt TL-X inverters 
-#   If available get date/time from invertor data record (prohibit wrong time if buffered data is sent after reconnect).  
-#        If not available server datetime will be used 
-#   First step to filter command comming from Growatt (to prevent unwanted remote changes or control of inverter and hacking). 
+2.1.3 (Not published, internal test only)
+#	Changed automatic protocol conversion for wifi-x, growatt TL-X inverters
+#   If available get date/time from invertor data record (prohibit wrong time if buffered data is sent after reconnect).
+#        If not available server datetime will be used
+#   First step to filter command comming from Growatt (to prevent unwanted remote changes or control of inverter and hacking).
 #       Be aware data will still be sent to growatt!!
-2.2.0 
+2.2.0
 #   (Only published as docker container for tests)
-#	Enhanced automatic protocol conversion (also allow sending saved records) 
+#	Enhanced automatic protocol conversion (also allow sending saved records)
 #   Create command filter from Growatt server (to prevent unwanted remote changes or control of inverter and hacking): blockcmd = True in .ini or -b/--blockcmd at startup
 #   Allow change IP address from Growatt server  if wanted for testing/changing (use only temporary!) noipf = True in .ini or -n/--noipf at startup
-#   Created and published docker images (see dockerhub: https://hub.docker.com/u/ledidobe) 
-#   Added json key "buffered" to MQTT message. If "buffered": "no", the record is actual,  
-#     if  "buffered":"yes" the record is send from the buffer in the inverter (saved) and created in the past (advise: use date/time in record, not actual date/time). 
-2.2.1 
+#   Created and published docker images (see dockerhub: https://hub.docker.com/u/ledidobe)
+#   Added json key "buffered" to MQTT message. If "buffered": "no", the record is actual,
+#     if  "buffered":"yes" the record is send from the buffer in the inverter (saved) and created in the past (advise: use date/time in record, not actual date/time).
+2.2.1
 # Some minor (cosmetic) improvements on 2.2.0
 # Show inverter id = automatic if not specified in .ini
-# Show Grott ip address as default if not specified 
+# Show Grott ip address as default if not specified
 # Show IP and Port messages during proxy startup
 2.2.1c
 # Minor cosmetic and stability changes
@@ -93,27 +93,27 @@ Version history
 # repair issue with automatic protocol detection
 2.2.2
 #Added support for MIN 36000-TL XE / With ShineLan
-2.2.3 
+2.2.3
 added additional test for date-time validation in data record the solve time issues with TL3-s inverter (issue 22)
 added time = auto/server parameter in .ini and gtime = auto server environment variable to disable time retrieval form data record (server), default is auto: grott decides which time is used (data record if vald otherwise Server)
 sample grott.ini sample .ini file to examples directory (issue 21) to make it easier to retrieve grott from github (no .ini overwrites anymore)
 2.2.4
 Data from buffer will set with the data from the record (it does not make sense to send historical data with actual server time). If the data/time does not have the right format the data will not be sent to MQTT and PVOutput
 New parameter sendbuf = True / False (default True) to enable / disable sending historical data. Environmental variable: gsendbuf = True/False
-fixed json time error when running in compat = True mode 
-added data layout for T020404 record 
-fixed decryp definition problem in external data layout jso files. 
+fixed json time error when running in compat = True mode
+added data layout for T020404 record
+fixed decryp definition problem in external data layout jso files.
 2.2.4a
 processing for t055104 data record added
-remove requirment for distutils (for compatibility reason) 
+remove requirment for distutils (for compatibility reason)
 2.2.5
-Simplified data processing record allow generic definition (T0xNNNNX) so less layout definitions are needed. 
-Enable PVOUTPUT for multiple inverters (specify , pvinverters=1-8, pvsystemidx x=integer). default pvinverters = 1 and pvsystemid = <your systemid>  
-   For comptibility reason specifing pvsystemid = <yoursystemid> is the same as specifing pvsystemid1 = <yoursystemid> 
-2.2.6 
-Changed support for multiple inverters to supported all kind combination of inverters with 1 grott instance, 
-Enable PVOUTPUT for multiple inverters (specify , pvinverters=1-8, pvsystemidx=<pvoutput systemid>, pvinverteridx=<inverterid for pvsystemidx>  x=integer, pv). 
-      default pvinverters = 1 and pvsystemid = <your systemid> 
+Simplified data processing record allow generic definition (T0xNNNNX) so less layout definitions are needed.
+Enable PVOUTPUT for multiple inverters (specify , pvinverters=1-8, pvsystemidx x=integer). default pvinverters = 1 and pvsystemid = <your systemid>
+   For comptibility reason specifing pvsystemid = <yoursystemid> is the same as specifing pvsystemid1 = <yoursystemid>
+2.2.6
+Changed support for multiple inverters to supported all kind combination of inverters with 1 grott instance,
+Enable PVOUTPUT for multiple inverters (specify , pvinverters=1-8, pvsystemidx=<pvoutput systemid>, pvinverteridx=<inverterid for pvsystemidx>  x=integer, pv).
+      default pvinverters = 1 and pvsystemid = <your systemid>
 2.3.0
 Support direct output to Influxdb. See wiki for more information how to enable (resolve issue: #29)
 allow true / false (lower cases) in ini file and environmental variables (resolve issue: #24 )
@@ -121,55 +121,55 @@ allow true / false (lower cases) in ini file and environmental variables (resolv
 Added support for influxdb V2
 2.3.1a
 bugfix:  influx ip address localhost will be translated to 0.0.0.0
-Grott processing will end with an error if influxdb initialisation fails 
+Grott processing will end with an error if influxdb initialisation fails
 2.3.1b
-influxdb organization check at initialization only for information. Grott will not be stopped if organization can not be found. 
+influxdb organization check at initialization only for information. Grott will not be stopped if organization can not be found.
       a token with only read/write permission is not allowed to find organisations (tested with influxdb 2.0.4)
 influxdb write error will stop grott processing (just to be save if organization is not available)
-2.4.0 
-Introduce possibility to add extensions for additional (personalized) processing. 
- see wiki for more information: 
-create extension directory with extension examples  
+2.4.0
+Introduce possibility to add extensions for additional (personalized) processing.
+ see wiki for more information:
+create extension directory with extension examples
 2.4.1
-Fixed date proble with T065150X record layout 
-2.5.0 
-Change data / layout processing. 
-Improved dynamic data processing  and dynamic generation of output depended on keywords specified in record layout makes it possible: 
-      - easy add new keyword / values to process 
-      - rename keywords 
+Fixed date proble with T065150X record layout
+2.5.0
+Change data / layout processing.
+Improved dynamic data processing  and dynamic generation of output depended on keywords specified in record layout makes it possible:
+      - easy add new keyword / values to process
+      - rename keywords
       - external layout definitions with a layout json file still exist and make it now possible for users to easily add / change the data processing
-      - define print (verbose) layout of values 
-2.5.1 
-Cosmetic change (change devide in divide) 
+      - define print (verbose) layout of values
+2.5.1
+Cosmetic change (change devide in divide)
 2.5.2
-Bugfix for specifing IP port definitions in environmentals (gmqttport, qifport, ggrowattport) 
-Add additional checking for IP address definitions in environmentals. 
+Bugfix for specifing IP port definitions in environmentals (gmqttport, qifport, ggrowattport)
+Add additional checking for IP address definitions in environmentals.
 2.5.3
 Allow negative values for pvpowerout (added type = numx to recordlayout) because new Growatt inverter can also publish neagtive values
 Complement bugfix prepared by KBraham (issue / pull request #41)
 2.5.4
 -Change PVIMPTEMP for the extend records (T05nnnnX and t06nnnnX)
--Added new values for to T05nnnnX records. 
+-Added new values for to T05nnnnX records.
 2.6.0 (Never published)
-- Support for SPF (offgrid/Battery) and SPH (on-grid/Battery) inverters. New parameter, invtype= (env variable ginvtype=) to specify the inverttype and 
-  and select new record lauout (e.g. T060104XSPH). Be awere this can also be used to create own record layout (no check on record type, so invtype=test 
-  will search for T060104XTEST). Default invtype=default, this means normal processing without suffix. 
+- Support for SPF (offgrid/Battery) and SPH (on-grid/Battery) inverters. New parameter, invtype= (env variable ginvtype=) to specify the inverttype and
+  and select new record lauout (e.g. T060104XSPH). Be awere this can also be used to create own record layout (no check on record type, so invtype=test
+  will search for T060104XTEST). Default invtype=default, this means normal processing without suffix.
   Standard processing is include in Grott for SPH/SPF
 - Add PVOutput for SPH (add pvenerytoday == eactoday, same offset => double keyword!) !be awere not tested with real inverters yet!
 - Add PVOutput for SPF (add pvenerytoday == epvtoday, pvpowerout=opwatt, pvgridvoltage = outputvolt, same offset => double keywords!) !be awere not tested with real inverters yet!
 - Added keyword incl :  yes/no  to layout value definition. "incl" : "no"  means this value processing is suppresed and will not be shown in
-  verbose output and not sent to MQTT and Influxdb. Added some keyword with incl = no (where commented out in prev versions) 
-  includeall=True (gincludall=True) will process also exluded values. 
+  verbose output and not sent to MQTT and Influxdb. Added some keyword with incl = no (where commented out in prev versions)
+  includeall=True (gincludall=True) will process also exluded values.
 2.6.1
 - Include support for Growatt Smart Meter (connected with inverter)
   Seperate MQTT, Influx records will be created (with datalogserial, smart meter id,  as device/mesurement)
-  Power and tot energy being used from grid are sent to PVOutput.org in 2 additional calls. 
+  Power and tot energy being used from grid are sent to PVOutput.org in 2 additional calls.
 2.6.1a
 - Bugfix SPF record processing
 2.6.1b
 - Filter (ignore) invalid 0120 smart meter record
 2.6.1c
-- Bugfix when sendbuf = False now only buffered records are filtered.  In the pase if specified also non buffered records were filtered. 
+- Bugfix when sendbuf = False now only buffered records are filtered.  In the pase if specified also non buffered records were filtered.
 - Be aware: Buffered records with invalid time (time from server) are also filtered.
 2.6.1d
 -Added statement to [pvoutput] section: pvinverter = 2 [This specifies # inverters to be processed, See also issue #53]
@@ -183,12 +183,12 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 2.7.0
 - SDM630/Raillog connect support
 - SDM630/Inverter connected 3 phases support
-- (a) added support for seperate topic for smart meter 
+- (a) added support for seperate topic for smart meter
     - by default noting changes topic name will be energy/growatt (unless overidden in .ini: topic = <topic> in MQTT section or environmental variable gmqtttopic = "<topic>" )
-    - if mtopic = True in .ini [MQTT section] (or gmqttmtopic = "True" environmental) the smart meter topic will be: energy/meter 
-    - smartmeter topic name can be overridden by: 
-      - mtopicname = <topicname> in .ini [MQTT] 
-      - gmqttmtopicname = "<topicname" environmental 
+    - if mtopic = True in .ini [MQTT section] (or gmqttmtopic = "True" environmental) the smart meter topic will be: energy/meter
+    - smartmeter topic name can be overridden by:
+      - mtopicname = <topicname> in .ini [MQTT]
+      - gmqttmtopicname = "<topicname" environmental
 - (b) fix MQTT message is not sent
 2.7.1
 - Add coding from Pull req #91 (csv export exentsion)
@@ -201,60 +201,67 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
   "csvheader": comma separated string with fields to store, defaults to all available fields
 - Add parameter to enable message retain in MQTT (#84)
   - .ini [MQTT section] retain = True
-  - environmental gmqttretain = "True" (docker: -e gmqttretain = "True") 
+  - environmental gmqttretain = "True" (docker: -e gmqttretain = "True")
 - Add parameter to enable sent inverter temperature as temperature value to pvoutput (not advised PVOutemp should be outside temperature) Issue #60
   - .ini [PVOutput section] pvtemp = True
   - environmental gpvtemp = "True" (docker: -e gpvtemp = "True")
-- Add parameter to disable sending energytoday to pvoutput (disable V1 input). This should show better avarages. Issue: #51  
+- Add parameter to disable sending energytoday to pvoutput (disable V1 input). This should show better avarages. Issue: #51
   - .ini [PVOutput section] pvdisv1 = True
-  - environmental gpvdisv1 = "True" (docker: -e gpvdisv1 = "True")  
+  - environmental gpvdisv1 = "True" (docker: -e gpvdisv1 = "True")
 - Added first beta of grottserver to act as destination for inverter/datalogger data (remove need to cummunicate with internet).
   - see discussions (#98) for more information: https://github.com/johanmeijer/grott/discussions/98
 2.7.2
-- added support for  SPH5000 T05nnnnXSPH data record 
+- added support for  SPH5000 T05nnnnXSPH data record
 2.7.3
 - Added detail data record trace information when command is blocked (blockkcmd = True) to be able to analyse command given from growatt website (inverter / data logger setting).
-- New version of grottserver (0.0.4) which supports datalogger/inverter read/write commands. 
+- New version of grottserver (0.0.4) which supports datalogger/inverter read/write commands.
 - added new version of grottserver (0.0.5) with improve error handling (stability)
 - added new version of grottserver (0.0.6) with additional error handling improvements (stability)
 2.7.4
 - improve error handling at disconnect of inverter (grottproxy)
 - added new version of grottserver (0.0.7) with additional error handling improvements (stability)
 2.7.5
-- Add record validation (length and CRC) to eliminate invalid records, 
+- Add record validation (length and CRC) to eliminate invalid records,
   be aware for full validation (including CRC) python libscrc libary needs to be installed (pip3 install libscrc)
 - new version of grottserver (0.0.9)
-  - Improve error handling (stability)    
+  - Improve error handling (stability)
   - Add record validation (length and CRC) to eliminate invalid records
 2.7.6
 - Improve error handling (stability) for grottserver (0.0.10) (thanks to tabascoz)
-- Option to add inverter serial to MQTT topic (thanks to @ebosveld) 
-  Add  self.mqttinverterintopic = True to MQTT section of grott.ini or use  qmqttinverterintopic = "False" environmental (e.g. docker). 
+- Option to add inverter serial to MQTT topic (thanks to @ebosveld)
+  Add  self.mqttinverterintopic = True to MQTT section of grott.ini or use  qmqttinverterintopic = "False" environmental (e.g. docker).
 2.7.7 (not fully validated/tested and documented yet!)
 - Fixed some message typo's  (thanks to @markt-asf, see PR #190)
-- Add support for setting multiple register (thanks to @markt-asf, see PR #191), 
+- Add support for setting multiple register (thanks to @markt-asf, see PR #191),
 - Add an inverter serial <-> inverter type map thanks to @markt-asf, see PR #169)
   Be aware should only be used if no Energy Meter is used and only with new (updated) inverter/datalogger types! Will be available for everbody in a next release!
 - Add Extension plugin for HA native integration (thanks to @egguy, see PR #203)
 - Do not run the Grott service as root (thanks to phavekes, see PR #195)
   Needs some additional documentation !!!!!!
- - Add PvOutput limit to limit Configurable (via grott.ini) PvOut upload limit (in minutes) (thanks to @githubDante, see PR 202/237) 
+ - Add PvOutput limit to limit Configurable (via grott.ini) PvOut upload limit (in minutes) (thanks to @githubDante, see PR 202/237)
 2.7.8 (promoted to master)
-- grottserver 0.0.12. Fixes to support "older" inverter/datalogger configurations (using "02" protocol). 
+- grottserver 0.0.12. Fixes to support "older" inverter/datalogger configurations (using "02" protocol).
 2.8.0 (New beta, 2.7.8. promoted to master)
-2.8.1 
-- added first SPA support 
+2.8.1
+- added first SPA support
 - increase hardcoded register limit from 1024 to 4096
-2.8.2 
-- added first MIN support 
-- added some field to SPA layout 
+2.8.2
+- added first MIN support
+- added some field to SPA layout
 - fix bug with gverbose environment (see pr: #304)
 - fix bug in devider for batery SOC (see pr: #305)
-2.8.3 
+2.8.3
 - Removed space at the end of epvtotal and epv1today keywords in min layout (#481)
 - Changed bms_batterycurr in MIN layout to numx (issue #362)
 - Add gpvuplimit environmental for limiting pvoutpy writes in docker container (#346), be ware need new docker image 2.8.3 (will be created in next gen)
-- add invfanspeed to SPF layout 
-2.8.3 (20240722)
-- add T06NNNNXMOD MOd type inverter layout to examples directory
-- change default growatt IP address to server.growatt.com URL, hopefully this will prevent growatt from changing IP address and the need for changing IP address in grott.ini
+- Add invfanspeed to SPF layout
+3.0.0
+- Introduction of python logger: Standard info loglevel is enabled. Loglevel debug (start grott with --log debug/-l debug, will also enable verbose + vice versa)
+  Levels supported (Debug, Info, Warning, error, Critical)
+- Changed influxDB init processing : init failure will not stop Grott processing, Grott will continue without influxDB enabled.
+- Removed dependency on libscrc for Grott and Grottserver
+- Improve SDM smart monitor processing (to support more inverter / datalogger combinations)
+- For Grottproxy and grottserver enhance data receive (read multiple buffers until empty, split buffer content when contains multiple records)
+3.0.xxxx (todo)
+- Add MPPT4 (PV4) values to grottconf
+- Check 3.0.0 on changes in 2.8.x!!!!!
