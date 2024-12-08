@@ -12,7 +12,7 @@ What is new in 3.0.0
 * Started with using default python logging capabilities (instead of print log messages)
 * Use more multithreading to enhance performance and create stability
 * new grott.ini in example directory (include settings and documentation)
-* For more information and user experience see (and contribute) discussions https://github.com/johanmeijer/grott/discussions/613
+* For more information and user experiences see (and contribute to) discussions https://github.com/johanmeijer/grott/discussions/613
 ### ---------------------------------------------------------------------------------------------
 
 Growatt inverters can send performance and status metrics (log data) to the Growatt company servers. The inverters rely on either a ShineWIFI module or a ShineLAN box to relay the data to Growatt. The metrics stored on the Growatt servers then can be viewed on the Growatt website or using the ShinePhone mobile app. 
