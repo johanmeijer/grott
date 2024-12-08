@@ -2,8 +2,8 @@
 ## The Growatt Inverter Monitor 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?business=RQFS46F9JTESQ&item_name=Grott+&currency_code=EUR)
 #### Before using grott please read disclaimer: https://github.com/johanmeijer/grott/wiki/@disclaimer,-statement-of-use-and-limitations
-### -----------------------------------------------------------------------------------------------------------------------------
-### 08-12-2024 this the new 3.0.0 version of grott (fully under development!!!) 
+### ---------------------------------------------------------------------------------------------
+### 08-12-2024 this the new 3.0.0 version of grott (under development!!!) 
 
 What is new in 3.0.0
 * Grott and Grottserver are fully integrated
@@ -13,7 +13,7 @@ What is new in 3.0.0
 * Use more multithreading to enhance performance and create stability
 * new grott.ini in example directory (include settings and documentation)
 * For more information and user experience see (and contribute) discussions https://github.com/johanmeijer/grott/discussions/613
-### -----------------------------------------------------------------------------------------------------------------------------
+### ---------------------------------------------------------------------------------------------
 
 Growatt inverters can send performance and status metrics (log data) to the Growatt company servers. The inverters rely on either a ShineWIFI module or a ShineLAN box to relay the data to Growatt. The metrics stored on the Growatt servers then can be viewed on the Growatt website or using the ShinePhone mobile app. 
 
