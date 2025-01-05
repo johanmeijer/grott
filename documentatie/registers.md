@@ -6,10 +6,20 @@ Use it with care and be aware it might damage your devices. Changing the registe
 ## datalogger
 | Reg  | Name              | Description      | Write | Value   |Unit |Initial| Note                                                               |
 | ---- | ----------------- | ---------------- |-------|---------|-----|-------| -------------------------------------------------------------------| 
-|4|Interval|update interval|W||Ascii|| e.g 5 or 1 or 0.5|
+|4|Interval|update interval|W||Ascii|5| e.g 5 or 1 or 0.5|
+|8|Datalogger Serial Number||R||Ascii||JPC0A0000Z|
+|14|AP IP Address||W||Ascii|192.168.5.1||
+|15|AP Port||W||Ascii|80||
+|16|DataLogger MAC Address||R||Ascii||e.g. 00:00:00:00:00:00|
+|17|growatt_ip|Growatt server ip addres|W||Ascii||set for redirection to Grott e.g. 192.168.0.206|
+|18|growatt_port|Growatt server Port|W||Num|5279|set for redirection to Grott e.g. 5279|
+|21|Firmware version||R||Ascii|3.0.0.2||
+|25|AP Netmask||W||Ascii|255.255.255.0||
+|26|AP Gateway||W||Ascii|192.168.5.1||
 |31|datetime|current date-time|W||Ascii||e.g 2022-05-17 21:01:50|
-|17| growatt_ip|Growatt server ip addres|W||Ascii||set for redirection to Grott e.g. 192.168.0.206|
-|18| growatt_port|Growatt server Port|W||Num||set for redirection to Grott e.g. 5279|
+|56|Wi-Fi SSID|
+|57|Wi-Fi Password|
+
 
 ## inverter
 
