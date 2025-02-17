@@ -245,6 +245,10 @@ def procdata(conf,data):
                         if keytype == "num" :
                         #else:                    
                             definedkey[keyword] = int(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)],16)                                     
+                        if keytype == "snum" :
+                            definedkey[keyword] = int(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)],16)
+                            if definedkey[keyword] > 32767 :
+                                definedkey[keyword] = definedkey[keyword] - 65536
                         if keytype == "numx" :
                             #process signed integer 
                             keybytes = bytes.fromhex(result_string[conf.recorddict[layout][keyword]["value"]:conf.recorddict[layout][keyword]["value"]+(conf.recorddict[layout][keyword]["length"]*2)])
