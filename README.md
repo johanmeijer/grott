@@ -84,6 +84,9 @@ And is tested, but not limited to, inverter models:
 + MOD 5000TL3-X* (ShineLan)
 + MOD 9000TL3-X*
 
+Currently incompatible inverter models:
++ NEO 800M-X (see #552)
+
 **Experimental in latest 2.6 branch*
 
 The Docker images are tested RPI(arm32), Ubuntu and Synology NAS
