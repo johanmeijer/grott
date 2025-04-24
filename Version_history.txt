@@ -262,6 +262,7 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - Removed dependency on libscrc for Grott and Grottserver
 - Improve SDM smart monitor processing (to support more inverter / datalogger combinations)
 - For Grottproxy and grottserver enhance data receive (read multiple buffers until empty, split buffer content when contains multiple records)
-3.0.xxxx (todo)
-- Add MPPT4 (PV4) values to grottconf
-- Check 3.0.0 on changes in 2.8.x!!!!!
+3.1.0
+- Fix bug on output power for PVOutput MIN type inverters (use register 23 ipv register 19)
+- Made Default for extension handling False
+- Enhance connection cleanup - connectiontimeout parameter added to .ini processing (default 300 seconds), fix bug that causing close connection error: [Errno 107] loop.

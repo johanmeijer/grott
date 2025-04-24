@@ -9,7 +9,7 @@ import logging
 #set logging definities
 #logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-vrmconf = "3.0.0_20241208"
+vrmconf = "3.1.0_20250406"
 
 class Conf :
     """define/proces grott configuration settings"""
@@ -146,6 +146,8 @@ class Conf :
         self.addparm("Server","inverterrespwait",10,"ginverterrespwait")
         #Totaal time in seconds to wait on Datalogger Response
         self.addparm("Server","dataloggerrespwait",5,"gdataloggerrespwait")
+        #Totaal time in seconds to wait before a inactive session will be closed
+        self.addparm("Server","ConnectionTimeout",200,"gConnectionTimeout")
 
         #MQTT Basic settings
         ##self.nomqtt = False
@@ -200,7 +202,7 @@ class Conf :
 
         #extension
         #self.extension = False
-        self.addparm("extension","extension",True,"gextension")
+        self.addparm("extension","extension",False,"gextension")
         #self.extname = "grottext"
         self.addparm("extension","extname","grottext","gextname")
         #self.extvar = {"ip": "localhost", "port":8000}
@@ -478,9 +480,10 @@ class Conf :
         if config.has_option("Server","serverip"): self.serverip = config.get("Server","serverip")
         if config.has_option("Server","serverport"): self.serverport = config.getint("Server","serverport")
         if config.has_option("Server","httpport"): self.httpport = config.getint("Server","httpport")
-        if config.has_option("Server","serverrespwait"): self.serverrespwait = config.get("Server","serverrespwait")
-        if config.has_option("Server","serverirespwait"): self.serverirespwait = config.get("Server","serverirespwait")
-        if config.has_option("Server","serverlrespwait"): self.serverlrespwait = config.get("Server","serverlrespwait")
+        if config.has_option("Server","apirespwait"): self.apirespwait = config.getfloat("Server","apirespwait")
+        if config.has_option("Server","inverterrespwait"): self.inverterrespwait = config.getint("Server","inverterrespwait")
+        if config.has_option("Server","dataloggerrespwait"): self.dataloggerrespwait = config.getint("Server","dataloggerrespwait")
+        if config.has_option("Server","ConnectionTimeout"): self.ConnectionTimeout = config.getint("Server","ConnectionTimeout")
         #mqtt
         if config.has_option("MQTT","nomqtt"): self.nomqtt = config.get("MQTT","nomqtt")
         if config.has_option("MQTT","ip"): self.mqttip = config.get("MQTT","ip")
@@ -565,6 +568,8 @@ class Conf :
             if 0 <= int(os.getenv('ggrowattport')) <= 65535  :  self.growattport = int(self.getenv('ggrowattport'))
             else :
                 if self.verbose : print("\nGrott Growatt server Port address env invalid")
+        #handle Serever environmentals
+        if os.getenv('ConnectionTimeout') != None :  self.nomqtt = self.getenv('ConnectionTimeout')
         #handle mqtt environmentals
         if os.getenv('gnomqtt') != None :  self.nomqtt = self.getenv('gnomqtt')
         if os.getenv('gmqttip') != None :
@@ -2061,9 +2066,9 @@ class Conf :
             "pv4voltage"        : {"value" : 218,"length": 2,"type" : "numx","divide" : 10,"register" : 3015},
             "pv4current"        : {"value" : 222,"length": 2,"type" : "numx","divide" : 10,"register" : 3016},
             "pv4watt"           : {"value" : 226,"length": 4,"type" : "numx","divide" : 10,"register" : 3017},
-            "pvpowerout"        : {"value" : 234,"length": 4,"type" : "numx","divide" : 10,"register" : 3019},
             "qac"               : {"value" : 242,"length": 4,"type" : "numx","divide" : 10,"register" : 3021},
             "pac"               : {"value" : 250,"length": 4,"type" : "numx","divide" : 10,"register" : 3023},
+            "pvpowerout"        : {"value" : 250,"length": 4,"type" : "numx","divide" : 10,"register" : 3023},
             "pvfrequency"       : {"value" : 258,"length": 2,"type" : "numx","divide" : 100,"register" : 3025},
             "pvgridvoltage"     : {"value" : 262,"length": 2,"type" : "numx","divide" : 10,"register" : 3026},
             "pvgridcurrent"     : {"value" : 266,"length": 2,"type" : "numx","divide" : 10,"register" : 3027},

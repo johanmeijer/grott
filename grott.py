@@ -1,7 +1,7 @@
 """Grott Growatt monitor base"""
 #       For more information how to see aditional documentation on github wiki. #
 #       For version history see: version_history.txt
-# Updated: 2024-10-16
+# Updated: 2025-04-06
 
 import sys
 import argparse
@@ -12,7 +12,7 @@ from grottsniffer import Sniff
 from grottserver import *
 #from collections import defaultdict
 
-VERREL = "3.0.0_20241208"
+VERREL = "3.1.0_20250406"
 
 #set logging definities
 LOGGERFORMAT = '%(asctime)s - %(name)s - \t%(levelname)s: %(message)s'

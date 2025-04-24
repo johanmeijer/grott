@@ -21,9 +21,9 @@ from grottdata import procdata
 logger = logging.getLogger(__name__)
 
 # grottserver.py emulates the server.growatt.com website and is initial developed for debugging and testing grott.
-# Updated: 2024-10-13
+# Updated: 2025-04-11
 # Version:
-vrmserver = "3.0.0_241020"
+vrmserver = "3.1.0_250411"
 
 loggerreg = {}
 commandresponse =  defaultdict(dict)
@@ -37,12 +37,13 @@ verbose = True
 #firstping = False
 sendseq = 1
 #Time to sleep waiting on API response
-apirespwait = 0.1
+#apirespwait = 0.1
 #Totaal time in seconds to wait on Iverter Response
-inverterrespwait = 10
+#inverterrespwait = 10
+
 #Totaal time in seconds to wait on Datalogger Response
-dataloggerrespwait = 5
-ConnectionTimeout = 300
+#dataloggerrespwait = 5
+#ConnectionTimeout = 300 is now configurable in grott.ini
 
 def addLoggingLevel(levelName, levelNum, methodName=None):
     if not methodName:
@@ -83,7 +84,7 @@ class Miniconf:
             #self.serverip = "0.0.0.0"
             self.httpport = 5782
             self.apirespwait = 0.1                                                                  #Time to sleep waiting on API response
-            self.inverterrespwait = 10                                                                  #Totaal time in seconds to wait on Iverter Response
+            self.inverterrespwait = 10                                                              #Totaal time in seconds to wait on Iverter Response
             self.dataloggerrespwait = 5
 
 # Formats multi-line data
@@ -114,7 +115,7 @@ def decrypt(decdata):
 
     result_string = "".join("{:02x}".format(n) for n in unscrambled)
 
-    print("\t - " + "Grott - data decrypted V2")
+    logger.debugv("\t - " + "Grott - data decrypted V2")
     return result_string
 
 def calc_crc(data):
@@ -214,13 +215,15 @@ def createtimecommand(self, protocol,deviceid,loggerid,sequenceno) :
         return(body)
 
 class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
-    def __init__(self, send_queuereg, *args):
+    def __init__(self, conf, send_queuereg, *args):
         self.send_queuereg = send_queuereg
+        self.conf=conf
         super().__init__(*args)
 
     def do_GET(self):
         try:
             if verbose: print("\t - Grotthttpserver - Get received ")
+            #print(self.conf)
             #parse url
             url = urlparse(self.path)
             urlquery = parse_qs(url.query)
@@ -455,10 +458,10 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                 #wait for response
                 #Set #retry waiting loop for datalogger or inverter
                 if sendcommand == "05" :
-                   wait = round(inverterrespwait/apirespwait)
+                   wait = round(self.conf.inverterrespwait/self.conf.apirespwait)
                    #if verbose: print("\t - Grotthttpserver - wait Cycles:", wait )
                 else :
-                    wait = round(dataloggerrespwait/apirespwait)
+                    wait = round(self.conf.dataloggerrespwait/self.conf.apirespwait)
                     #if verbose: print("\t - Grotthttpserver - wait Cycles:", wait )
 
                 for x in range(wait):
@@ -481,7 +484,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                         #wait for second and try again
                          #Set retry waiting cycle time loop for datalogger or inverter
 
-                        time.sleep(apirespwait)
+                        time.sleep(self.conf.apirespwait)
 
                 try:
                     if comresp != "" :
@@ -811,10 +814,10 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                 #wait for response
                 #Set #retry waiting loop for datalogger or inverter
                 if sendcommand == "06" :
-                   wait = round(inverterrespwait/apirespwait)
+                   wait = round(self.conf.inverterrespwait/self.conf.apirespwait)
                    #if verbose: print("\t - Grotthttpserver - wait Cycles:", wait )
                 else :
-                   wait = round(dataloggerrespwait/apirespwait)
+                   wait = round(self.conf.dataloggerrespwait/self.conf.apirespwait)
                    #if verbose: print("\t - Grotthttpserver - wait Cycles:", wait )
 
                 for x in range(wait):
@@ -830,7 +833,7 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
                     except:
                         #wait for second and try again
                         #Set retry waiting cycle time loop for datalogger or inverter
-                        time.sleep(apirespwait)
+                        time.sleep(self.conf.apirespwait)
                 try:
                     if comresp != "" :
                         responsetxt = b'OK'
@@ -861,21 +864,22 @@ class GrottHttpRequestHandler(http.server.BaseHTTPRequestHandler):
 class GrottHttpServer:
     """This wrapper will create an HTTP server where the handler has access to the send_queue"""
 
-    def __init__(self, httphost, httpport, send_queuereg):
+    def __init__(self, conf, httphost, httpport, send_queuereg):
         def handler_factory(*args):
             """Using a function to create and return the handler, so we can provide our own argument (send_queue)"""
-            return GrottHttpRequestHandler(send_queuereg, *args)
-
+            return GrottHttpRequestHandler(conf, send_queuereg, *args)
+        print(conf)
         self.server = http.server.HTTPServer((httphost, httpport), handler_factory)
         self.server.allow_reuse_address = True
         logger.info(f"GrottHttpserver - Ready to listen at: {httphost}:{httpport}")
 
-    def run(self):
+    def run(self,conf):
         try:
             logger.info("GrottHttpserver - server listening")
-            logger.info("GrottHttpserver - Response interval wait time: %s", apirespwait)
-            logger.info("GrottHttpserver - Datalogger ResponseWait: %s", dataloggerrespwait)
-            logger.info("GrottHttpserver - Inverter ResponseWait: %s", inverterrespwait)
+            print("voor")
+            logger.info("GrottHttpserver - Response interval wait time: %s", conf.apirespwait)
+            logger.info("GrottHttpserver - Datalogger ResponseWait: %s", conf.dataloggerrespwait)
+            logger.info("GrottHttpserver - Inverter ResponseWait: %s", conf.inverterrespwait)
             self.server.serve_forever()
         except Exception as e:
             print(e)
@@ -899,9 +903,7 @@ class sendrecvserver:
 
     def run(self,conf):
         logger.info("Grottserver - server listening")
-        print(conf)
         trname = conf.serverip+"_"+str(conf.serverport)
-        #trname = self.host+"_"+str(self.port)
         self.inputs[trname] = [self.server]
         self.outputs[trname] = [self.server]
         self.exceptional[trname] = [self.server]
@@ -946,9 +948,9 @@ class sendrecvserver:
                 for s in exceptional:
                     self.handle_exceptional_socket(conf,s)
         except Exception as e:
-            print("Socket closed: ", e)
+            logger.info("Socket closed: %s", e)
 
-        logger.info("[thread for: {0}] ending".format(trname))
+        logger.info("thread for: {0} ending".format(trname))
 
     def handle_readable_socket(self, conf, s, trname):
         logger.debug("handle_readble_socket, input received on socket : %s",s)
@@ -958,7 +960,7 @@ class sendrecvserver:
             if s is self.server:
                 logger.debug("handle_readable_socket, no connection with peer yet, will be established")
                 self.handle_new_connection(conf,s)
-                #time.sleep(5)
+
             else:
                 # Existing connection
                 try:
@@ -1033,8 +1035,6 @@ class sendrecvserver:
                     else:
                         # Empty read means connection is closed, perform cleanup
                         logger.warning("handle_readble_socket, empty read, close connection")
-                        #logger.debug("handle_readble_socket, empty read")
-                        #close client and passthrough connection
                         self.close_connection(conf,s)
 
                 #except ConnectionResetError:
@@ -1054,15 +1054,13 @@ class sendrecvserver:
             time.sleep(0.1)
 
             if s.fileno() == -1 :
-                logger.debug("handle_writable_socket ({0}), socket already closed".format(trname))
+                logger.info("handle_writable_socket ({0}), socket already closed".format(trname))
                 return
             try:
                 #try for debug 007
                 client_address, client_port = s.getpeername()
                 if conf.serverpassthrough:
                     if client_address == self.forwardip and client_port == int(self.forwardport):
-                    #if client_address == conf.growattip and client_port == int(conf.growattport):
-                        #logger.debug("data with destination growatt, qname based on grott local address and port")
                         client_address, client_port = s.getsockname()
             except Exception as e:
                 logger.warning("handle_writable_socket, socket error: %s",e)
@@ -1078,32 +1076,25 @@ class sendrecvserver:
 
             except queue.Empty:
                 #Do not activate logger entry here will full-up the log!!!!!
-                #logger.debug("handle_writable_socket, queue empty: %s \n", qname)
-
                 #wait before handling next message
                 #time.sleep(0.1)
                 pass
 
             # calculate last message send and close connection if iddle for more then 90s (ping frequency)
             try:
-                #logger.debug("handle_writable_connection, calculate timeout to detect if connections are lost")
-                #work with copy self.lastmessage to enable deletes during  close_connection
-                #temp_self.lastmessage = self.lastmessage
-                #print("voor calc time out")
+                logger.debugv("handle_writable_connection, Start calculate timeout routine %s", s)
+
                 try:
                     timeout =  time.time()-self.lastmessage[s]
+                    logger.debugv("handle_writable_connection: {0}, timer: {1}, connectiontimeout: {2}".format(trname,timeout,conf.ConnectionTimeout))
                 except Exception as e:
                     #no lastmessage for this connection yet, set lastmessage skip processing
                     self.lastmessage[s] = time.time()
                     timeout =  0
-                    print(s)
-                    print(self.lastmessage)
-                #print("na calc time out")
-                #logger.debug(f"handle_new_connection, last message send for socket: {s}, {timeout}")
-                if timeout > ConnectionTimeout:
-                    logger.debug("time out > {0} for {1}".format(ConnectionTimeout,s))
-                    #r_address, r_port = s.getpeername()
-                    #if r_address != conf.growattip :
+
+                if timeout > conf.ConnectionTimeout:
+
+                    logger.debug("time out > {0} for {1}".format(conf.ConnectionTimeout,s))
                     if s.fileno() != -1 :
                         logger.info("handle_writable_connection, inactive socket will be closed: {0}, {1}".format({s}, {timeout}))
                         self.close_connection(conf,s)
@@ -1112,7 +1103,6 @@ class sendrecvserver:
 
             except Exception as e:
                 logger.debug("handle_writable_connection, error in calculate timeout routine %s",e)
-                # list all current connections:
 
         except Exception as e:
             logger.warning("handle_writable_socket, exception: %s", e)
@@ -1127,15 +1117,12 @@ class sendrecvserver:
             logger.debug("handle_new_connection, new connection request received: \n\t %s",s)
             connection, client_address = s.accept()
             #connection.setblocking(0)
-            #print(f"\t - Grottserver - Socket connection received from {client_address}")
+
             client_address, client_port = connection.getpeername()
             qname = client_address + "_" + str(client_port)
-            #self.inputs[qname] = [connection]
-            #self.outputs[qname] = [connection]
+
             #create queue
             self.send_queuereg[qname] = queue.Queue()
-            #print(send_queuereg)
-            #if verbose: print(f"\t - Grottserver - Send queue created for : {qname}")
             logger.debug("handle_new_connection, send queue created for: %s", qname)
 
             if conf.serverpassthrough:
@@ -1149,8 +1136,6 @@ class sendrecvserver:
                 #get actual growatt server address if DNS name is used in .ini settings
                 self.forwardip, self.forwardport = forward.getpeername()
                 self.send_queuereg[gqname] = queue.Queue()
-                #self.inputs[gqname] = [forward]
-                #self.outputs[gqname] = [forward]
 
                 #create forward channel pair
                 self.channel[connection] = forward
@@ -1170,97 +1155,73 @@ class sendrecvserver:
 
         except Exception as e:
             logger.warning("handle_new_connection exception:  %s \n\t", e)
-            #print("\t - Grottserver - exception in server thread - handle_new_connection : ", e)
-            #self.close_connection(s)
 
     def close_connection(self, conf, s):
+        logger.debug("Close Connection for socket: {0}".format(s))
+
+        #retrieve information about connection
+        logger.debugv("retrieve connection information")
+
+        close_fd = s.fileno()
+        for x in self.inputs :
+
+                if  close_fd == self.inputs[x][0].fileno() :
+                    qname = x
+                    break
+
         try:
-            logger.debug("close connection request for : %s",s)
-            #only sessionpairs will be closed if passthrough is enabled, so first close client and then passthrough connection
-            if conf.serverpassthrough:
-                #test if close request is for forward connection
-                sRaddr = s.getpeername()
-                if sRaddr[0] == conf.growattip and sRaddr[1] == int(conf.growattport) :
-                    logger.debug("Cllose connections: Forward connection close requested start with closing client connection: %s ",s)
-                    s = self.channel[s]
-            try:
-                #client_address, client_port = s.getpeername()
-                logger.info("Close connection: %s", s)
-                #print(client_address, client_port)
-                client_address, client_port = s.getpeername()
-                qname = client_address + "_" + str(client_port)
-                if s in self.outputs:
-                    self.outputs[qname].remove(s)
-                if s in self.inputs:
-                    self.inputs[qname].remove(s)
-                if s in self.exceptional:
-                    self.exceptional[qname].remove(s)
-                if s in self.lastmessage :
-                    del self.lastmessage[s]
-                del self.send_queuereg[qname]
-                logger.debug(f"Client connection queue deleted: {qname}")
-            except Exception as e:
-                logger.info("Close client connection error: %s", e)
+            logger.debug("Close Connection for socket: {0}".format(s))
+            #Test if endpoint still exist?
+            s.close()
+        except Exception as e:
+            logger.debug("close connection error:  %s", e)
 
-            ### after this also clean the logger reg. To be implemented ??? Only for datalogger but those are not known here (Make relation qname / loggerid?)
-            # for key in loggerreg.keys() :
-            #     #print(key, loggerreg[key])
-            #     #print(key, loggerreg[key]["ip"], loggerreg[key]["port"])
-            #     if loggerreg[key]["ip"] == client_address and loggerreg[key]["port"] == client_port :
-            #         del loggerreg[key]
-            #         logger.info("Config information deleted for datalogger and connected inverters : %s", key)
-            #         # to be developed delete also register information for this datalogger (and  connected inverters).  Be aware this need redef of commandresp!
-            #         break
+        try:
+            logger.debugv("clean connection queues")
+            if qname in self.outputs:
+                del self.outputs[qname]
+            if qname in self.inputs:
+                del self.inputs[qname]
+            if qname in self.exceptional:
+                del self.exceptional[qname]
+            if s in self.lastmessage :
+                del self.lastmessage[s]
+            del self.send_queuereg[qname]
+        except Exception as e:
+            logger.debugv("clean connection queues error:  %s", e)
 
+        if conf.serverpassthrough:
+            logger.debug("Close  Passthough Connection")
+            pt_socket = self.channel[s]
+            pt_address, pt_port = pt_socket.getsockname()
+            pt_qname = pt_address + "_" + str(pt_port)
             try:
-                if conf.serverpassthrough:
-                    sg = self.channel[s]
-                    gLaddr = sg.getsockname()
-                    gqname =  gLaddr[0] + "_" + str(gLaddr[1])
-                    if sg in self.outputs:
-                        self.outputs[gqname].remove(sg)
-                    if sg in self.inputs:
-                        self.inputs[gqname].remove(sg)
-                    if sg in self.exceptional:
-                        self.exceptional[gqname].remove(sg)
-                    if sg in self.lastmessage :
-                        del self.lastmessage[sg]
-                    del self.send_queuereg[gqname]
-                    logger.debug(f"Growatt connection queue deleted: {gqname}")
-                    del self.channel[s]
-                    del self.channel[sg]
-                    #close growatt connection
-                    sg.close()
-                    #logger.debug("connection to growatts server closed")
-                    logger.info("forward connection closed: %s", s)
+                logger.debugv("Close Passtrough Connection socket: {0}".format(pt_socket))
+                #Test if endpoint still exist?
+                pt_socket.close()
             except Exception as e:
-                logger.info("Close forward connection error: %s", e)
-            try:
-                #close datalogger client
-                s.close()
-                logger.info("client connection closed: %s", s)
-            except Exception as e:
-                logger.info("Close client connection error: %s", e)
+                logger.error("close Passthrough connection error:  %s", e)
 
+        try:
+            logger.debugv("clean Passthrough connection queues")
+            if pt_qname in self.outputs:
+                del self.outputs[pt_qname]
+            if pt_qname in self.inputs:
+                del self.inputs[pt_qname]
+            if pt_qname in self.exceptional:
+                del self.exceptional[pt_qname]
+            if s in self.lastmessage :
+                del self.lastmessage[pt_socket]
+            del self.send_queuereg[pt_qname]
 
         except Exception as e:
-            logger.debug(" close connection error: %s",e)
-            try:
-                #try to cleanup connection definitions (if exists)
-                client_address, client_port = s.getpeername()
-                qname = client_address + "_" + str(client_port)
-                if s in self.outputs:
-                    self.outputs[qname].remove(s)
-                if s in self.inputs:
-                    self.inputs[qname].remove(s)
-                if s in self.exceptional:
-                    self.exceptional[qname].remove(s)
-                if s in self.lastmessage :
-                    del self.lastmessage[s]
-                del self.send_queuereg[qname]
-            except Exception as e:
-                logger.debug("close connection cleanup error: %s",e)
+            logger.debugv("clean connection queues error:  %s", e)
 
+        #clean channels
+        if s in self.channel:
+                del self.channel[s]
+        if pt_socket in self.channel:
+                del self.channel[pt_socket]
 
     def waitsync(self,sequencenumber,sendersock,timeout=1):
         #this routine will wait on (ack/nack) response for a message
@@ -1292,9 +1253,6 @@ class sendrecvserver:
             # Display data
             logger.debug(f"process_data, data received from : {client_address}:{client_port}")
             logger.debug("\n{0}".format(format_multi_line("\t", data)))
-            #if verbose:
-            #    print("\t - " + "Grottserver - Original Data:")
-            #    print(format_multi_line("\t\t ", data))
 
             #validate data (Length + CRC for 05/06)
             #join gebeurt nu meerdere keren! Stroomlijnen!!!!
@@ -1330,9 +1288,6 @@ class sendrecvserver:
                 response = data
                 logger.debug(f"process_data, 16- ping response:")
                 logger.debug("\n{0}".format(format_multi_line("\t\t ", response)))
-                # if verbose:
-                #     print("\t - Grottserver - 16 - Ping response: ")
-                #     print(format_multi_line("\t\t ", response))
 
                 #     #v0.0.14a: create temporary also logger record at ping (to support shinelink without inverters)
 
@@ -1464,8 +1419,6 @@ class sendrecvserver:
             #elif rectype in ("99") :
                 #placeholder for communicating from html server to sendrecv server
             #    if verbose:
-            #        print("\t - Grottserver - " + header[12:16] + " Internal Status request")
-            #        print("\t - request     - ",  loggerid
             #    response = None
 
             else:
@@ -1502,13 +1455,13 @@ class Server :
         # response from command is written is this variable (for now flat, maybe dict later)
         #commandresponse =  defaultdict(dict)
 
-        http_server = GrottHttpServer(conf.serverip, conf.httpport, send_queuereg)
+        http_server = GrottHttpServer(conf, conf.serverip, conf.httpport, send_queuereg)
         #connection_server = sendrecvserver(conf.serverip, conf.serverport, send_queuereg)
         connection_server = sendrecvserver(conf,"0.0.0.0", conf.serverport, send_queuereg)
         httpname = "httpserver_" + conf.serverip + ":" + str(conf.httpport)
         servername = "conserver_" + conf.serverip + ":" + str(conf.serverport)
         connection_server_thread = threading.Thread(target=connection_server.run,name=servername,args=[conf])
-        http_server_thread = threading.Thread(target=http_server.run,name=httpname)
+        http_server_thread = threading.Thread(target=http_server.run,name=httpname,args=[conf])
         http_server_thread.start()
         connection_server_thread.start()
 
@@ -1532,15 +1485,7 @@ if __name__ == "__main__":
     addLoggingLevel("DEBUGV", logging.DEBUG - 5)
     logging.basicConfig(level=logging.DEBUG)
     logger.info("Grottserver Version: %s",vrmserver)
-    #print("\t - Grottserver - Version: " + verrel)
 
-    # send_queuereg = {}
-    # loggerreg = {}
-    # # response from command is written is this variable (for now flat, maybe dict later)
-    # commandresponse =  defaultdict(dict)
-
-    #loggerreg = {}
-    #commandresponse =  defaultdict(dict)
     #set gmode environment to override mode to standalone
     os.environ["gmode"] = "serversa"
 
@@ -1565,9 +1510,11 @@ if __name__ == "__main__":
     try:
         server.main(conf)
     except KeyboardInterrupt:
-        print("Ctrl C - Stopping server")
-        try:
-            print("closeport")
-            #proxy.on_close(conf)
-        except:
-            print("\t - no ports to close")
+        logger.info("Ctrl C - Stopping server")
+        exit()
+
+        # try:
+        #     logger.info("closeport")
+        #     #proxy.on_close(conf)
+        # except:
+        #     logger.info("\t - no ports to close")
