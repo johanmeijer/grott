@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # grottserver.py emulates the server.growatt.com website and is initial developed for debugging and testing grott.
 # Updated: 2025-04-11
 # Version:
-vrmserver = "3.1.0_250411"
+vrmserver = "3.1.0_250430"
 
 loggerreg = {}
 commandresponse =  defaultdict(dict)
@@ -976,9 +976,14 @@ class sendrecvserver:
                     #process the data
                     if msgbuffer:
                         #split buffer if contain multiple records
+                        logger.debug("start message buffer processing")
                         reclength = int.from_bytes(msgbuffer[4:6],"big")
                         buflength = len(msgbuffer)
+                        if reclength + 8 > buflength:
+                            logger.debug("Invalid Record (length) detected")
+                            return
                         while reclength + 8 <= buflength:
+                            logger.debug("Process message buffer split processing")
                             #get first message
                             data = msgbuffer[0:reclength+8]
                             #set last reference time (for removing inactive connections)
@@ -1256,11 +1261,11 @@ class sendrecvserver:
 
             #validate data (Length + CRC for 05/06)
             #join gebeurt nu meerdere keren! Stroomlijnen!!!!
-            #vdata = "".join("{:02x}".format(n) for n in data)
-            #validatecc = validate_record(vdata)
-            validatecc = 0
+            vdata = "".join("{:02x}".format(n) for n in data)
+            validatecc = validate_record(vdata)
+            #validatecc = 0
             if validatecc != 0 :
-                logger.debug(f"process_data, invalid data record received, processing stopped for this record")
+                logger.debug("process_data, invalid data record received, processing stopped for this record returncode: %s",validatecc)
                 #Create response if needed?
                 #self.send_queuereg[qname].put(response)
                 return

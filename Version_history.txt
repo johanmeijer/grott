@@ -266,3 +266,6 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - Fix bug on output power for PVOutput MIN type inverters (use register 23 ipv register 19)
 - Made Default for extension handling False
 - Enhance connection cleanup - connectiontimeout parameter added to .ini processing (default 300 seconds), fix bug that causing close connection error: [Errno 107] loop.
+3.1.0_20250430
+- Enable CRC checkeing for Grottserver again (and start with some basic record validation)  
+
