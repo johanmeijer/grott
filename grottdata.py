@@ -76,9 +76,9 @@ def decrypt(decdata) :
 
 def str2bool(defstr):
     """Convert string input to bool """
-    if defstr in ("True", "true", "TRUE", "y", "Y", "yes", "YES", 1, "1") :
+    if defstr in ("True",  "true",  "TRUE",  "y", "Y", "yes", "Yes", "YES", 1, "1") :
         defret = True
-    if defstr in ("False", "false", "FALSE", "n", "N", "no", "NO", 0, "0") :
+    if defstr in ("False", "false", "FALSE", "n", "N", "no",  "No",  "NO",  0, "0") :
         defret = False
     if 'defret' in locals():
         return defret
