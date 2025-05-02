@@ -1,3 +1,6 @@
+# do not track the local grott configuration file
+grott.ini
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

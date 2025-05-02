@@ -1,0 +1,118 @@
+# Configuration for grott
+
+# Rename this file to grott.ini
+# To enable an option remove the comment sign "#" at the beginning of the line
+# Modify values to reflect your system setup
+
+
+[Generic]
+# Specify verbose for extended messaging
+verbose = True
+
+# Specify minrecl for debugging purposes only (default = 100)
+#minrecl = 100
+
+# Grott operation mode (sniff or proxy)
+mode = proxy
+
+# Specify port and IP address to listen to (only proxy), default port 5279, 0.0.0.0 ==> own ip address
+# ip   = 0.0.0.0
+# port = 5279  
+
+# To blocks commands from outside (to channge inverter and shine devices settings) specify blockcmd = True,
+# specify noipf = True if you still want be able to dest ip addres from growatt server
+# Specify noipf = True if you still want be able to dest ip addres from growatt server (advice only to use 
+# this for a short time)
+#blockcmd = True 
+#noipf    = True
+
+# Time = auto/server parameter enable/disable date/time retrieval from data record (server), 
+# default is auto: grott decides which time is used (data record if valid otherwise Server) 
+# If time = server Grott server time is alwas used
+time     = auto # server
+timezone = Europe/Berlin
+
+# Sendbuf = True / False parameter to enable  / disable sending historical (buffered) data. Default is sendbuf = True.
+#sendbuf = True 
+
+# Compat is True and valoffset needs to be set if offset / growatt protocol has been changed. 
+#compat      = False
+#valueoffset = 6
+
+# Specify inverter id (not necessary in version >2.1.0 if compat = false!)
+#inverterid = ABC1234567
+# Specify the type of the inverter (default/sph/spf/max)
+#invtype = default
+#invtype = tl3
+invtype  = auto
+
+# Decrypt is False if growatt communication is not encrypted (older inverters), (not necessary in version
+# >2.1.0 if compat = false!)
+#decrypt = True
+
+[Growatt] 
+# Server name/IP address and port of Growatt server
+# specify only if the IP address of server.growatt.com is changed
+# The address as of Nov 2022 is 47.91.67.66
+
+#ip   = server.growatt.com
+#ip   = 47.91.67.66
+#port = 5279
+#ip   = 192.168.178.167
+#port = 5781
+
+[MQTT]
+# Mqtt parameters definitions
+# Be aware nomqtt = True means no MQTT processing will be done
+
+nomqtt = True
+ip     = localhost
+port   = 1883
+topic  = energy/growatt
+auth   = False
+#user     = grott
+#password = growatt2020
+
+[PVOutput]
+# PVOutput parameters definitions
+
+pvoutput = True
+apikey   = your_api_key
+# Data upload limit (in minutes)
+pvuplimit = 5
+# Use this if you have one inverter
+systemid = your_system_id
+
+# Use this if you have multiple inverters
+#pvinverters = 2
+#systemid1   = 12345
+#inverterid1 = inverter1
+#systemid2   = 67890
+#inverterid2 = inverter2
+
+#systemid99   = 99999
+#inverterid99 = inverter99
+
+pvdisv1 = False
+pvtemp  = True
+
+[influx]
+# Influxdb parameters definitions
+
+#influx   = False
+#influx2  = False
+#dbname   = grottdb
+#ip       = localhost
+#port     = 8086
+#user     = grott
+#password = growatt2020
+#token    = "influx_token"
+#org      = "grottorg"
+#bucket   = "grottdb" 
+
+[extension] 
+# grott extension parameters definitions
+
+#extension = True
+#extname   = grottext
+#extvar    = {"var1": "var1_content", "var2": "var2_content"}
