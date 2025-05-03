@@ -74,17 +74,20 @@ def decrypt(decdata) :
     logger.debug("Growatt data decrypted V2")
     return result_string
 
-def str2bool(defstr):
-    """Convert string input to bool """
-    if defstr in ("True",  "true",  "TRUE",  "y", "Y", "yes", "Yes", "YES", 1, "1") :
-        defret = True
-    if defstr in ("False", "false", "FALSE", "n", "N", "no",  "No",  "NO",  0, "0") :
-        defret = False
-    if 'defret' in locals():
-        return defret
-    else :
-        return
 
+# \todo this function lies, it test not only strings but also booleans and integers 
+## test if the provided value can be interpreted as a boolean value
+#  if so the corresponding boolean is returned otherwise None
+def str2bool(defstr):
+    """Convert provided input value to bool """
+    
+    # check if provided parameter is a boolean
+    if isinstance(defstr, (int)) : return defstr.__bool__()
+    
+    # check if provided string can be assigned to a boolean
+    string_to_test = defstr.lower()
+    if string_to_test in ("true",  "yes", "y", "1") : return True 
+    if string_to_test in ("false", "no",  "n", "0") : return False
 
 
 def AutoCreateLayout(conf,data,protocol,deviceno,recordtype) :

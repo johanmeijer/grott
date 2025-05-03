@@ -6,6 +6,49 @@ import grottconf
 # Unit Tests for modul grottdata.py
 
 
+
+class TestGrottdataStr2Bool(unittest.TestCase):
+    
+    def test_str2bool(self):
+        self.assertEqual(grottdata.str2bool("TRUE"), True)
+        self.assertEqual(grottdata.str2bool("TRuE"), True)
+        self.assertEqual(grottdata.str2bool("true"), True)
+        self.assertEqual(grottdata.str2bool("True"), True)
+        self.assertEqual(grottdata.str2bool("YES"),  True)
+        self.assertEqual(grottdata.str2bool("Yes"),  True)
+        self.assertEqual(grottdata.str2bool("yes"),  True)
+        self.assertEqual(grottdata.str2bool("Y"),    True)
+        self.assertEqual(grottdata.str2bool("y"),    True)
+        self.assertEqual(grottdata.str2bool("1"),    True)
+        self.assertEqual(grottdata.str2bool(1),      True)
+        self.assertEqual(grottdata.str2bool(2),      True)
+        self.assertEqual(grottdata.str2bool(123456), True)
+        self.assertEqual(grottdata.str2bool(-1),     True)
+        self.assertEqual(grottdata.str2bool(True),   True)
+        
+        self.assertEqual(grottdata.str2bool("FALSE"), False)
+        self.assertEqual(grottdata.str2bool("FAlsE"), False)
+        self.assertEqual(grottdata.str2bool("false"), False)
+        self.assertEqual(grottdata.str2bool("False"), False)
+        self.assertEqual(grottdata.str2bool("NO"),    False)
+        self.assertEqual(grottdata.str2bool("No"),    False)
+        self.assertEqual(grottdata.str2bool("no"),    False)
+        self.assertEqual(grottdata.str2bool("N"),     False)
+        self.assertEqual(grottdata.str2bool("n"),     False)
+        self.assertEqual(grottdata.str2bool("0"),     False)
+        self.assertEqual(grottdata.str2bool(0),       False)
+        self.assertEqual(grottdata.str2bool(False),   False)
+    
+        self.assertEqual(grottdata.str2bool(""),      None)
+        self.assertEqual(grottdata.str2bool("a"),     None)
+        self.assertEqual(grottdata.str2bool("2"),     None) # should the be considered True?
+        self.assertEqual(grottdata.str2bool("123"),   None) # should the be considered True?
+        self.assertEqual(grottdata.str2bool("?"),     None)
+        self.assertEqual(grottdata.str2bool("hello"), None)
+        self.assertEqual(grottdata.str2bool("ABC"),   None)
+        self.assertEqual(grottdata.str2bool("!&/("),  None)
+
+
 class TestGrottPVOutputLimit(unittest.TestCase):
 
     def test_ok_send_run_once_should_be_ok(self):
@@ -52,34 +95,6 @@ class TestGrottPVOutputLimit(unittest.TestCase):
         self.assertEqual(result, "###123")
         
         
-    def test_str2bool(self):
-        self.assertEqual(grottdata.str2bool("TRUE"), True)
-        self.assertEqual(grottdata.str2bool("true"), True)
-        self.assertEqual(grottdata.str2bool("True"), True)
-        self.assertEqual(grottdata.str2bool("YES"),  True)
-        self.assertEqual(grottdata.str2bool("Yes"),  True)
-        self.assertEqual(grottdata.str2bool("yes"),  True)
-        self.assertEqual(grottdata.str2bool("Y"),    True)
-        self.assertEqual(grottdata.str2bool("y"),    True)
-        self.assertEqual(grottdata.str2bool("1"),    True)
-        
-        self.assertEqual(grottdata.str2bool("FALSE"), False)
-        self.assertEqual(grottdata.str2bool("false"), False)
-        self.assertEqual(grottdata.str2bool("False"), False)
-        self.assertEqual(grottdata.str2bool("NO"),    False)
-        self.assertEqual(grottdata.str2bool("No"),    False)
-        self.assertEqual(grottdata.str2bool("no"),    False)
-        self.assertEqual(grottdata.str2bool("N"),     False)
-        self.assertEqual(grottdata.str2bool("n"),     False)
-        self.assertEqual(grottdata.str2bool("0"),     False)
-    
-        self.assertEqual(grottdata.str2bool(""),      None)
-        self.assertEqual(grottdata.str2bool("a"),     None)
-        self.assertEqual(grottdata.str2bool("2"),     None)
-        self.assertEqual(grottdata.str2bool("hello"), None)
-        self.assertEqual(grottdata.str2bool("ABC"),   None)
-        self.assertEqual(grottdata.str2bool("!&/("),  None)
-
             
     def test_AutoCreateLayout_short_data_protocol_0(self):
         conf       = grottconf.Conf("3.0.0_20241208")
