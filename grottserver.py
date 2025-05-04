@@ -1049,7 +1049,8 @@ class sendrecvserver:
                     self.close_connection(conf,s)
 
         except Exception as e:
-            logger.warning("handle_readble_socket, generic exception: %s",e)
+            logger.warning("handle_readble_socket, generic exception, closing connection: %s",e)
+            self.close_connection(conf,s)
 
 
     def handle_writable_socket(self, conf, s, trname):
@@ -1111,6 +1112,7 @@ class sendrecvserver:
 
         except Exception as e:
             logger.warning("handle_writable_socket, exception: %s", e)
+            self.close_connection(conf,s)      
 
 
     def handle_exceptional_socket(self, conf, s):
@@ -1209,15 +1211,16 @@ class sendrecvserver:
 
         try:
             logger.debugv("clean Passthrough connection queues")
-            if pt_qname in self.outputs:
-                del self.outputs[pt_qname]
-            if pt_qname in self.inputs:
-                del self.inputs[pt_qname]
-            if pt_qname in self.exceptional:
-                del self.exceptional[pt_qname]
-            if s in self.lastmessage :
-                del self.lastmessage[pt_socket]
-            del self.send_queuereg[pt_qname]
+            if conf.serverpassthrough:
+                if pt_qname in self.outputs:
+                    del self.outputs[pt_qname]
+                if pt_qname in self.inputs:
+                    del self.inputs[pt_qname]
+                if pt_qname in self.exceptional:
+                    del self.exceptional[pt_qname]
+                if s in self.lastmessage :
+                    del self.lastmessage[pt_socket]
+                del self.send_queuereg[pt_qname]
 
         except Exception as e:
             logger.debugv("clean connection queues error:  %s", e)
@@ -1225,7 +1228,8 @@ class sendrecvserver:
         #clean channels
         if s in self.channel:
                 del self.channel[s]
-        if pt_socket in self.channel:
+        if conf.serverpassthrough:
+            if pt_socket in self.channel:
                 del self.channel[pt_socket]
 
     def waitsync(self,sequencenumber,sendersock,timeout=1):

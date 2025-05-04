@@ -15,8 +15,8 @@ from itertools import cycle # to support "cycling" the iterator
 import json
 import codecs
 from typing import Dict
-#import mqtt
-import paho.mqtt.publish as publish
+from grottmqtt import MQTTPublisher
+from concurrent.futures import ThreadPoolExecutor
 
 #set logging
 logger = logging.getLogger(__name__)
@@ -543,17 +543,42 @@ def procdata(conf,data):
 
             if conf.mqttretain:
                if conf.verbose: print("\t - " + 'Grott MQTT message retain enabled')
+ 
+            try:	
 
-            try:
-                #v2.7.1 add retrain variable
-                publish.single(mqtttopic, payload=jsonmsg, qos=0, retain=conf.mqttretain, hostname=conf.mqttip,port=conf.mqttport, client_id=conf.inverterid, keepalive=60, auth=conf.pubauth)
-                if conf.verbose: print("\t - " + 'MQTT message message sent')
+               logger.debug("MQTT messaging initialization starterd")
+                # Initialize the MQTT publisher
+               mqtt_publisher = MQTTPublisher(
+                  hostname=conf.mqttip,
+                  port=conf.mqttport,
+                  client_id=conf.inverterid,
+                  auth=conf.pubauth,
+                  socket_timeout=1.0
+                  )
+               logger.debug("MQTT message about to be sent for deviceid: %s", deviceid)
+               # Publish the message
+               success = mqtt_publisher.publish(
+                    topic=mqtttopic,
+                    payload=jsonmsg,
+                    qos=0,
+                    retain=conf.mqttretain,
+                    timeout=1.0
+                    )
+
+               if success:
+                  logger.debug("MQTT message published for deviceid: %s", deviceid)
+               else:
+                  logger.debug("MQTT message publishing failed for deviceid: %s", deviceid) 
             except TimeoutError:
-                if conf.verbose: print("\t - " + 'MQTT connection time out error')
+               if conf.verbose: print("\t - " + 'MQTT connection time out error')
             except ConnectionRefusedError:
-                if conf.verbose: print("\t - " + 'MQTT connection refused by target')
+               if conf.verbose: print("\t - " + 'MQTT connection refused by target')
+            except socket.timeout:
+               if conf.verbose: print("\t - " + 'MQTT socket timeout')
             except BaseException as error:
-                if conf.verbose: print("\t - "+ 'MQTT send failed:', str(error))
+               if conf.verbose: print("\t - " + 'MQTT send failed:', str(error))
+            except Exception as e:
+               logger.debug("general exception in MQTT routine occurred  %s", e)
         else:
             if conf.verbose: print("\t - " + 'No MQTT message sent, MQTT disabled')
 
@@ -707,13 +732,19 @@ def procdata(conf,data):
                 #print(ifresult)
             else:
                 if conf.verbose :  print("\t - " + "Grott write to influxdb v1")
-                ifresult = conf.influxclient.write_points(ifjson)
+                with ThreadPoolExecutor(max_workers=5) as executor:
+                      future = executor.submit(
+                          conf.influxclient.write_points,
+                          ifjson
+                )
+                future.result(timeout=1)  # Wait for 1 second, raise TimeoutError if exceeded
+                future.exception(timeout=1)
         #except :
         except Exception as e:
             # if  conf.verbose:
                 print("\t - " + "Grott InfluxDB error ")
                 print(e)
-                raise SystemExit("Grott Influxdb write error, grott will be stopped")
+#                raise SystemExit("Grott Influxdb write error, grott will be stopped")
 
     else:
             if conf.verbose : print("\t - " + "Grott Send data to Influx disabled ")
