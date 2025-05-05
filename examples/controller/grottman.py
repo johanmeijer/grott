@@ -1,3 +1,9 @@
+########################################################################################
+Do not run this script! Writing to registers in EEPROM can cause EEPROM to fail!!!!!!! 
+For insperation only!!!! 
+########################################################################################
+
+{
 """Grottman manage inverter"""
 import configparser, sys, argparse, os, json, io
 import ipaddress
@@ -283,3 +289,4 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     runman = grottman()
     runman.run()
+}
