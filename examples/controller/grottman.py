@@ -1,4 +1,9 @@
-"""Grottman manage inverter"""
+################################################################
+Do not use this script. Writing to a register to much can damage the eeprom!!!!!!!
+Use for inspiration only
+################################################################
+
+{"""Grottman manage inverter"""
 import configparser, sys, argparse, os, json, io
 import ipaddress
 from os import walk
@@ -283,3 +288,5 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     runman = grottman()
     runman.run()
+
+}
