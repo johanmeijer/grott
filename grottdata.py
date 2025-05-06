@@ -813,13 +813,14 @@ def procdata(conf,data):
                 #print(ifresult)
             else:
                 if conf.verbose :  print("\t - " + "Grott write to influxdb v1")
-                with ThreadPoolExecutor(max_workers=5) as executor:
-                      future = executor.submit(
-                          conf.influxclient.write_points,
-                          ifjson
-                )
-                future.result(timeout=1)  # Wait for 1 second, raise TimeoutError if exceeded
-                future.exception(timeout=1)
+                ifresult = conf.influxclient.write_points(ifjson)
+#                with ThreadPoolExecutor(max_workers=5) as executor:
+#                      future = executor.submit(
+#                          conf.influxclient.write_points,
+#                          ifjson
+#                )
+#                future.result(timeout=1)  # Wait for 1 second, raise TimeoutError if exceeded
+#                future.exception(timeout=1)
         #except :
         except Exception as e:
             # if  conf.verbose:
