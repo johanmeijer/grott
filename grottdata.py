@@ -15,11 +15,92 @@ from itertools import cycle # to support "cycling" the iterator
 import json
 import codecs
 from typing import Dict
-from grottmqtt import MQTTPublisher
+#from grottmqtt import MQTTPublisher
 from concurrent.futures import ThreadPoolExecutor
+import paho.mqtt.client as mqtt
+import socket
 
 #set logging
 logger = logging.getLogger(__name__)
+
+
+class MQTTPublisher:
+    def __init__(self, hostname, port, client_id, auth=None, socket_timeout=1.0):
+        """
+        Initialize the MQTT publisher.
+
+        Args:
+            hostname (str): MQTT broker hostname or IP address.
+            port (int): MQTT broker port (e.g., 1883).
+            client_id (str): Unique client ID for the MQTT connection.
+            auth (dict, optional): Dictionary with 'username' and 'password' for authentication.
+            socket_timeout (float): Socket timeout in seconds for MQTT operations (default: 1.0).
+        """
+        self.hostname = hostname
+        self.port = port
+        self.client_id = client_id
+        self.auth = auth
+        self.socket_timeout = socket_timeout
+
+    def publish(self, topic, payload, qos=0, retain=False, timeout=1.0):
+        """
+        Publish an MQTT message with a timeout.
+
+        Args:
+            topic (str): MQTT topic to publish to.
+            payload (str): Message payload (e.g., JSON string).
+            qos (int): Quality of Service level (0, 1, or 2; default: 0).
+            retain (bool): Whether to retain the message on the broker (default: False).
+            timeout (float): Maximum time to wait for the publish operation (default: 1.0 seconds).
+
+        Returns:
+            bool: True if the publish succeeded, False if it failed (e.g., due to timeout or error).
+        """
+        def publish_message():
+            client = mqtt.Client(client_id=self.client_id)  # New client per call
+            if self.auth:
+                client.username_pw_set(self.auth['username'], self.auth['password'])
+            start_time = time.time()
+            logger.debug("Starting MQTT publish to topic: %s", topic)
+            try:
+                client.connect(self.hostname, self.port, keepalive=60)
+                sock = client.socket()
+                if sock is not None:
+                    sock.settimeout(self.socket_timeout)
+                    logger.debug("Socket timeout set to %.2f seconds", self.socket_timeout)
+                else:
+                    logger.error("No socket available after connect for topic: %s", topic)
+                    raise RuntimeError("MQTT client has no socket")
+                client.publish(topic, payload=payload, qos=qos, retain=retain)
+                logger.debug("Publish completed in %.2f seconds", time.time() - start_time)
+            finally:
+                client.disconnect()
+                logger.debug("MQTT client disconnected")
+
+        try:
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(publish_message)
+                future.result(timeout=timeout)
+            logger.debug("MQTT message published successfully to topic: %s", topic)
+            return True
+        except TimeoutError:
+            logger.debug("Timeout occurred while publishing to topic: %s", topic)
+            return False
+        except ConnectionRefusedError:
+            logger.debug("Connection refused by MQTT broker for topic: %s", topic)
+            return False
+        except socket.timeout:
+            logger.debug("Socket timeout while publishing to topic: %s", topic)
+            return False
+        except Exception as e:
+            logger.debug("Exception in MQTT publish: %s", e)
+            return False
+
+    def __del__(self):
+        """
+        Destructor to ensure cleanup (no client to disconnect since created per call).
+        """
+        pass
 
 class GrottPvOutLimit:
     """limit the amount of request sent to pvoutput"""
@@ -252,6 +333,8 @@ def AutoCreateLayout(conf,data,protocol,deviceno,recordtype) :
                 layout = "none"
 
     return(layout,result_string)
+
+
 
 
 def procdata(conf,data):
@@ -545,9 +628,9 @@ def procdata(conf,data):
                if conf.verbose: print("\t - " + 'Grott MQTT message retain enabled')
  
             try:	
-
-               logger.debug("MQTT messaging initialization starterd")
+               logger.debug("MQTT messaging initialization started")
                 # Initialize the MQTT publisher
+               logger.debug("MQTT message about to be sent for deviceid: %s", deviceid)
                mqtt_publisher = MQTTPublisher(
                   hostname=conf.mqttip,
                   port=conf.mqttport,
@@ -555,7 +638,6 @@ def procdata(conf,data):
                   auth=conf.pubauth,
                   socket_timeout=1.0
                   )
-               logger.debug("MQTT message about to be sent for deviceid: %s", deviceid)
                # Publish the message
                success = mqtt_publisher.publish(
                     topic=mqtttopic,
@@ -564,7 +646,6 @@ def procdata(conf,data):
                     retain=conf.mqttretain,
                     timeout=1.0
                     )
-
                if success:
                   logger.debug("MQTT message published for deviceid: %s", deviceid)
                else:
@@ -578,7 +659,7 @@ def procdata(conf,data):
             except BaseException as error:
                if conf.verbose: print("\t - " + 'MQTT send failed:', str(error))
             except Exception as e:
-               logger.debug("general exception in MQTT routine occurred  %s", e)
+               print("\t - " + "Grott MQTT publish error ", str(e))
         else:
             if conf.verbose: print("\t - " + 'No MQTT message sent, MQTT disabled')
 
