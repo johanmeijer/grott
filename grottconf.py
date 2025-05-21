@@ -9,7 +9,7 @@ import logging
 #set logging definities
 #logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-vrmconf = "3.1.0_20250406"
+vrmconf = "3.2.0_20250521"
 
 class Conf :
     """define/proces grott configuration settings"""
@@ -22,10 +22,10 @@ class Conf :
         # Set default for the command line parms
         self.verrel = vrm
         self.vrmconf = vrmconf
-        self.vrmproxy = "nky"
-        self.vrmsniff = "nky"
-        self.vrmdata = "nky"
-        self.vrmserver = "nky"
+        self.vrmproxy = "3.0.0_241019"
+        self.vrmsniff = "1.1.2"
+        self.vrmdata = "3.2.0_20250521"
+        self.vrmserver = "3.2.0_20250521"
         self.verbose= False
         self.loglevel = "INFO"
         self.cfgfile = "grott.ini"

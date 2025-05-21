@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # grottserver.py emulates the server.growatt.com website and is initial developed for debugging and testing grott.
 # Updated: 2025-04-11
 # Version:
-vrmserver = "3.1.0_250430"
+vrmserver = "3.2.0_20250521"
 
 loggerreg = {}
 commandresponse =  defaultdict(dict)
@@ -1112,7 +1112,7 @@ class sendrecvserver:
 
         except Exception as e:
             logger.warning("handle_writable_socket, exception: %s", e)
-            self.close_connection(conf,s)      
+            self.close_connection(conf,s)
 
 
     def handle_exceptional_socket(self, conf, s):

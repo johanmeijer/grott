@@ -1,7 +1,7 @@
 """grottdata.py processing data functions"""
-# Version 3.0.0
-# Updated: 2024-08-11
-#!change self.vrmdata 3.0.0_20240811 in grott.conf!!
+# Version 3.2.0
+# Updated: 2025-05-21
+#!change self.vrmdata 3.2.0_20250521 in grott.conf!!
 import logging
 #import time
 from datetime import datetime, timedelta
@@ -626,8 +626,8 @@ def procdata(conf,data):
 
             if conf.mqttretain:
                if conf.verbose: print("\t - " + 'Grott MQTT message retain enabled')
- 
-            try:	
+
+            try:
                logger.debug("MQTT messaging initialization started")
                 # Initialize the MQTT publisher
                logger.debug("MQTT message about to be sent for deviceid: %s", deviceid)
@@ -649,7 +649,7 @@ def procdata(conf,data):
                if success:
                   logger.debug("MQTT message published for deviceid: %s", deviceid)
                else:
-                  logger.debug("MQTT message publishing failed for deviceid: %s", deviceid) 
+                  logger.debug("MQTT message publishing failed for deviceid: %s", deviceid)
             except TimeoutError:
                if conf.verbose: print("\t - " + 'MQTT connection time out error')
             except ConnectionRefusedError:
