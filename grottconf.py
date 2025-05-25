@@ -1001,7 +1001,9 @@ class Conf :
             "BatDischarWatt"    : {"value" :458, "length" : 4, "type" : "num", "divide" : 10},  
             "BatDischarVA"      : {"value" :466, "length" : 4, "type" : "num", "divide" : 10},  
             "BatWatt"           : {"value" :474, "length" : 4, "type" : "numx", "divide" : 10},                                                
-            "invfanspeed"       : {"value" :494, "length" : 2, "type" : "num", "divide" : 1}
+            "invfanspeed"       : {"value" :494, "length" : 2, "type" : "num", "divide" : 1},
+            "eopDischrToday"    : {"value" :506, "length" : 4, "type" : "num", "divide" : 10},
+            "eopDischrTotal"    : {"value" :514, "length" : 4, "type" : "num", "divide" : 10}
         }}
 
         self.recorddict9 = {"T06NNNNXTL3": {
