@@ -20,7 +20,7 @@ For more information see: https://github.com/johanmeijer/grott/wiki/Grottserver.
 * For all changes see Version_history file (https://github.com/johanmeijer/grott/blob/2.8.3/Version_history.txt)
 
 ### New in Version 2.7  
-* Added first beta of **grottserver** to act as destination for inverter/datalogger data (remove need to cummunicate with internet).
+* Added first beta of **grottserver** to act as destination for inverter/datalogger data (remove need to communicate with internet).
   - grottserver is able to sent read/write register commands to inverter and datalogger.
   - see https://github.com/johanmeijer/grott/wiki/Grottserver and discussions https://github.com/johanmeijer/grott/discussions/98 for more information: 
 * Support for SDM630/Raillog connected (see issue #88)
