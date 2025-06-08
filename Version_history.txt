@@ -52,7 +52,7 @@ Version history
 #	Initial Support for shinelink lan box
 #	Improve unscramble routine (preperation for server mode)
 #2.1.1
-#	Enhanced docker support (more startup parms, env variable support
+#	Enhanced docker support (more startup parms, env variable support)
 #   Improve / repair automatic protocol detection
 #   enable dynamic protocol layout (override existing layout, override pre-defined values)
 #   almost all .ini keywords available as env. variables start (see wiki for more details
@@ -270,5 +270,8 @@ Complement bugfix prepared by KBraham (issue / pull request #41)
 - Enable CRC checkeing for Grottserver again (and start with some basic record validation)
 3.2.0_20250521
 - changes to fix MQTT connection stalls (#665)
+3.2.1_20250608 (grottserver)
+- fix protocol "02" record checking for grottserver
+- Add additional debug messages for grottserver received record debugging
 
 

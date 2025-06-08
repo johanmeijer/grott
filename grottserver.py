@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # grottserver.py emulates the server.growatt.com website and is initial developed for debugging and testing grott.
 # Updated: 2025-04-11
 # Version:
-vrmserver = "3.2.0_20250521"
+vrmserver = "3.2.1_20250608"
 
 loggerreg = {}
 commandresponse =  defaultdict(dict)
@@ -868,7 +868,6 @@ class GrottHttpServer:
         def handler_factory(*args):
             """Using a function to create and return the handler, so we can provide our own argument (send_queue)"""
             return GrottHttpRequestHandler(conf, send_queuereg, *args)
-        print(conf)
         self.server = http.server.HTTPServer((httphost, httpport), handler_factory)
         self.server.allow_reuse_address = True
         logger.info(f"GrottHttpserver - Ready to listen at: {httphost}:{httpport}")
@@ -876,13 +875,12 @@ class GrottHttpServer:
     def run(self,conf):
         try:
             logger.info("GrottHttpserver - server listening")
-            print("voor")
             logger.info("GrottHttpserver - Response interval wait time: %s", conf.apirespwait)
             logger.info("GrottHttpserver - Datalogger ResponseWait: %s", conf.dataloggerrespwait)
             logger.info("GrottHttpserver - Inverter ResponseWait: %s", conf.inverterrespwait)
             self.server.serve_forever()
         except Exception as e:
-            print(e)
+            logger.info("httpserver start error %s",e)
 
 class sendrecvserver:
     def __init__(self, conf, host, port, send_queuereg):
@@ -973,19 +971,29 @@ class sendrecvserver:
                         if len(part) < buffsize:
                         # either 0 or end of data
                             break
+                    logger.debug(f"received data before buffersplit processing:")
+                    logger.debug("\n{0}".format(format_multi_line("\t", msgbuffer)))
                     #process the data
                     if msgbuffer:
                         #split buffer if contain multiple records
                         logger.debug("start message buffer processing")
                         reclength = int.from_bytes(msgbuffer[4:6],"big")
                         buflength = len(msgbuffer)
-                        if reclength + 8 > buflength:
+                        header = "".join("{:02x}".format(n) for n in msgbuffer[0:8])
+                        protocol = header[6:8]
+                        #set recordlength correction header + crc (if included).
+                        if protocol in ("05","06"):
+                           lcrc = 8
+                        else:
+                            lcrc = 6
+                        buflength = len(msgbuffer)
+                        if reclength + lcrc > buflength:
                             logger.debug("Invalid Record (length) detected")
                             return
-                        while reclength + 8 <= buflength:
+                        while reclength + lcrc <= buflength:
                             logger.debug("Process message buffer split processing")
                             #get first message
-                            data = msgbuffer[0:reclength+8]
+                            data = msgbuffer[0:reclength+lcrc]
                             #set last reference time (for removing inactive connections)
                             self.lastmessage[s] = time.time()
                             header = "".join("{:02x}".format(n) for n in data[0:8])
@@ -1031,9 +1039,9 @@ class sendrecvserver:
                             #Process the data
                             self.process_data(conf,s, data)
                             #create buffer with remaining messages
-                            if buflength > reclength+8:
+                            if buflength > reclength+lcrc:
                                 logger.debug("handle_readble_socket, process additional messages in buffer")
-                                msgbuffer = msgbuffer[reclength+8:buflength]
+                                msgbuffer = msgbuffer[reclength+lcrc:buflength]
                                 reclength = int.from_bytes(msgbuffer[4:6],"big")
                                 buflength = len(msgbuffer)
                             else: break

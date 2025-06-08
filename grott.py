@@ -12,7 +12,7 @@ from grottsniffer import Sniff
 from grottserver import *
 #from collections import defaultdict
 
-VERREL = "3.2.0_20250521"
+VERREL = "3.2.1_20250608"
 
 #set logging definities
 LOGGERFORMAT = '%(asctime)s - %(name)s - \t%(levelname)s: %(message)s'
